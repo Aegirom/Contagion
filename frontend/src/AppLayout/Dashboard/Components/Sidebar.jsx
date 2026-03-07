@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { Link, useLocation } from 'react-router-dom';
+import logo from '../../../assets/logo.png';
 
 const SidebarItem = ({ item, active, isOpen }) => (
   <Link
@@ -82,16 +83,9 @@ const Sidebar = ({ isOpen, toggleSidebar }) => {
         className="flex items-center gap-3 px-4 h-16 flex-shrink-0"
         style={{ borderBottom: '1px solid rgba(30,34,51,0.6)' }}
       >
-        <div
-          className="w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0"
-          style={{
-            background: 'rgba(34,197,94,0.1)',
-            border: '1px solid rgba(34,197,94,0.3)',
-            boxShadow: '0 0 12px rgba(34,197,94,0.2)',
-          }}
-        >
-          <div className="w-2 h-2 rounded-full animate-pulse-green" style={{ background: '#22C55E' }} />
-        </div>
+        <Link to="/dashboard" className="flex items-center justify-center flex-shrink-0">
+          <img src={logo} alt="Contagion" className="w-8 h-8 rounded-lg object-cover" style={{ backgroundColor: '#0F1118' }} />
+        </Link>
         {isOpen && (
           <span
             className="font-display text-sm font-bold tracking-[0.15em]"
