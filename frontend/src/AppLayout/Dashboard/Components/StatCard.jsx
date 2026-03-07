@@ -1,76 +1,55 @@
-import { useCounter, useTilt } from './HooksAndBadges';
+import { useCounter } from './HooksAndBadges';
 
-const StatCard = ({ label, rawValue, suffix = '', change, changePos, icon, accentColor, delay, index }) => {
-  const { ref, tilt, onMove, onLeave } = useTilt(6);
-  const numericTarget = parseInt(String(rawValue).replace(/[^0-9]/g, ''), 10) || 0;
-  const counted = useCounter(numericTarget, 1000, delay);
-  const displayValue = rawValue.toString().includes(',')
-    ? counted.toLocaleString()
-    : counted.toString();
+const StatCard = ({ label, value, suffix = '', change, changePos, color, icon, delay, loading = false }) => {
+  const numericTarget = loading ? 0 : parseInt(String(value).replace(/[^0-9]/g, ''), 10) || 0;
+  const counted = useCounter(numericTarget, 1000, loading ? 0 : delay);
+  const displayValue = loading ? '...' : value.includes(',') ? counted.toLocaleString() : counted.toString();
 
   return (
     <div
-      ref={ref}
-      onMouseMove={onMove}
-      onMouseLeave={onLeave}
-      className="rounded-lg overflow-hidden relative transition-glow animate-fade-up"
-      style={{
-        background: 'rgba(12,13,20,0.8)',
-        border: `1px solid ${tilt.hovering ? `rgba(${accentColor},0.25)` : 'rgba(30,34,51,0.9)'}`,
-        boxShadow: tilt.hovering ? `0 0 40px rgba(${accentColor},0.1), 0 20px 40px rgba(0,0,0,0.4)` : '0 4px 24px rgba(0,0,0,0.3)',
-        transform: `perspective(800px) rotateX(${tilt.x}deg) rotateY(${tilt.y}deg) scale3d(${tilt.hovering ? 1.02 : 1},${tilt.hovering ? 1.02 : 1},${tilt.hovering ? 1.02 : 1})`,
-        transition: tilt.hovering ? 'transform 0.08s ease, box-shadow 0.3s ease, border-color 0.3s ease' : 'transform 0.5s cubic-bezier(0.34,1.2,0.64,1), box-shadow 0.3s ease, border-color 0.3s ease',
-        animationDelay: `${index * 100}ms`,
-        backdropFilter: 'blur(16px)',
-      }}
+      className={`rounded-lg border p-6 hover:border-opacity-40 transition-all ${loading ? 'opacity-75' : ''}`}
+      style={{ background: '#0F1118', borderColor: '#1E2233' }}
     >
-      {/* Accent glow corner */}
-      <div
-        className="absolute top-0 right-0 w-24 h-24 rounded-full blur-2xl pointer-events-none"
-        style={{ background: `radial-gradient(circle, rgba(${accentColor},0.12), transparent)` }}
-      />
-
-      {/* Content */}
-      <div className="relative z-10 p-6">
-        {/* Header with icon and change badge */}
-        <div className="flex items-start justify-between mb-6">
-          <div
-            className="w-10 h-10 rounded-lg flex items-center justify-center"
-            style={{
-              background: `rgba(${accentColor},0.1)`,
-              border: `1px solid rgba(${accentColor},0.2)`,
-            }}
-          >
-            {icon}
-          </div>
+      <div className="flex items-start justify-between mb-5">
+        <div
+          className="w-12 h-12 rounded-xl flex items-center justify-center"
+          style={{
+            background: `rgba(${parseInt(color, 16)}, 0.1)`,
+            borderColor: `rgba(${parseInt(color, 16)}, 0.2)`,
+          }}
+        >
+          {icon}
+        </div>
+        {change && (
           <span
-            className="font-code text-xs px-2 py-1 rounded whitespace-nowrap"
+            className="px-3 py-1 rounded text-[10px] font-black uppercase tracking-wider"
             style={{
               background: changePos ? 'rgba(34,197,94,0.1)' : 'rgba(239,68,68,0.1)',
               color: changePos ? '#4ADE80' : '#F87171',
               border: `1px solid ${changePos ? 'rgba(34,197,94,0.2)' : 'rgba(239,68,68,0.2)'}`,
             }}
           >
-Medium
             {change}
           </span>
-        </div>
+        )}
+      </div>
 
-        {/* Value and label */}
-        <p
-          className="font-display text-3xl font-bold mb-2 tabular-nums"
-          style={{
-            color: '#F1F5F9',
-            textShadow: `0 0 20px rgba(${accentColor},0.3)`,
-          }}
+      <div className="flex items-baseline gap-2">
+        <span
+          className="font-display text-3xl font-bold tracking-tight text-white"
         >
           {displayValue}
-          {suffix}
-        </p>
-        <p className="font-body text-sm" style={{ color: '#64748B' }}>
-          {label}
-        </p>
+        </span>
+        {suffix && (
+          <span className="font-body text-sm" style={{ color: '#64748B' }}>
+            {suffix}
+          </span>
+        )}
       </div>
+
+      <p className="font-body text-sm mt-2" style={{ color: '#475569' }}>
+        {label}
+      </p>
     </div>
   );
 };

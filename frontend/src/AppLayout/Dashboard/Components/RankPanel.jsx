@@ -1,89 +1,73 @@
-const RankPanel = () => {
+const RankPanel = ({ loading }) => {
   return (
-    <div
-      className="rounded-lg overflow-hidden p-6 animate-fade-up"
-      style={{
-        background: 'linear-gradient(135deg, rgba(12,13,20,0.9) 0%, rgba(18,8,58,0.6) 100%)',
-        border: '1px solid rgba(139,92,246,0.15)',
-        backdropFilter: 'blur(16px)',
-        animationDelay: '600ms',
-        boxShadow: '0 0 40px rgba(139,92,246,0.06)',
-      }}
-    >
-      <div className="flex flex-col gap-6">
-        {/* Left section - Rank info */}
+    <div className="rounded-lg border" style={{ background: '#0F1118', borderColor: '#1E2233' }}>
+      <div className="px-5 py-3 border-b flex items-center justify-between" style={{ borderColor: '#1E2233' }}>
+        <h3 className="font-display text-sm font-black tracking-wider text-white">
+          Analyst Reputation
+        </h3>
+        <span
+          className="px-2 py-1 rounded text-[10px] font-black uppercase tracking-wider"
+          style={{ background: 'rgba(34,197,94,0.1)', color: '#4ADE80', border: '1px solid rgba(34,197,94,0.2)' }}
+        >
+          {loading ? '...' : 'RANK #42'}
+        </span>
+      </div>
+
+      <div className="p-4 space-y-4">
         <div>
-          <p className="font-code text-[10px] tracking-[0.25em] uppercase mb-3" style={{ color: '#475569' }}>
-            Analyst Reputation
-          </p>
-          <div className="flex items-baseline gap-4">
-            <span 
-              className="font-display text-4xl font-bold" 
-              style={{ color: '#A78BFA', textShadow: '0 0 20px rgba(139,92,246,0.4)' }}
+          <div className="flex items-baseline gap-3">
+            <span
+              className="font-display text-3xl font-bold tracking-tight"
+              style={{ color: loading ? '#475569' : '#8B5CF6' }}
             >
-              2,450 XP
+              {loading ? '...' : '2,450'}
             </span>
-            <span 
-              className="px-3 py-1 rounded font-code text-[10px] font-semibold tracking-wider"
-              style={{
-                background: 'rgba(34,197,94,0.1)',
-                border: '1px solid rgba(34,197,94,0.2)',
-                color: '#4ADE80'
-              }}
-            >
-              RANK #42
-            </span>
+            <span className="font-body text-sm" style={{ color: '#64748B' }}>XP</span>
           </div>
-          <p className="font-body text-sm mt-2" style={{ color: '#64748B' }}>
-            550 XP until Rank #41
+          <p className="font-body text-xs mt-1" style={{ color: '#475569' }}>
+            {loading ? '...' : '550 XP until Rank #41'}
           </p>
         </div>
 
-        {/* XP Progress section */}
-        <div className="space-y-3">
+        <div className="space-y-2">
           <div className="flex justify-between items-center">
-            <span className="font-code text-[9px] tracking-widest uppercase" style={{ color: '#475569' }}>
-              XP PROGRESS
+            <span className="font-code text-[9px] font-black uppercase tracking-widest" style={{ color: '#475569' }}>
+              PROGRESS
             </span>
-            <span className="font-code text-[9px]" style={{ color: '#A78BFA' }}>
-              2450 / 3000
+            <span className="font-code text-[9px]" style={{ color: loading ? '#475569' : '#8B5CF6' }}>
+              {loading ? '...' : '82%'}
             </span>
           </div>
 
-          {/* Progress bar */}
-          <div className="h-2 rounded-full overflow-hidden" style={{ background: 'rgba(30,34,51,0.8)' }}>
+          <div className="h-1.5 rounded-full overflow-hidden" style={{ background: '#0A0B10' }}>
             <div
               className="h-full rounded-full"
               style={{
-                width: '82%',
-                background: 'linear-gradient(to right, #6D28D9, #A78BFA)',
-                boxShadow: '0 0 12px rgba(139,92,246,0.5)',
-                transition: 'width 1.5s cubic-bezier(0.4, 0, 0.2, 1)',
+                width: loading ? '40%' : '82%',
+                background: 'linear-gradient(to right, #6D28D9, #8B5CF6)',
               }}
             />
           </div>
+        </div>
 
-          {/* Badge row */}
-          <div className="flex flex-wrap items-center gap-2 pt-2">
-            {[
-              { label: '🏆 Ransomware Hunter', color: 'rgba(245,158,11,0.15)', border: 'rgba(245,158,11,0.3)', text: '#FBBF24' },
-              { label: '🛡 APT Analyst', color: 'rgba(139,92,246,0.12)', border: 'rgba(139,92,246,0.3)', text: '#A78BFA' },
-              { label: '⚡ Top Reviewer', color: 'rgba(34,197,94,0.10)', border: 'rgba(34,197,94,0.3)', text: '#4ADE80' },
-            ].map((badge) => (
-              <span
-                key={badge.label}
-                className="px-3 py-1 rounded font-code text-[9px] font-semibold tracking-wider"
-                style={{
-                  background: badge.color,
-                  border: `1px solid ${badge.border}`,
-                  color: badge.text,
-                  whiteSpace: 'nowrap'
-                }}
-              >
-                {badge.label}
-              </span>
-            ))}
-          </div>
+        <div className="flex flex-wrap gap-1.5 pt-1">
+          {[
+            { label: loading ? '...' : 'Ransomware Hunter', color: '#F59E0B' },
+            { label: loading ? '...' : 'APT Analyst', color: '#8B5CF6' },
+            { label: loading ? '...' : 'Top Reviewer', color: '#22C55E' },
+          ].map((badge, i) => (
+            <span
+              key={i}
+              className="px-2 py-1 rounded text-[10px] font-black uppercase tracking-wider"
+              style={{
+                background: loading ? '#1E2233' : `rgba(${parseInt(badge.color.replace('#', ''), 16)}, 0.1)`,
+                border: `1px solid ${loading ? '#1E2233' : `rgba(${parseInt(badge.color.replace('#', ''), 16)}, 0.2)`}`,
+                color: loading ? '#64748B' : badge.color,
+              }}
+            >
+              {badge.label}
+            </span>
+          ))}
         </div>
       </div>
     </div>

@@ -1,131 +1,44 @@
-import { StatusBadge, SeverityBadge } from './HooksAndBadges';
+import { StatusBadge } from './HooksAndBadges';
 
-const SubmissionsTable = ({ submissions }) => {
+const SubmissionsTable = ({ submissions, loading }) => {
+  const displayData = loading ? Array(4).fill(null).map((_, i) => ({ id: i, hash: '...', family: 'Loading', status: 'Queued', score: null })) : submissions;
+
   return (
-    <div
-      className="rounded-lg overflow-hidden animate-fade-up"
-      style={{
-        background: 'rgba(12,13,20,0.8)',
-        border: '1px solid rgba(30,34,51,0.8)',
-        backdropFilter: 'blur(16px)',
-        animationDelay: '200ms',
-        margin: 0, // ✅ No margins - spacing handled by parent grid
-      }}
-    >
-      {/* Table Header - no margins */}
-      <div
-        className="flex items-center justify-between px-6 py-4"
-        style={{ 
-          borderBottom: '1px solid rgba(30,34,51,0.6)',
-          margin: 0, // ✅ No margins
-        }}
-      >
-        <div className="flex items-center gap-3">
-          <h3 className="font-display text-sm font-bold tracking-wider" style={{ color: '#F1F5F9' }}>
-            Recent Submissions
-          </h3>
-          <span
-            className="px-2 py-0.5 rounded font-code text-[9px] tracking-widest"
-            style={{ background: 'rgba(34,197,94,0.08)', color: '#22C55E', border: '1px solid rgba(34,197,94,0.15)' }}
-          >
-            {submissions.length} SAMPLES
-          </span>
-        </div>
-        <a 
-          href="/submissions" 
-          className="font-code text-xs transition-colors duration-200" 
-          style={{ color: '#475569' }}
-          onMouseEnter={(e) => (e.currentTarget.style.color = '#22C55E')}
-          onMouseLeave={(e) => (e.currentTarget.style.color = '#475569')}
+    <div className="rounded-lg border" style={{ background: '#0F1118', borderColor: '#1E2233' }}>
+      <div className="px-6 py-3 border-b flex items-center justify-between" style={{ borderColor: '#1E2233' }}>
+        <h3 className="font-display text-sm font-black tracking-wider text-white">
+          Recent Submissions
+        </h3>
+        <span
+          className="px-2 py-1 rounded text-[10px] font-black uppercase tracking-wider"
+          style={{ background: 'rgba(34,197,94,0.1)', color: '#4ADE80', border: '1px solid rgba(34,197,94,0.2)' }}
         >
-          View all →
-        </a>
+          {loading ? '-' : submissions.length}
+        </span>
       </div>
-
-      {/* Table Container - no margins */}
-      <div className="overflow-x-auto" style={{ margin: 0 }}>
-        <table className="w-full" style={{ margin: 0 }}>
-          <thead>
-            <tr style={{ 
-              borderBottom: '1px solid rgba(30,34,51,0.5)',
-              margin: 0,
-            }}>
-              {['Sample Hash', 'Malware Family', 'Threat', 'Status', 'Score', 'Time'].map((col) => (
-                <th 
-                  key={col} 
-                  className="px-6 py-3 text-left font-code text-[9px] tracking-[0.2em] uppercase" 
-                  style={{ 
-                    color: '#475569',
-                    margin: 0, // ✅ No margins
-                  }}
-                >
-                  {col}
-                </th>
-              ))}
-            </tr>
-          </thead>
-          <tbody>
-            {submissions.map((s, i) => (
-              <tr
-                key={s.id}
-                className="group transition-all duration-150 animate-fade-up"
-                style={{
-                  borderBottom: '1px solid rgba(30,34,51,0.3)',
-                  animationDelay: `${300 + i * 60}ms`,
-                  margin: 0, // ✅ No margins
-                }}
-                onMouseEnter={(e) => (e.currentTarget.style.background = 'rgba(255,255,255,0.02)')}
-                onMouseLeave={(e) => (e.currentTarget.style.background = 'transparent')}
-              >
-                <td className="px-6 py-4" style={{ margin: 0 }}>
-                  <span className="font-code text-xs" style={{ color: '#22C55E' }}>
-                    {s.hash}
-                    <span style={{ color: '#1E2233' }}>...</span>
-                  </span>
-                </td>
-                <td className="px-6 py-4" style={{ margin: 0 }}>
-                  <span className="font-body text-sm" style={{ color: '#F1F5F9' }}>
-                    {s.family}
-                  </span>
-                </td>
-                <td className="px-6 py-4" style={{ margin: 0 }}>
-                  <SeverityBadge level={s.threat} />
-                </td>
-                <td className="px-6 py-4" style={{ margin: 0 }}>
-                  <StatusBadge status={s.status} />
-                </td>
-                <td className="px-6 py-4" style={{ margin: 0 }}>
-                  {s.score !== null ? (
-                    <div className="flex items-center gap-2">
-                      <div
-                        className="w-16 h-1 rounded-full overflow-hidden"
-                        style={{ background: 'rgba(30,34,51,0.8)' }}
-                      >
-                        <div
-                          className="h-full rounded-full"
-                          style={{
-                            width: `${s.score}%`,
-                            background: s.score > 85 ? '#EF4444' : s.score > 65 ? '#F59E0B' : '#22C55E',
-                          }}
-                        />
-                      </div>
-                      <span className="font-code text-xs" style={{ color: '#94A3B8' }}>
-                        {s.score}
-                      </span>
-                    </div>
-                  ) : (
-                    <span className="font-code text-xs" style={{ color: '#1E2233' }}>—</span>
-                  )}
-                </td>
-                <td className="px-6 py-4" style={{ margin: 0 }}>
-                  <span className="font-code text-xs" style={{ color: '#475569' }}>
-                    {s.date}
-                  </span>
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
+      <div>
+        {displayData.map((s, i) => (
+          <div
+            key={s.id}
+            className="flex items-center justify-between px-5 py-2.5 border-b hover:bg-[#141720] transition-colors cursor-pointer"
+            style={{ borderColor: '#1E2233' }}
+          >
+            <div className="flex items-center gap-3 min-w-0 flex-1">
+              <span className="font-code text-sm font-medium truncate" style={{ color: '#22C55E' }}>
+                {s.hash.substring(0, 8)}...
+              </span>
+              <span className="font-body text-sm whitespace-nowrap" style={{ color: '#E5E5E5' }}>
+                {loading ? 'Loading...' : s.family}
+              </span>
+            </div>
+            <div className="flex items-center gap-3 flex-shrink-0">
+              <StatusBadge status={s.status} />
+              <span className="font-code text-sm w-10 text-right" style={{ color: s.score !== null && s.score > 85 ? '#EF4444' : s.score !== null ? '#F59E0B' : '#475569' }}>
+                {s.score !== null ? s.score : '—'}
+              </span>
+            </div>
+          </div>
+        ))}
       </div>
     </div>
   );
