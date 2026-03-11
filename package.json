@@ -15,13 +15,14 @@
   "keywords": [],
   "author": "",
   "license": "ISC",
-  "type": "commonjs",
+  "type": "module",
   "bugs": {
     "url": "https://github.com/Aegirom/Contagion/issues"
   },
   "homepage": "https://github.com/Aegirom/Contagion#readme",
   "devDependencies": {
-    "concurrently": "^9.2.1"
+    "concurrently": "^9.2.1",
+    "prettier": "^3.8.1"
   },
   "dependencies": {
     "vite": "^7.3.1"
