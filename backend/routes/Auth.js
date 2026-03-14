@@ -1,5 +1,6 @@
 import express from 'express';
-import { createUser, findUserByEmail, findUserById, verifyPassword } from '../models/User.js';
+import { createUser, findUserByEmail, findUserById, verifyPassword, updatePassword, verifyUserEmail, isUserActive } from '../models/User.js';
+import { sendVerificationEmail, sendPasswordResetEmail } from '../services/emailService.js';
 import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
 import pool from '../config/db.js';
@@ -31,7 +32,7 @@ router.post('/register', async (req, res) => {
       return res.status(400).json({ error: 'All fields are required' });
     }
 
-  
+
     const existingUser = await findUserByEmail(email);
     if (existingUser) {
       return res.status(409).json({ error: 'User already exists' });
@@ -39,20 +40,16 @@ router.post('/register', async (req, res) => {
 
     const newUser = await createUser({ username, email, password });
 
-   
-    const { accessToken, refreshToken } = generateTokens(newUser.user_id, newUser.email);
+    // Send verification email
+    await sendVerificationEmail(email, newUser.user_id, username);
 
     res.status(201).json({
-      message: 'User created successfully',
+      message: 'Verification email sent. Please check your email to verify your account.',
       user: {
         id: newUser.user_id,
         username: newUser.username,
         email: newUser.email,
         role: newUser.role
-      },
-      tokens: {
-        accessToken,
-        refreshToken
       }
     });
   } catch (error) {
@@ -70,10 +67,16 @@ router.post('/login', async (req, res) => {
       return res.status(400).json({ error: 'Email and password are required' });
     }
 
-   
+
     const user = await findUserByEmail(email);
     if (!user) {
       return res.status(401).json({ error: 'Invalid credentials' });
+    }
+
+    // Check if user is active (email verified)
+    const active = user.is_active === 1 || user.is_active === true;
+    if (!active) {
+      return res.status(403).json({ error: 'Please verify your email before logging in. Check your inbox for the verification link.' });
     }
 
     const isPasswordValid = await verifyPassword(password, user.password_hash);
@@ -84,7 +87,7 @@ router.post('/login', async (req, res) => {
 
     const { accessToken, refreshToken } = generateTokens(user.user_id, user.email);
 
-    
+
     await pool.request()
       .input('user_id', sql.INT, user.user_id)
       .query(`UPDATE Users SET last_login = GETDATE() WHERE user_id = @user_id`);
@@ -118,14 +121,17 @@ router.post('/forgot-password', async (req, res) => {
       return res.status(400).json({ error: 'Email is required' });
     }
 
-  
+
     const user = await findUserByEmail(email);
+
+    // Always return success to prevent email enumeration
     if (!user) {
       return res.status(200).json({ message: 'If the email exists, a reset link has been sent' });
     }
 
-    // TODO: Send reset email with token
-    // For now, just return success
+    // Send password reset email
+    await sendPasswordResetEmail(email, user.user_id, user.username);
+
     res.status(200).json({
       message: 'If the email exists, a reset link has been sent',
     });
@@ -144,7 +150,7 @@ router.post('/refresh-token', async (req, res) => {
       return res.status(400).json({ error: 'Refresh token is required' });
     }
 
-    
+
     jwt.verify(refreshToken, process.env.JWT_SECRET, (err, decoded) => {
       if (err) {
         return res.status(403).json({ error: 'Invalid refresh token' });
@@ -160,6 +166,66 @@ router.post('/refresh-token', async (req, res) => {
   } catch (error) {
     console.error('Refresh token error:', error);
     res.status(500).json({ error: 'Server error' });
+  }
+});
+
+// Verify email endpoint
+router.post('/verify-email', async (req, res) => {
+  try {
+    const { token } = req.body;
+
+    if (!token) {
+      return res.status(400).json({ error: 'Verification token is required' });
+    }
+
+    const decoded = jwt.verify(token, process.env.JWT_SECRET);
+
+    if (decoded.type !== 'verification') {
+      return res.status(400).json({ error: 'Invalid token type' });
+    }
+
+    // Verify user's email
+    await verifyUserEmail(decoded.userId);
+
+    res.status(200).json({
+      message: 'Email verified successfully. You can now login.'
+    });
+  } catch (error) {
+    console.error('Email verification error:', error);
+    if (error.name === 'TokenExpiredError') {
+      return res.status(400).json({ error: 'Verification link has expired. Please request a new one.' });
+    }
+    res.status(500).json({ error: 'Invalid or expired verification token' });
+  }
+});
+
+// Reset password endpoint
+router.post('/reset-password', async (req, res) => {
+  try {
+    const { token, newPassword } = req.body;
+
+    if (!token || !newPassword) {
+      return res.status(400).json({ error: 'Token and new password are required' });
+    }
+
+    const decoded = jwt.verify(token, process.env.JWT_SECRET);
+
+    if (decoded.type !== 'password-reset') {
+      return res.status(400).json({ error: 'Invalid token type' });
+    }
+
+    // Update password
+    await updatePassword(decoded.userId, newPassword);
+
+    res.status(200).json({
+      message: 'Password reset successful. You can now login with your new password.'
+    });
+  } catch (error) {
+    console.error('Password reset error:', error);
+    if (error.name === 'TokenExpiredError') {
+      return res.status(400).json({ error: 'Password reset link has expired. Please request a new one.' });
+    }
+    res.status(500).json({ error: 'Invalid or expired reset token' });
   }
 });
 

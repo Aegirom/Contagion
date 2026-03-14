@@ -25,9 +25,10 @@ const sqlConfig = {
   database: connConfig['Database'],
   user: connConfig['User ID'],
   password: connConfig['Password'],
-  encrypt: connConfig['Encrypt'] === 'true',
-  trustServerCertificate: connConfig['TrustServerCertificate'] !== 'true',
-  connectionTimeout: 30000, // 30 seconds
+
+  encrypt: true,                 
+  trustServerCertificate: false, 
+  connectionTimeout: 30000
 };
 
 

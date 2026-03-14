@@ -4,6 +4,8 @@ import { useState } from 'react';
 import LoginPage from './AppLayout/Auth/LoginPage';
 import RegisterPage from './AppLayout/Auth/RegisterPage';
 import ForgotPasswordPage from './AppLayout/Auth/ForgotPasswordPage';
+import VerifyEmailPage from './AppLayout/Auth/VerifyEmailPage';
+import ResetPasswordPage from './AppLayout/Auth/ResetPasswordPage';
 import DashboardPage from './AppLayout/Dashboard/DashboardPage';
 import FeedPage from './AppLayout/Feed/FeedPage';
 import CreatePost from './AppLayout/CreatePost/CreatePost';
@@ -29,6 +31,8 @@ function App() {
           <Route path="/login" element={<LoginPage />} />
           <Route path="/register" element={<RegisterPage />} />
           <Route path="/forgot-password" element={<ForgotPasswordPage />} />
+          <Route path="/verify-email" element={<VerifyEmailPage />} />
+          <Route path="/reset-password" element={<ResetPasswordPage />} />
 
           {/* Dashboard & Main Layout Routes */}
           <Route

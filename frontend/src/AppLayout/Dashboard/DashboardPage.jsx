@@ -1,4 +1,5 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useContext } from 'react';
+import { AuthContext } from '../../context/AuthContext';
 import StatCard from './Components/StatCard';
 import ActivityFeed from './Components/ActivityFeed';
 import QuickActions from './Components/QuickActions';
@@ -7,6 +8,8 @@ import RankPanel from './Components/RankPanel';
 import PlusButton from './Components/Buttons';
 
 const DashboardPage = () => {
+  const { user } = useContext(AuthContext);
+
   const stats = [
     { label: 'Total Analyses', value: '1,247', suffix: '', change: '+14%', changePos: true, color: '22C55E', icon: <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#22C55E" strokeWidth="2"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14" /><polyline points="22 4 12 14.01 9 11.01" /></svg>, delay: 0 },
     { label: 'Threats Detected', value: '389', suffix: '', change: '+23%', changePos: true, color: 'EF4444', icon: <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#EF4444" strokeWidth="2"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z" /><line x1="12" y1="9" x2="12" y2="13" /><line x1="12" y1="17" x2="12.01" y2="17" /></svg>, delay: 100 },
@@ -45,7 +48,7 @@ const DashboardPage = () => {
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-6">
           <div>
             <h2 className="font-display text-3xl font-black tracking-tight text-white">
-              Welcome back, <span style={{ color: '#22C55E' }}>Mr Epstein</span>
+              Welcome back, <span style={{ color: '#22C55E' }}>{user?.username || 'Analyst'}</span>
             </h2>
             <p className="font-body text-sm mt-2" style={{ color: '#475569' }}>
               Threat intelligence overview

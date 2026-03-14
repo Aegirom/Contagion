@@ -1,7 +1,10 @@
-import { useState, useRef, useEffect } from 'react';
-import { Link } from 'react-router-dom';
+import { useState, useRef, useEffect, useContext } from 'react';
+import { Link, useNavigate } from 'react-router-dom';
+import { AuthContext } from '../../../context/AuthContext';
 
 const TopBar = ({ pageName, toggleSidebar, sidebarOpen }) => {
+  const { user, logout: authLogout } = useContext(AuthContext);
+  const navigate = useNavigate();
   const [currentTime, setCurrentTime] = useState(new Date());
 
   useEffect(() => {
@@ -13,8 +16,6 @@ const TopBar = ({ pageName, toggleSidebar, sidebarOpen }) => {
 
   const [profileOpen, setProfileOpen] = useState(false);
   const profileRef = useRef(null);
-
-  const user = { name: 'Rafeel Subhani', email: 'rafeel@contagion.sec' };
 
   useEffect(() => {
     const handler = (e) => {
@@ -28,7 +29,10 @@ const TopBar = ({ pageName, toggleSidebar, sidebarOpen }) => {
 
   const formatTime = (d) => d.toLocaleTimeString('en-US', { hour12: false });
 
-  const logout = () => console.log('logout');
+  const logout = () => {
+    authLogout();
+    navigate('/login');
+  };
 
   return (
     <header
@@ -90,10 +94,10 @@ const TopBar = ({ pageName, toggleSidebar, sidebarOpen }) => {
                 boxShadow: '0 0 10px rgba(34,197,94,0.4)',
               }}
             >
-              {user?.name?.charAt(0) || 'A'}
+              {user?.username?.charAt(0) || 'A'}
             </div>
             <span className="font-body text-sm hidden md:block" style={{ color: '#94A3B8' }}>
-              {user?.name?.split(' ')[0] || 'Analyst'}
+              {user?.username?.split(' ')[0] || 'Analyst'}
             </span>
             <svg
               width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#475569" strokeWidth="2"
@@ -114,7 +118,7 @@ const TopBar = ({ pageName, toggleSidebar, sidebarOpen }) => {
               }}
             >
               <div className="px-4 py-3" style={{ borderBottom: '1px solid rgba(30,34,51,0.6)' }}>
-                <p className="font-body text-sm font-semibold" style={{ color: '#F1F5F9' }}>{user?.name || 'Analyst'}</p>
+                <p className="font-body text-sm font-semibold" style={{ color: '#F1F5F9' }}>{user?.username || 'Analyst'}</p>
                 <p className="font-code text-xs mt-0.5" style={{ color: '#475569' }}>{user?.email || 'analyst@contagion.sec'}</p>
                 <div className="flex items-center gap-1.5 mt-2">
                   <span className="badge-info text-[9px]">ANALYST</span>

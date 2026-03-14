@@ -1,16 +1,20 @@
-import { useState, useRef } from 'react';
-import { Link } from 'react-router-dom';
+import { useState, useRef, useContext } from 'react';
+import { Link, useNavigate } from 'react-router-dom';
 import AuthLayout from './AuthLayout';
 import InputField from './InputField';
 import SuccessView from './SuccessView';
+import { AuthContext } from '../../../context/AuthContext';
 
 const LoginForm = () => {
+  const { login } = useContext(AuthContext);
   const [formData, setFormData] = useState({ email: '', password: '' });
   const [focused, setFocused] = useState(null);
   const [showPass, setShowPass] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [error, setError] = useState('');
   const [isSuccess, setIsSuccess] = useState(false);
   const canvasRef = useRef(null);
+  const navigate = useNavigate();
 
   // Green theme orbs for login
   const orbs = [
@@ -20,21 +24,29 @@ const LoginForm = () => {
     { x: 0.78, y: 0.12, r: 0.35, color: [34, 197, 94], angle: 1.0, speed: 0.00025, sineX: 0.15, cosY: 0.71, cosX: 0.12 },
   ];
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
 
     if (!formData.email || !formData.password) {
-      alert('Please fill in all fields');
+      setError('Please fill in all fields');
       return;
     }
 
     setLoading(true);
-    // Simulate API call
-    setTimeout(() => {
+    setError('');
+
+    try {
+      const result = await login(formData.email, formData.password);
+      if (result.success) {
+        setIsSuccess(true);
+      } else {
+        setError(result.error || 'Login failed');
+      }
+    } catch (err) {
+      setError('Login failed. Please try again.');
+    } finally {
       setLoading(false);
-      setIsSuccess(true);
-      console.log('login:', formData);
-    }, 1500);
+    }
   };
 
   const inputStyle = (field) => ({
@@ -80,6 +92,15 @@ const LoginForm = () => {
           Secure Access Portal
         </p>
       </div>
+
+      {/* Error Message */}
+      {error && (
+        <div className="mb-4 px-4 py-3 rounded-lg font-code text-xs animate-fade-up" style={{
+          background: 'rgba(239,68,68,0.07)',
+          border: '1px solid rgba(239,68,68,0.2)',
+          color: '#F87171'
+        }}>⚠ {error}</div>
+      )}
 
       <form onSubmit={handleSubmit} className="space-y-4">
         <InputField

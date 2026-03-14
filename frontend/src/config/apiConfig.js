@@ -1,15 +1,15 @@
 const apiConfig = {
   development: {
-    baseURL: 'https://dev.api.example.com',
-    timeout: 1000,
+    baseURL: import.meta.env.VITE_API_BASE_URL || 'http://localhost:3000',
+    timeout: 10000,
   },
   production: {
-    baseURL: 'https://api.example.com',
-    timeout: 2000,
+    baseURL: import.meta.env.VITE_API_BASE_URL || 'https://your-backend-url.com',
+    timeout: 10000,
   },
   test: {
-    baseURL: 'https://test.api.example.com',
-    timeout: 500,
+    baseURL: import.meta.env.VITE_API_BASE_URL || 'http://localhost:3000',
+    timeout: 5000,
   },
 };
 

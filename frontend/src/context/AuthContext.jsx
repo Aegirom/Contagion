@@ -1,61 +1,62 @@
 import { createContext, useState } from 'react';
+import { login as apiLogin, register as apiRegister, forgotPassword as apiForgotPassword } from '../services/authService';
 
 export const AuthContext = createContext();
 
 export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(false);
+  const [tokens, setTokens] = useState({ accessToken: null, refreshToken: null });
 
-  // Mock login function - replace with real API call later
   const login = async (email, password) => {
     setLoading(true);
     try {
-      // Simulate API call
-      console.log('Login attempt:', { email, password });
-      // Mock successful login - if email contains 'admin', make them an admin
-      const isAdmin = email.toLowerCase().includes('admin');
-      setUser({ email, name: isAdmin ? 'Admin User' : 'Standard User', isAdmin });
-      return { success: true };
+      const response = await apiLogin(email, password);
+      const { user: userData, tokens: authTokens } = response;
+
+      setUser(userData);
+      setTokens(authTokens);
+      localStorage.setItem('authTokens', JSON.stringify(authTokens));
+      localStorage.setItem('user', JSON.stringify(userData));
+
+      return { success: true, user: userData, tokens: authTokens };
     } catch (error) {
       console.error('Login error:', error);
-      return { success: false, error };
+      const errorMessage = error.response?.data?.error || 'Login failed';
+      return { success: false, error: errorMessage };
     } finally {
       setLoading(false);
     }
   };
 
-  // Mock register function
   const register = async (userData) => {
     setLoading(true);
     try {
-      console.log('Register attempt:', userData);
-      // Mock successful registration
-      const isAdmin = userData.email.toLowerCase().includes('admin');
-      setUser({ email: userData.email, name: userData.name, isAdmin });
-      return { success: true };
+      const response = await apiRegister(userData);
+      // New flow: user must verify email before login
+      // Response contains message and user info (but no tokens)
+      const { user: newUser, message } = response;
+
+      // Return success - user needs to verify email
+      return { success: true, message: message || 'Verification email sent. Please check your inbox.', user: newUser };
     } catch (error) {
       console.error('Register error:', error);
-      return { success: false, error };
+      const errorMessage = error.response?.data?.error || 'Registration failed';
+      return { success: false, error: errorMessage };
     } finally {
       setLoading(false);
     }
   };
 
-  // For testing: toggle admin status
-  const toggleAdmin = () => {
-    setUser(prev => prev ? { ...prev, isAdmin: !prev.isAdmin } : null);
-  };
-
-  // Mock forgot password function
   const forgotPassword = async (email) => {
     setLoading(true);
     try {
-      console.log('Forgot password for:', email);
-      // Mock success
-      return { success: true };
+      const response = await apiForgotPassword(email);
+      return { success: true, message: response.message };
     } catch (error) {
       console.error('Forgot password error:', error);
-      return { success: false, error };
+      const errorMessage = error.response?.data?.error || 'Failed to send reset link';
+      return { success: false, error: errorMessage };
     } finally {
       setLoading(false);
     }
@@ -63,17 +64,20 @@ export const AuthProvider = ({ children }) => {
 
   const logout = () => {
     setUser(null);
+    setTokens({ accessToken: null, refreshToken: null });
+    localStorage.removeItem('authTokens');
+    localStorage.removeItem('user');
     console.log('Logged out');
   };
 
   const value = {
     user,
     loading,
+    tokens,
     login,
     register,
     logout,
-    forgotPassword,
-    toggleAdmin
+    forgotPassword
   };
 
   return (
