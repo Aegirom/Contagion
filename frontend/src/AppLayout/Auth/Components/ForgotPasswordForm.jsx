@@ -1,14 +1,17 @@
-import { useState, useRef } from 'react';
+import { useState, useRef, useContext } from 'react';
 import { Link } from 'react-router-dom';
 import AuthLayout from './AuthLayout';
 import InputField from './InputField';
 import SuccessView from './SuccessView';
+import { AuthContext } from '../../../context/AuthContext';
 
 const ForgotPasswordForm = () => {
+  const { forgotPassword } = useContext(AuthContext);
   const [email, setEmail] = useState('');
   const [focused, setFocused] = useState(null);
   const [submitted, setSubmitted] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [error, setError] = useState('');
   const canvasRef = useRef(null);
 
   // Cyan-tinted orbs for forgot page
@@ -19,21 +22,29 @@ const ForgotPasswordForm = () => {
     { x: 0.15, y: 0.7, r: 0.28, color: [139, 92, 246], angle: 2.2, speed: 0.00025, sineX: 0.13, cosY: 0.69, cosX: 0.1 },
   ];
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
 
     if (!email) {
-      alert('Please enter your email address');
+      setError('Please enter your email address');
       return;
     }
 
     setLoading(true);
-    // Simulate API call
-    setTimeout(() => {
+    setError('');
+
+    try {
+      const result = await forgotPassword(email);
+      if (result.success) {
+        setSubmitted(true);
+      } else {
+        setError(result.error || 'Failed to send reset link');
+      }
+    } catch (err) {
+      setError('Failed to send reset link. Please try again.');
+    } finally {
       setLoading(false);
-      setSubmitted(true);
-      console.log('forgot:', email);
-    }, 1200);
+    }
   };
 
   const inputStyle = (field) => ({
@@ -88,6 +99,15 @@ const ForgotPasswordForm = () => {
       <p className="font-body text-sm mb-8 text-center" style={{ color: '#475569' }}>
         Enter your email to receive a reset link.
       </p>
+
+      {/* Error Message */}
+      {error && (
+        <div className="mb-4 px-4 py-3 rounded-lg font-code text-xs animate-fade-up" style={{
+          background: 'rgba(239,68,68,0.07)',
+          border: '1px solid rgba(239,68,68,0.2)',
+          color: '#F87171'
+        }}>⚠ {error}</div>
+      )}
 
       <form onSubmit={handleSubmit} className="space-y-4">
         <InputField
