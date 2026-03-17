@@ -1,11 +1,12 @@
 import express from "express";
 import cors from "cors";
+import rateLimit from 'express-rate-limit'
 import submissionsRoutes from "./routes/Submissions.js";
 import  authRoutes  from "./routes/Auth.js";
 const app = express();
 
 app.use(cors());
-app.use(express.json());
+app.use(express.json({ limit : '100kb' }));
 
 //attach route files
 app.use("/submissions", submissionsRoutes);

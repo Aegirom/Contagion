@@ -14,13 +14,14 @@ async function fetchSubmissions(userId) {
 
 export const getAllSubmissions = async (req, res) => {
   try{
-  const userId = 0;  
-  const data = await fetchSubmissions(userId);
-  console.log(data);
-  res.json([{ id: 1, name: "Example submission" }]);
+    const userId = 0;
+    const data = await fetchSubmissions(userId);
+    console.log(data);
+    res.json([{ id: 1, name: "Example submission" }]);
   }
   catch (err) {
     console.log("Failed to get Submissions: ", err);
     res.status(500).json({ error: 'Internal Server Error' });
   }
 }
+
