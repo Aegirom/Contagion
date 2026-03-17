@@ -25,3 +25,14 @@ export const getAllSubmissions = async (req, res) => {
   }
 }
 
+export const postSubmission = async (req, res) => {
+  try {
+     
+  }
+  catch(err) {
+    console.log("Failed to post Submission:", err);
+    res.status(500).json({ error: 'Internal Server Error' });
+  }
+}
+
+

@@ -8,6 +8,13 @@ const app = express();
 app.use(cors());
 app.use(express.json({ limit : '100kb' }));
 
+const limiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  max: 100
+});
+
+app.use(limiter);
+
 //attach route files
 app.use("/submissions", submissionsRoutes);
 app.use("/auth", authRoutes);
