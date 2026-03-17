@@ -2,18 +2,18 @@ import pool from '../config/db.js'
 import express from "express";
 
 async function fetchSubmissions(userId) {
-  try{
+  try {
     const result = await pool.query`SELECT * FROM Analysis_Submissions`;
     return result.recordset;
   }
-  catch(err){
+  catch (err) {
     console.log("Failed to fetch Submissions: ", err);
     return 0;
   }
 }
 
 export const getAllSubmissions = async (req, res) => {
-  try{
+  try {
     const userId = 0;
     const data = await fetchSubmissions(userId);
     console.log(data);
@@ -27,9 +27,10 @@ export const getAllSubmissions = async (req, res) => {
 
 export const postSubmission = async (req, res) => {
   try {
-     
+    console.log(req.baseUrl);
+    res.json("Shukrya boss");
   }
-  catch(err) {
+  catch (err) {
     console.log("Failed to post Submission:", err);
     res.status(500).json({ error: 'Internal Server Error' });
   }

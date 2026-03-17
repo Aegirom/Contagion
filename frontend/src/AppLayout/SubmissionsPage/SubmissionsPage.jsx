@@ -4,6 +4,10 @@ import Submitted from "./Components/Submitted";
 import AiEvaluationModal from "./Components/AiEvaluationModal";
 import { useNavigate } from "react-router-dom";
 import PlusButton from "../Dashboard/Components/Buttons.jsx";
+import axios from 'axios';
+import dotenv from 'dotenv';
+
+const backendURL = import.meta.env.backendURL;
 
 const INITIAL_SUBMISSIONS = [
   { id: 1, name: "WannaCry Network Patterns", description: "Analysis of SMB exploitation.", status: "Under Review", family: "Ransomware", threatLevel: "Critical", aiScorePercentage: "98%", reviewCount: 2, date: "2024-02-13" },
@@ -13,6 +17,19 @@ const INITIAL_SUBMISSIONS = [
 ];
 
 function SubmissionsPage() {
+
+  const getData = async () => {
+    try {
+      const res = await axios.get(backendURL + '/submissions/get/');
+      console.log("Submissions Recieved: ", res);
+    }
+    catch (err) {
+      console.log("Could not recieve submissions: ", err);
+    }
+  }
+
+  getData();
+
   const navigate = useNavigate();
   const [filters, setFilters] = useState({
     query: "",
