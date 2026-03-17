@@ -1,5 +1,4 @@
 import pool from '../config/db.js'
-import express from "express";
 
 async function fetchSubmissions(userId) {
   try {
@@ -27,12 +26,29 @@ export const getAllSubmissions = async (req, res) => {
 
 export const postSubmission = async (req, res) => {
   try {
-    console.log(req.baseUrl);
-    res.json("Shukrya boss");
+    console.log(req.body);
+    const { author_id, artifact_id, title, content, status, version, template_type } = req.body;
+
+    if (!author_id || !title || !content) {
+      return res.status(400).json({ error: "Required fields missing" })
+    }
+
+    try {
+      await pool.query`
+      INSERT INTO Analysis_Submissions(author_id, artifact_id, title, content, status, version, template_type)
+      VALUES (${author_id}, ${artifact_id}, ${title}, ${content}, ${status}, ${version}, ${template_type})
+      `;
+      res.status(201).json({ message: "Submission Created" });
+    }
+    catch (dbErr) {
+      console.error("Failed to post submission: ", dbErr);
+      res.status(500).json({ error: "DB constraint violated" });
+    }
+
   }
   catch (err) {
-    console.log("Failed to post Submission:", err);
-    res.status(500).json({ error: 'Internal Server Error' });
+    console.log("Failed to post submission:", err);
+    res.status(400).json({ error: "Bad Request" });
   }
 }
 
