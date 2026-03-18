@@ -2,6 +2,7 @@ import express from "express";
 import cors from "cors";
 import rateLimit from 'express-rate-limit'
 import submissionsRoutes from "./routes/Submissions.js";
+import leaderboardRoutes from "./routes/Leaderboard.js";
 import authRoutes from "./routes/Auth.js";
 const app = express();
 
@@ -18,6 +19,7 @@ app.use(limiter);
 //attach route files
 app.use("/submissions", submissionsRoutes);
 app.use("/auth", authRoutes);
+app.use("/leaderboard", leaderboardRoutes);
 
 app.listen(3000, () => {
   console.log("Server running on port 3000");
