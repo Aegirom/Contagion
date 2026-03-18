@@ -16,7 +16,7 @@ export const getAllSubmissions = async (req, res) => {
     const userId = 0;
     const data = await fetchSubmissions(userId);
     console.log(data);
-    res.json([{ id: 1, name: "Example submission" }]);
+    res.json(data);
   }
   catch (err) {
     console.log("Failed to get Submissions: ", err);
