@@ -2,7 +2,6 @@ import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 
 const BACKEND_URL = import.meta.env.backendURL || "http://localhost:3000";
-console.log(BACKEND_URL);
 const CreatePost = () => {
   const navigate = useNavigate();
 
