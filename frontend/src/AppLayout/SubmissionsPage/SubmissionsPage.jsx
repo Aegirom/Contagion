@@ -5,7 +5,6 @@ import AiEvaluationModal from "./Components/AiEvaluationModal";
 import { useNavigate } from "react-router-dom";
 import PlusButton from "../Dashboard/Components/Buttons.jsx";
 import axios from 'axios';
-import dotenv from 'dotenv';
 
 const backendURL = import.meta.env.backendURL;
 
