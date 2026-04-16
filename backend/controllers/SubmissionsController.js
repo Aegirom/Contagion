@@ -7,7 +7,7 @@ async function fetchSubmissions(userId) {
   }
   catch (err) {
     console.log("Failed to fetch Submissions: ", err);
-    return 0;
+    return [];
   }
 }
 

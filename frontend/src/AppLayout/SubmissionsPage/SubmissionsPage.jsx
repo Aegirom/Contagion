@@ -9,27 +9,13 @@ import axios from 'axios';
 const backendURL = import.meta.env.backendURL;
 
 const INITIAL_SUBMISSIONS = [
-  { id: 1, name: "WannaCry Network Patterns", description: "Analysis of SMB exploitation.", status: "Under Review", family: "Ransomware", threatLevel: "Critical", aiScorePercentage: "98%", reviewCount: 2, date: "2024-02-13" },
-  { id: 2, name: "Emotet Payload Delivery", description: "Investigation into VBA macros.", status: "Approved", family: "Trojan", threatLevel: "High", aiScorePercentage: "84%", reviewCount: 5, date: "2024-02-10" },
-  { id: 3, name: "Stuxnet PLC Logic", description: "Deep dive into industrial control.", status: "Archived", family: "Worm", threatLevel: "Critical", aiScorePercentage: "100%", reviewCount: 12, date: "2024-01-25" },
-  { id: 4, name: "Cobalt Strike Beacon", description: "Detecting memory-resident beacons.", status: "Under Review", family: "APT", threatLevel: "Elevated", aiScorePercentage: "72%", reviewCount: 1, date: "2024-02-15" },
+  { id: 1, name: "hola", description: "bonjour.", status: "merheba", family: "khush amdeed", threatLevel: "hello", aiScorePercentage: "98%", reviewCount: 2, date: "2024-02-13" },
 ];
 
 function SubmissionsPage() {
-
-  const getData = async () => {
-    try {
-      const res = await axios.get(backendURL + '/submissions/get/');
-      console.log("Submissions Recieved: ", res);
-    }
-    catch (err) {
-      console.log("Could not recieve submissions: ", err);
-    }
-  }
-
-  getData();
-
   const navigate = useNavigate();
+
+  const [submissions, setSubmissions] = useState(INITIAL_SUBMISSIONS);
   const [filters, setFilters] = useState({
     query: "",
     status: "all",
@@ -39,6 +25,20 @@ function SubmissionsPage() {
   const [selectedSubmission, setSelectedSubmission] = useState(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
 
+  useEffect(() => {
+    const getData = async () => {
+      try {
+        const res = await axios.get(backendURL + '/submissions/get/');
+        console.log("Submissions Received");
+        setSubmissions(Array.isArray(res.data) ? res.data : INITIAL_SUBMISSIONS);
+      } catch (err) {
+        console.log("Could not receive submissions: ", err);
+      }
+    };
+
+    getData();
+  }, []);
+
   const handleFilterChange = (key, value) => {
     setFilters(prev => ({ ...prev, [key]: value }));
   };
@@ -46,7 +46,7 @@ function SubmissionsPage() {
   const handleViewDetails = (submission) => {
     setSelectedSubmission(submission);
     navigate(`/post/${submission.id}`);
-  }
+  };
 
   const handleOpenEvaluation = (submission) => {
     setSelectedSubmission(submission);
@@ -65,7 +65,7 @@ function SubmissionsPage() {
     handleCloseModal();
   };
 
-  const filteredSubmissions = INITIAL_SUBMISSIONS.filter(item => {
+  const filteredSubmissions = submissions.filter(item => {
     const matchesQuery = item.name.toLowerCase().includes(filters.query.toLowerCase()) ||
       item.description.toLowerCase().includes(filters.query.toLowerCase());
 
