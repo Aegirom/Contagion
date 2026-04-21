@@ -27,6 +27,7 @@ export const getLeaderboard = async (req, res) => {
     // }
     //at this point the incoming request is cleansed
     const result = await retrieveLeaderboard();
+    console.log(result);
     res.status(200).json(result);
   }
   catch (err) {

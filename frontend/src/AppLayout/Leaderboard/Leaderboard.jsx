@@ -8,7 +8,7 @@ const backendURL = import.meta.env.VITE_BACKEND_URL;
 function Leaderboard() {
   const [leaderboardData, setLeaderboardData] = useState([]);
   const [duration, setDuration] = useState("all");
-
+  console.log("backendURL: ", backendURL);
   useEffect(() => {
     const getLeaderboard = async () => {
       try {

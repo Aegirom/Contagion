@@ -6,7 +6,7 @@ import { useNavigate } from "react-router-dom";
 import PlusButton from "../Dashboard/Components/Buttons.jsx";
 import axios from 'axios';
 
-const backendURL = import.meta.env.backendURL;
+const backendURL = import.meta.env.VITE_BACKEND_URL;
 
 const INITIAL_SUBMISSIONS = [
   { id: 1, name: "hola", description: "bonjour.", status: "merheba", family: "khush amdeed", threatLevel: "hello", aiScorePercentage: "98%", reviewCount: 2, date: "2024-02-13" },
