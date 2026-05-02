@@ -5,7 +5,11 @@ import AiEvaluationModal from "./Components/AiEvaluationModal";
 import { useNavigate } from "react-router-dom";
 import PlusButton from "../Dashboard/Components/Buttons.jsx";
 import { AuthContext } from "../../context/AuthContext";
-import { deleteSubmission, evaluateSandboxFile, getUserSubmissions } from "../../services/api";
+import {
+  deleteSubmission,
+  evaluateSandboxFile,
+  getUserSubmissions,
+} from "../../services/api";
 
 function SubmissionsPage() {
   const { user, loading: authLoading } = useContext(AuthContext);
@@ -15,7 +19,7 @@ function SubmissionsPage() {
   const [filters, setFilters] = useState({
     query: "",
     status: "all",
-    family: "all"
+    family: "all",
   });
   const [dataLoading, setDataLoading] = useState(true);
   const [selectedSubmission, setSelectedSubmission] = useState(null);
@@ -49,7 +53,7 @@ function SubmissionsPage() {
   }, [user, authLoading]);
 
   const handleFilterChange = (key, value) => {
-    setFilters(prev => ({ ...prev, [key]: value }));
+    setFilters((prev) => ({ ...prev, [key]: value }));
   };
 
   const handleViewDetails = (submission) => {
@@ -89,16 +93,22 @@ function SubmissionsPage() {
   };
 
   const handleDeleteSubmission = async (submission) => {
-    const confirmed = window.confirm(`Delete "${submission.name}"? This archives the submission and removes it from active lists.`);
+    const confirmed = window.confirm(
+      `Delete "${submission.name}"? This archives the submission and removes it from active lists.`,
+    );
     if (!confirmed) return;
 
     setActionError("");
     setDeletingId(submission.id);
     try {
       await deleteSubmission(submission.id);
-      setSubmissions((prev) => prev.filter((item) => item.submission_id !== submission.id));
+      setSubmissions((prev) =>
+        prev.filter((item) => item.submission_id !== submission.id),
+      );
     } catch (err) {
-      setActionError(err.response?.data?.error || "Failed to delete submission");
+      setActionError(
+        err.response?.data?.error || "Failed to delete submission",
+      );
     } finally {
       setDeletingId(null);
     }
@@ -111,35 +121,42 @@ function SubmissionsPage() {
 
   const handleViewFullReport = () => {
     if (selectedSubmission) {
-      navigate(`/submissions/${selectedSubmission.submission_id || selectedSubmission.id}/ai-evaluation`);
+      navigate(
+        `/submissions/${selectedSubmission.submission_id || selectedSubmission.id}/ai-evaluation`,
+      );
     }
     handleCloseModal();
   };
 
   // Transform API data to match component format
-  const transformedSubmissions = submissions.map(sub => ({
+  const transformedSubmissions = submissions.map((sub) => ({
     id: sub.submission_id,
-    name: sub.title || 'Untitled',
-    description: sub.content?.substring(0, 100) || '',
+    name: sub.title || "Untitled",
+    description: sub.content?.substring(0, 100) || "",
     status: sub.status,
-    family: sub.malware_family || sub.malware_category || sub.template_type || 'General',
-    threatLevel: sub.malware_category || 'Unknown',
-    aiScorePercentage: sub.sandbox_status === 'Completed' ? '100%' : '0%',
+    family: sub.malware_category || "Other",
+    threatLevel: sub.malware_category || "Unknown",
+    aiScorePercentage: sub.sandbox_status === "Completed" ? "100%" : "0%",
     reviewCount: 0,
-    date: sub.submitted_at ? new Date(sub.submitted_at).toLocaleDateString() : 'Unknown',
+    date: sub.submitted_at
+      ? new Date(sub.submitted_at).toLocaleDateString()
+      : "Unknown",
     artifactId: sub.artifact_id,
     hash: sub.sha256_hash,
     fileName: sub.file_name,
-    sandboxStatus: sub.sandbox_status || 'Not queued',
+    sandboxStatus: sub.sandbox_status || "Not queued",
   }));
 
   // Filter submissions
-  const filteredSubmissions = transformedSubmissions.filter(item => {
-    const matchesQuery = item.name.toLowerCase().includes(filters.query.toLowerCase()) ||
+  const filteredSubmissions = transformedSubmissions.filter((item) => {
+    const matchesQuery =
+      item.name.toLowerCase().includes(filters.query.toLowerCase()) ||
       item.description.toLowerCase().includes(filters.query.toLowerCase());
 
-    const matchesStatus = filters.status === "all" || item.status === filters.status;
-    const matchesFamily = filters.family === "all" || item.family === filters.family;
+    const matchesStatus =
+      filters.status === "all" || item.status === filters.status;
+    const matchesFamily =
+      filters.family === "all" || item.family === filters.family;
 
     return matchesQuery && matchesStatus && matchesFamily;
   });
@@ -151,7 +168,9 @@ function SubmissionsPage() {
           <div className="space-y-1">
             <div className="flex items-center gap-2">
               <div className="w-1 h-6 bg-toxic shadow-[0_0_8px_#22C55E]"></div>
-              <h3 className="text-3xl font-black text-slate-100 tracking-tighter uppercase">My Submissions</h3>
+              <h3 className="text-3xl font-black text-slate-100 tracking-tighter uppercase">
+                My Submissions
+              </h3>
             </div>
           </div>
           <PlusButton text={"New Submission"} />
@@ -179,7 +198,9 @@ function SubmissionsPage() {
             <Submitted
               key={item.id}
               {...item}
-              aiScorePercentage={runningSandboxId === item.id ? '...' : item.aiScorePercentage}
+              aiScorePercentage={
+                runningSandboxId === item.id ? "..." : item.aiScorePercentage
+              }
               onOpenAiEval={() => handleOpenEvaluation(item)}
               gotoPost={() => handleViewDetails(item)}
               onRunSandbox={() => handleRunSandbox(item)}
@@ -190,14 +211,18 @@ function SubmissionsPage() {
 
           {filteredSubmissions.length === 0 && !dataLoading && (
             <div className="col-span-full py-20 text-center border border-dashed border-phantom">
-              <p className="text-slate-500 font-mono text-sm uppercase">No intelligence found matching current parameters.</p>
+              <p className="text-slate-500 font-mono text-sm uppercase">
+                No intelligence found matching current parameters.
+              </p>
             </div>
           )}
 
           {dataLoading && filteredSubmissions.length === 0 && (
             <div className="col-span-full py-20 text-center">
               <div className="inline-block animate-spin rounded-full h-12 w-12 border-4 border-toxic border-t-transparent mb-4"></div>
-              <p className="text-slate-500 font-mono text-sm uppercase">Loading submissions...</p>
+              <p className="text-slate-500 font-mono text-sm uppercase">
+                Loading submissions...
+              </p>
             </div>
           )}
         </div>
@@ -209,12 +234,22 @@ function SubmissionsPage() {
           onRequestClose={handleCloseModal}
           evaluationResult={
             <div className="space-y-4">
-              <p className="text-slate-400 text-sm">Summary for <span className="text-toxic">{selectedSubmission.name}</span></p>
+              <p className="text-slate-400 text-sm">
+                Summary for{" "}
+                <span className="text-toxic">{selectedSubmission.name}</span>
+              </p>
               <div className="bg-void p-4 border border-phantom rounded">
                 <p className="text-xs font-mono text-slate-300">
-                  Automated analysis confirms <span className="text-red-500">{selectedSubmission.threatLevel}</span> threat level
-                  with a neural confidence of <span className="text-toxic">{selectedSubmission.aiScorePercentage}</span>.
-                  Recommended action: Immediate quarantine and further deep-dive analysis.
+                  Automated analysis confirms{" "}
+                  <span className="text-red-500">
+                    {selectedSubmission.threatLevel}
+                  </span>{" "}
+                  threat level with a neural confidence of{" "}
+                  <span className="text-toxic">
+                    {selectedSubmission.aiScorePercentage}
+                  </span>
+                  . Recommended action: Immediate quarantine and further
+                  deep-dive analysis.
                 </p>
               </div>
               <button

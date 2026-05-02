@@ -34,12 +34,11 @@ function SearchBar({ filters, onFilterChange }) {
       <Dropdown
         options={[
           { value: "all", label: "All Status" },
-          { value: "Approved", label: "Approved" },
-          { value: "Under Review", label: "Under Review" },
-          { value: "Archived", label: "Archived" },
           { value: "Draft", label: "Draft" },
+          { value: "Pending", label: "Pending" },
+          { value: "Published", label: "Published" },
+          { value: "Archived", label: "Archived" },
         ]}
-        defaultValue="all"
         onChange={handleChange}
         value={filters.status}
         name="status"
@@ -56,6 +55,9 @@ function SearchBar({ filters, onFilterChange }) {
           { value: "Trojan", label: "Trojan" },
           { value: "Worm", label: "Worm" },
           { value: "APT", label: "APT" },
+          { value: "Rootkit", label: "Rootkit" },
+          { value: "Spyware", label: "Spyware" },
+          { value: "Other", label: "Other" },
         ]}
       />
 
