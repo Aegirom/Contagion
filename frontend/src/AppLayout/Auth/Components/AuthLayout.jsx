@@ -1,96 +1,163 @@
-import { useState, useRef, useEffect } from 'react';
-import ThemeOrbs from './ThemeOrbs';
+const STATS_CARD = (
+  <>
+    <div style={{ background: '#0F0F0F', border: '1px solid #1C1C1C', borderRadius: 8, padding: '14px 16px', marginBottom: 10 }}>
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 10 }}>
+        <div>
+          <div style={{ fontSize: 10, letterSpacing: '0.12em', textTransform: 'uppercase', color: '#555', fontWeight: 500, marginBottom: 4 }}>Active threats</div>
+          <div style={{ fontSize: 20, fontWeight: 500, color: '#E2E2E2', letterSpacing: '-0.03em' }}>2,847</div>
+        </div>
+        <div style={{ textAlign: 'right' }}>
+          <div style={{ fontSize: 10, letterSpacing: '0.12em', textTransform: 'uppercase', color: '#555', fontWeight: 500, marginBottom: 4 }}>Severity</div>
+          <div style={{ fontSize: 11, color: '#EF4444', fontWeight: 600, letterSpacing: '0.05em' }}>CRITICAL</div>
+        </div>
+      </div>
+      <div style={{ background: '#181818', borderRadius: 2, height: 2, width: '100%', overflow: 'hidden' }}>
+        <div style={{ height: '100%', width: '73%', background: 'linear-gradient(90deg, #EF4444, #F97316)', borderRadius: 2 }} />
+      </div>
+      <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: 7 }}>
+        <span style={{ fontSize: 10, color: '#444' }}>↑ 14% this week</span>
+        <span style={{ fontSize: 10, color: '#444' }}>73 / 100</span>
+      </div>
+    </div>
 
-/**
- * AuthLayout - A reusable layout component for authentication pages
- * Supports different themes (green for login, purple for register, cyan for forgot password)
- *
- * @param {Object} props
- * @param {Array} props.orbs - Configuration for animated orbs (color, position, etc.)
- * @param {React.ReactNode} props.children - Children elements to render inside the layout
- * @param {string} props.title - Main title displayed in header
- * @param {string} props.subtitle - Subtitle displayed below title
- * @param {React.ReactNode} props.icon - Custom icon to display
- * @param {string} props.footerText - Footer text (default: CONTAGION v2.4.1)
- * @param {string} props.containerStyle - Additional container styles
- */
-const AuthLayout = ({
-  orbs,
-  children,
-  title,
-  subtitle,
-  icon,
-  footerText = 'CONTAGION v2.4.1',
-  containerStyle = {},
-}) => {
-  const canvasRef = useRef(null);
-  const [orbConfig, setOrbConfig] = useState(orbs);
+    <div style={{ background: '#0F0F0F', border: '1px solid #1C1C1C', borderRadius: 8, padding: '12px 16px', marginBottom: 20 }}>
+      <div style={{ display: 'flex' }}>
+        {[
+          { label: 'Mitigated', val: '1,204', color: '#22C55E' },
+          { label: 'Pending',   val: '318',   color: '#F59E0B' },
+          { label: 'Analysts',  val: '24',    color: '#A3A3A3' },
+        ].map((s, i) => (
+          <div key={i} style={{ flex: 1 }}>
+            <div style={{ fontSize: 10, letterSpacing: '0.1em', textTransform: 'uppercase', color: '#555', fontWeight: 500, marginBottom: 5 }}>{s.label}</div>
+            <div style={{ fontSize: 16, fontWeight: 500, color: s.color, letterSpacing: '-0.02em' }}>{s.val}</div>
+          </div>
+        ))}
+      </div>
+    </div>
+  </>
+);
 
-  useEffect(() => {
-    // Update orbs if they change
-    if (orbs) {
-      setOrbConfig(orbs);
-    }
-  }, [orbs]);
+export const FEED = (
+  <>
+    <div style={{ fontSize: 9, letterSpacing: '0.15em', textTransform: 'uppercase', color: '#555', marginBottom: 10, fontWeight: 600 }}>Live feed</div>
+    {[
+      { color: '#EF4444', text: 'APT-41 lateral movement — US-EAST-1', time: '2 min ago' },
+      { color: '#F59E0B', text: 'Suspicious C2 beacon — 185.220.101.42', time: '11 min ago' },
+      { color: '#22C55E', text: 'Ransomware variant quarantined — EU-WEST-2', time: '28 min ago' },
+    ].map((item, i) => (
+      <div key={i} style={{ display: 'flex', alignItems: 'flex-start', gap: 10, padding: '9px 0', borderTop: i === 0 ? '1px solid #181818' : '1px solid #141414' }}>
+        <div style={{ width: 6, height: 6, borderRadius: '50%', background: item.color, marginTop: 3, flexShrink: 0, boxShadow: `0 0 6px ${item.color}60` }} />
+        <div>
+          <div style={{ fontSize: 11, color: '#737373', lineHeight: 1.45 }}>{item.text}</div>
+          <div style={{ fontSize: 10, color: '#3D3D3D', marginTop: 2 }}>{item.time}</div>
+        </div>
+      </div>
+    ))}
+  </>
+);
 
+export const REASONS = (
+  <>
+    <div style={{ fontSize: 9, letterSpacing: '0.15em', textTransform: 'uppercase', color: '#555', marginBottom: 10, fontWeight: 600 }}>Why join?</div>
+    {[
+      'Real-time correlation across 140+ intel sources',
+      'Automated MITRE ATT&CK mapping and playbooks',
+      'SOC collaboration with shared analyst workspaces',
+    ].map((text, i) => (
+      <div key={i} style={{ display: 'flex', alignItems: 'flex-start', gap: 10, padding: '9px 0', borderTop: '1px solid #141414' }}>
+        <div style={{ width: 5, height: 5, borderRadius: '50%', background: '#8B5CF6', marginTop: 4, flexShrink: 0, boxShadow: '0 0 6px #8B5CF660' }} />
+        <div style={{ fontSize: 11, color: '#737373', lineHeight: 1.45 }}>{text}</div>
+      </div>
+    ))}
+  </>
+);
+
+export const RESET_STEPS = (
+  <div style={{ background: '#0F0F0F', border: '1px solid #1C1C1C', borderRadius: 8, padding: 16 }}>
+    <div style={{ fontSize: 10, letterSpacing: '0.12em', textTransform: 'uppercase', color: '#555', marginBottom: 14, fontWeight: 500 }}>Reset process</div>
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+      {[
+        'Enter your registered email address',
+        'Click the secure link sent to your inbox',
+        'Set a new strong password — link expires in 15 min',
+      ].map((text, i) => (
+        <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+          <div style={{ width: 18, height: 18, borderRadius: '50%', border: '1px solid #22D3EE30', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+            <span style={{ fontSize: 9, color: '#22D3EE', fontWeight: 600 }}>{i + 1}</span>
+          </div>
+          <span style={{ fontSize: 11, color: '#6B6B6B' }}>{text}</span>
+        </div>
+      ))}
+    </div>
+  </div>
+);
+
+export const PW_REQUIREMENTS = (
+  <div style={{ background: '#0F0F0F', border: '1px solid #1C1C1C', borderRadius: 8, padding: 16 }}>
+    <div style={{ fontSize: 10, letterSpacing: '0.12em', textTransform: 'uppercase', color: '#555', marginBottom: 12, fontWeight: 500 }}>Password requirements</div>
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+      {['Minimum 8 characters', 'At least one uppercase letter', 'At least one number', 'One special character (!@#$…)'].map((r, i) => (
+        <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+          <div style={{ width: 4, height: 4, borderRadius: '50%', background: '#333', flexShrink: 0 }} />
+          <span style={{ fontSize: 11, color: '#6B6B6B' }}>{r}</span>
+        </div>
+      ))}
+    </div>
+  </div>
+);
+
+const AuthLayout = ({ children, leftContent }) => {
   return (
-    <div
-      className="min-h-screen flex items-center justify-center p-4 relative overflow-hidden"
-      style={{ background: '#07080D', ...containerStyle }}
-    >
-      {/* Animated orbs */}
-      {orbConfig && <ThemeOrbs orbs={orbConfig} containerRef={canvasRef} />}
+    <div style={{
+      minHeight: '100vh',
+      display: 'flex',
+      background: '#080808',
+      fontFamily: "'DM Sans', -apple-system, sans-serif",
+    }}>
+      {/* Left panel */}
+      <div style={{
+        width: '40%',
+        minWidth: 320,
+        background: '#080808',
+        borderRight: '1px solid #141414',
+        padding: '36px 32px',
+        display: 'flex',
+        flexDirection: 'column',
+      }}>
+        {/* Brand */}
+        <div style={{ marginBottom: 32 }}>
+          <div style={{ fontSize: 10, letterSpacing: '0.3em', color: '#3A3A3A', fontWeight: 600, textTransform: 'uppercase', marginBottom: 6 }}>
+            Contagion
+          </div>
+          <p style={{ fontSize: 12, color: '#525252', lineHeight: 1.7, margin: 0, maxWidth: 200 }}>
+            Threat intelligence for modern security teams.
+          </p>
+        </div>
 
-      {/* Grid pattern */}
-      <div className="absolute inset-0 pointer-events-none" style={{
-        backgroundImage: 'linear-gradient(rgba(139,92,246,0.025) 1px, transparent 1px), linear-gradient(90deg, rgba(139,92,246,0.025) 1px, transparent 1px)',
-        backgroundSize: '48px 48px',
-      }} />
-      <div className="absolute inset-0 pointer-events-none" style={{
-        backgroundImage: 'repeating-linear-gradient(0deg, transparent, transparent 2px, rgba(0,0,0,0.18) 2px, rgba(0,0,0,0.18) 4px)',
-      }} />
+        {STATS_CARD}
+        {leftContent}
 
-      {/* Main content container */}
-      <div className="relative z-10 w-full max-w-[420px] animate-fade-up">
-        <div
-          className="rounded-2xl p-8 relative overflow-hidden"
-          style={{
-            background: 'rgba(9,10,16,0.82)',
-            backdropFilter: 'blur(24px)',
-            border: '1px solid rgba(255,255,255,0.06)',
-            boxShadow: '0 0 0 1px rgba(139,92,246,0.04), 0 32px 64px rgba(0,0,0,0.6)',
-          }}
-        >
-          {/* Decorative gradient line */}
-          <div
-            className="absolute top-0 left-1/2 -translate-x-1/2 w-2/3 h-px"
-            style={{
-              background: 'linear-gradient(to right, transparent, rgba(139,92,246,0.5), transparent)',
-            }}
-          />
+        {/* Footer status */}
+        <div style={{ display: 'flex', alignItems: 'center', gap: 7, marginTop: 'auto', paddingTop: 24 }}>
+          <div style={{ width: 5, height: 5, borderRadius: '50%', background: '#22C55E', boxShadow: '0 0 6px #22C55E80' }} />
+          <span style={{ fontSize: 10, color: '#3A3A3A', letterSpacing: '0.1em', textTransform: 'uppercase' }}>
+            All systems operational
+          </span>
+        </div>
+      </div>
 
-          {/* Header */}
-          {title && (
-            <div className="text-center mb-8">
-              <h1
-                className="font-display text-2xl tracking-[0.3em] font-bold mb-1"
-                style={{ color: '#F1F5F9', textShadow: '0 0 30px rgba(139,92,246,0.2)' }}
-              >
-                {title}
-              </h1>
-              {subtitle && (
-                <p className="font-code text-[10px] tracking-widest uppercase" style={{ color: '#334155' }}>
-                  {subtitle}
-                </p>
-              )}
-            </div>
-          )}
-
+      {/* Right panel */}
+      <div style={{
+        flex: 1,
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        padding: '48px 40px',
+        background: '#060606',
+      }}>
+        <div style={{ width: '100%', maxWidth: 310 }}>
           {children}
         </div>
-        <p className="text-center mt-4 font-code text-[10px] tracking-widest" style={{ color: '#1A1D2A' }}>
-          {footerText}
-        </p>
       </div>
     </div>
   );

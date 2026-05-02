@@ -1,267 +1,180 @@
-import { useState, useRef, useContext } from 'react';
+import { useState, useContext } from 'react';
 import { Link } from 'react-router-dom';
-import AuthLayout from './AuthLayout';
+import AuthLayout, { REASONS } from './AuthLayout';
 import InputField from './InputField';
-import PasswordStrength, { usePasswordStrength } from './PasswordStrength';
-import SuccessView from './SuccessView';
 import { AuthContext } from '../../../context/AuthContext';
+
+const ACCENT = '#8B5CF6';
+
+const calcStr = (pw) => {
+  let s = 0;
+  if (pw.length >= 8) s++;
+  if (/[A-Z]/.test(pw)) s++;
+  if (/[0-9]/.test(pw)) s++;
+  if (/[^A-Za-z0-9]/.test(pw)) s++;
+  return s;
+};
+const STR_COLORS = ['', '#EF4444', '#F59E0B', '#22C55E', '#22C55E'];
+const STR_LABELS = ['', 'Weak', 'Fair', 'Good', 'Strong'];
+
+const EyeIcon = ({ open }) => open
+  ? <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19M1 1l22 22" strokeLinecap="round"/></svg>
+  : <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>;
 
 const RegisterForm = () => {
   const { register } = useContext(AuthContext);
   const [formData, setFormData] = useState({ name: '', email: '', password: '', confirmPassword: '' });
-  const [focused, setFocused] = useState(null);
   const [showPass, setShowPass] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
-  const [isSuccess, setIsSuccess] = useState(false);
-  const canvasRef = useRef(null);
+  const [success, setSuccess] = useState(false);
 
-  // Purple-tinted orbs for register page
-  const orbs = [
-    { x: 0.85, y: 0.15, r: 0.45, color: [139, 92, 246], angle: 0, speed: 0.0003, sineX: 0.14, cosY: 0.73, cosX: 0.11 },
-    { x: 0.1, y: 0.8, r: 0.5, color: [34, 197, 94], angle: 2.5, speed: 0.00035, sineX: 0.14, cosY: 0.73, cosX: 0.11 },
-    { x: 0.6, y: 0.05, r: 0.38, color: [139, 92, 246], angle: 1.2, speed: 0.00045, sineX: 0.14, cosY: 0.73, cosX: 0.11 },
-    { x: 0.2, y: 0.4, r: 0.3, color: [34, 211, 238], angle: 3.8, speed: 0.00025, sineX: 0.14, cosY: 0.73, cosX: 0.11 },
-  ];
+  const strength = calcStr(formData.password);
+  const pwMismatch = formData.confirmPassword && formData.password !== formData.confirmPassword;
 
-  const { strength, strengthColor, strengthLabel, calcStrength } = usePasswordStrength(formData.password);
-
-  const handleChange = (e) => {
-    const { name, value } = e.target;
-    setFormData((p) => ({ ...p, [name]: value }));
-    if (name === 'password') calcStrength(value);
+  const handleChange = e => {
+    setFormData(p => ({ ...p, [e.target.name]: e.target.value }));
     if (error) setError('');
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-
-    if (!formData.name || !formData.email || !formData.password || !formData.confirmPassword) {
-      setError('Please fill in all fields');
-      return;
-    }
-
-    if (formData.password !== formData.confirmPassword) {
-      setError("Passwords don't match.");
-      return;
-    }
-
-    if (strength < 2) {
-      setError('Password is too weak. Use uppercase, numbers, and symbols');
-      return;
-    }
-
-    setLoading(true);
-    setError('');
-
+    if (!formData.name || !formData.email || !formData.password || !formData.confirmPassword) { setError('Please fill in all fields'); return; }
+    if (formData.password !== formData.confirmPassword) { setError("Passwords don't match"); return; }
+    if (strength < 2) { setError('Password is too weak'); return; }
+    setLoading(true); setError('');
     try {
       const result = await register(formData);
-      if (result.success) {
-        setIsSuccess(true);
-      } else {
-        setError(result.error || 'Registration failed');
-      }
-    } catch (err) {
-      setError('Registration failed. Please try again.');
-    } finally {
-      setLoading(false);
-    }
+      if (result.success) setSuccess(true);
+      else setError(result.error || 'Registration failed');
+    } catch { setError('Something went wrong. Please try again.'); }
+    finally { setLoading(false); }
   };
 
-  const inputStyle = (field) => ({
-    background: focused === field ? 'rgba(139,92,246,0.05)' : 'rgba(5,5,8,0.95)',
-    border: `1px solid ${focused === field ? 'rgba(139,92,246,0.4)' : 'rgba(30,34,51,1)'}`,
-    color: '#E2E8F0',
-    boxShadow: focused === field ? '0 0 0 3px rgba(139,92,246,0.07)' : 'none',
-  });
-
-  const pwMismatch = formData.confirmPassword && formData.password !== formData.confirmPassword;
-
-  if (isSuccess) {
+  if (success) {
     return (
-      <AuthLayout orbs={orbs} canvasRef={canvasRef}>
-        <SuccessView
-          title="Account Created!"
-          subtitle="Verification link sent to:"
-          email={formData.email}
-          showEmail={true}
-          linkText="← Back to Login"
-          linkTo="/login"
-          iconColor="#8B5CF6"
-          additionalInfo="Please click the link in your email to verify your account."
-          showAdditionalInfo={true}
-          redirectTo={null}
-        />
+      <AuthLayout leftContent={REASONS}>
+        <div style={{ marginBottom: 36 }}>
+          <h1 style={{ fontSize: 20, fontWeight: 500, color: '#D4D4D4', letterSpacing: '-0.025em', margin: '0 0 8px' }}>
+            Check your inbox
+          </h1>
+          <p style={{ fontSize: 12, color: '#4A4A4A', margin: '0 0 20px', lineHeight: 1.6 }}>
+            Verification link sent to{' '}
+            <span style={{ color: ACCENT }}>{formData.email}</span>
+          </p>
+          <p style={{ fontSize: 11, color: '#525252', lineHeight: 1.7, marginBottom: 28 }}>
+            Click the link in the email to activate your account. The link expires in 24 hours.
+          </p>
+          <Link
+            to="/login"
+            style={{ fontSize: 12, color: '#5A5A5A', textDecoration: 'none', transition: 'color 0.15s' }}
+            onMouseEnter={e => e.target.style.color = ACCENT}
+            onMouseLeave={e => e.target.style.color = '#5A5A5A'}
+          >
+            ← Back to login
+          </Link>
+        </div>
       </AuthLayout>
     );
   }
 
   return (
-    <AuthLayout orbs={orbs} canvasRef={canvasRef}>
-      {/* Title and Subtitle */}
-      <div className="text-center mb-8">
-        <h1
-          className="font-display text-2xl tracking-[0.3em] font-bold mb-1"
-          style={{ color: '#F1F5F9', textShadow: '0 0 30px rgba(139,92,246,0.2)' }}
-        >
-          CONTAGION
+    <AuthLayout leftContent={REASONS}>
+      <div style={{ marginBottom: 30 }}>
+        <h1 style={{ fontSize: 20, fontWeight: 500, color: '#D4D4D4', letterSpacing: '-0.025em', margin: '0 0 6px' }}>
+          Create account
         </h1>
-        <p className="font-code text-[10px] tracking-widest uppercase" style={{ color: '#334155' }}>
-          Create Analyst Account
+        <p style={{ fontSize: 12, color: '#4A4A4A', margin: 0 }}>
+          Already have access?{' '}
+          <Link to="/login" style={{ color: ACCENT, textDecoration: 'none' }}>Sign in</Link>
         </p>
       </div>
 
-      {/* Error */}
       {error && (
-        <div className="mb-4 px-4 py-3 rounded-lg font-code text-xs animate-fade-up" style={{
-          background: 'rgba(239,68,68,0.07)',
-          border: '1px solid rgba(239,68,68,0.2)',
-          color: '#F87171'
-        }}>⚠ {error}</div>
+        <div style={{
+          padding: '9px 13px',
+          background: '#EF444408',
+          border: '1px solid #EF444418',
+          borderRadius: 6,
+          fontSize: 11,
+          color: '#EF4444',
+          marginBottom: 16,
+        }}>
+          {error}
+        </div>
       )}
 
-      <form onSubmit={handleSubmit} className="space-y-4">
-        <InputField
-          label="Full Name"
-          name="name"
-          value={formData.name}
-          onChange={handleChange}
-          onFocus={() => setFocused('name')}
-          onBlur={() => setFocused(null)}
-          placeholder="John Doe"
-          required
-          customStyle={inputStyle('name')}
-          focusedColor="rgba(139,92,246,0.4)"
-        />
-
-        <InputField
-          label="Email Address"
-          name="email"
-          type="email"
-          value={formData.email}
-          onChange={handleChange}
-          onFocus={() => setFocused('email')}
-          onBlur={() => setFocused(null)}
-          placeholder="you@contagion.sec"
-          required
-          customStyle={inputStyle('email')}
-          focusedColor="rgba(139,92,246,0.4)"
-        />
+      <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
+        <InputField label="Full name" name="name" value={formData.name} onChange={handleChange} placeholder="Jane Smith" required accentColor={ACCENT} />
+        <InputField label="Email" name="email" type="email" value={formData.email} onChange={handleChange} placeholder="you@company.com" required accentColor={ACCENT} />
 
         <div>
-          <div className="flex items-center justify-between mb-2">
-            <label className="font-code text-[10px] tracking-[0.2em] uppercase transition-colors duration-200"
-              style={{ color: focused === 'password' ? '#8B5CF6' : '#475569' }}>Password</label>
-            <button type="button" onClick={() => setShowPass(!showPass)}
-              className="font-code text-[9px] tracking-widest uppercase transition-colors duration-150"
-              style={{ color: showPass ? '#8B5CF6' : '#334155' }}>
-              [{showPass ? 'HIDE' : 'SHOW'}]
-            </button>
-          </div>
           <InputField
+            label="Password"
             name="password"
             type={showPass ? 'text' : 'password'}
             value={formData.password}
             onChange={handleChange}
-            onFocus={() => setFocused('password')}
-            onBlur={() => setFocused(null)}
-            placeholder="••••••••••••"
+            placeholder="••••••••"
             required
-            customStyle={inputStyle('password')}
-            focusedColor="rgba(139,92,246,0.4)"
+            accentColor={ACCENT}
+            suffixButton={
+              <button type="button" onClick={() => setShowPass(!showPass)}
+                style={{ background: 'none', border: 'none', padding: 0, cursor: 'pointer', color: showPass ? ACCENT : '#404040', display: 'flex' }}>
+                <EyeIcon open={showPass} />
+              </button>
+            }
           />
           {formData.password && (
-            <PasswordStrength password={formData.password} strength={strength} />
+            <div style={{ marginTop: 7 }}>
+              <div style={{ display: 'flex', gap: 3, marginBottom: 4 }}>
+                {[1,2,3,4].map(n => (
+                  <div key={n} style={{
+                    flex: 1, height: 2, borderRadius: 2,
+                    background: n <= strength ? STR_COLORS[strength] : '#181818',
+                    transition: 'background 0.2s',
+                  }} />
+                ))}
+              </div>
+              <span style={{ fontSize: 10, color: STR_COLORS[strength] }}>{STR_LABELS[strength]}</span>
+            </div>
           )}
         </div>
 
-        <div>
-          <label className="block font-code text-[10px] tracking-[0.2em] uppercase mb-2 transition-colors duration-200"
-            style={{ color: focused === 'confirmPassword' ? '#8B5CF6' : '#475569' }}>
-            Confirm Password
-          </label>
-          <div className="relative">
-            <InputField
-              name="confirmPassword"
-              type="password"
-              value={formData.confirmPassword}
-              onChange={handleChange}
-              onFocus={() => setFocused('confirmPassword')}
-              onBlur={() => setFocused(null)}
-              placeholder="••••••••••••"
-              required
-              customStyle={{
-                ...inputStyle('confirmPassword'),
-                border: pwMismatch ? '1px solid rgba(239,68,68,0.4)' : inputStyle('confirmPassword').border,
-              }}
-              focusedColor="rgba(139,92,246,0.4)"
-            />
-            {formData.confirmPassword && (
-              <div className="absolute right-3 top-1/2 -translate-y-1/2">
-                {!pwMismatch
-                  ? <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#22C55E" strokeWidth="2.5"><path d="M20 6L9 17l-5-5" strokeLinecap="round" strokeLinejoin="round"/></svg>
-                  : <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#EF4444" strokeWidth="2.5"><path d="M18 6L6 18M6 6l12 12" strokeLinecap="round"/></svg>
-                }
-              </div>
-            )}
-          </div>
-        </div>
+        <InputField
+          label="Confirm password"
+          name="confirmPassword"
+          type="password"
+          value={formData.confirmPassword}
+          onChange={handleChange}
+          placeholder="••••••••"
+          required
+          accentColor={ACCENT}
+          error={pwMismatch ? "Passwords don't match" : undefined}
+        />
 
         <button
           type="submit"
           disabled={loading}
-          className="w-full py-3 rounded-md font-mono text-xs uppercase tracking-wider font-bold transition-colors duration-200 flex items-center justify-center gap-2"
           style={{
-            background: loading ? 'rgba(139, 92, 246, 0.15)' : '#8B5CF6',
-            color: loading ? 'rgba(139, 92, 246, 0.4)' : '#FFFFFF',
+            padding: '11px',
+            background: loading ? '#111' : ACCENT,
+            border: `1px solid ${loading ? '#1E1E1E' : ACCENT}`,
+            borderRadius: 6,
+            color: loading ? '#404040' : '#fff',
+            fontSize: 13,
+            fontWeight: 500,
             cursor: loading ? 'not-allowed' : 'pointer',
+            fontFamily: 'inherit',
+            transition: 'background 0.15s',
+            marginTop: 4,
           }}
-          onMouseEnter={(e) => {
-            if (!loading) {
-              e.currentTarget.style.background = '#A78BFA';
-            }
-          }}
-          onMouseLeave={(e) => {
-            if (!loading) {
-              e.currentTarget.style.background = '#8B5CF6';
-            }
-          }}
+          onMouseEnter={e => { if (!loading) e.target.style.background = '#A78BFA'; }}
+          onMouseLeave={e => { if (!loading) e.target.style.background = ACCENT; }}
         >
-          {loading ? (
-            <>
-              <span
-                className="w-3.5 h-3.5 border-2 rounded-full inline-block"
-                style={{
-                  borderColor: 'rgba(139, 92, 246, 0.33)',
-                  borderTopColor: 'transparent',
-                  animation: 'spinSlow 0.7s linear infinite',
-                }}
-              />
-              Creating account...
-            </>
-          ) : (
-            '→ Create Account'
-          )}
+          {loading ? 'Creating account…' : 'Create account'}
         </button>
       </form>
-
-      <div className="mt-6 pt-5 text-center" style={{ borderTop: '1px solid rgba(30,34,51,0.7)' }}>
-        <p className="font-code text-xs" style={{ color: '#334155' }}>
-          Already have access?{' '}
-          <Link to="/login" style={{ color: '#8B5CF6' }}
-            onMouseEnter={e => e.currentTarget.style.color='#A78BFA'}
-            onMouseLeave={e => e.currentTarget.style.color='#8B5CF6'}>
-            Sign in →
-          </Link>
-        </p>
-      </div>
-
-      <style>{`
-        @keyframes spinSlow {
-          from { transform: rotate(0deg); }
-          to { transform: rotate(360deg); }
-        }
-      `}</style>
     </AuthLayout>
   );
 };

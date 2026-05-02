@@ -1,73 +1,46 @@
-import React from 'react';
+import { useState } from 'react';
 
-const InputField = ({
-  label,
-  name,
-  type = 'text',
-  value,
-  onChange,
-  onFocus,
-  onBlur,
-  placeholder,
-  required = false,
-  error,
-  disabled = false,
-  prefixIcon,
-  suffixButton,
-  customStyle = {},
-  labelStyle = {},
-  focusedColor = 'rgba(139,92,246,0.4)',
-}) => {
+const InputField = ({ label, name, type = 'text', value, onChange, placeholder, required, error, disabled, suffixButton, accentColor = '#22C55E' }) => {
+  const [focused, setFocused] = useState(false);
   return (
-    <div className="space-y-1.5">
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
       {label && (
-        <label
-          className="block font-code text-[10px] tracking-[0.2em] uppercase transition-colors duration-200"
-          style={{ color: error ? '#F87171' : undefined, ...labelStyle }}
-        >
+        <label style={{ fontSize: 10, letterSpacing: '0.14em', textTransform: 'uppercase', color: error ? '#EF4444' : '#303030', fontWeight: 500 }}>
           {label}
         </label>
       )}
-      <div className="relative">
+      <div style={{ position: 'relative' }}>
         <input
           type={type}
           name={name}
           value={value}
           onChange={onChange}
-          onFocus={onFocus}
-          onBlur={onBlur}
+          onFocus={() => setFocused(true)}
+          onBlur={() => setFocused(false)}
           required={required}
           placeholder={placeholder}
           disabled={disabled}
-          className={`w-full px-4 py-3 rounded-lg font-code text-sm outline-none transition-all duration-200 ${
-            error ? 'ring-1 ring-red-500/50' : ''
-          }`}
           style={{
-            background: disabled ? 'rgba(5,5,8,0.5)' : 'rgba(5,5,8,0.95)',
-            border: error
-              ? '1px solid rgba(239,68,68,0.4)'
-              : `1px solid ${focusedColor.replace('0.4', '1')}`,
-            color: '#E2E8F0',
-            boxShadow: `0 0 0 3px ${focusedColor.replace('0.4', '0.07')}`,
-            ...customStyle,
+            width: '100%',
+            padding: '10px 13px',
+            paddingRight: suffixButton ? 38 : 13,
+            background: '#0D0D0D',
+            border: `1px solid ${error ? '#EF444430' : focused ? `${accentColor}30` : '#161616'}`,
+            borderRadius: 6,
+            color: '#C8C8C8',
+            fontSize: 13,
+            outline: 'none',
+            fontFamily: 'inherit',
+            boxSizing: 'border-box',
           }}
         />
-        {prefixIcon && (
-          <div className="absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none">
-            {prefixIcon}
-          </div>
-        )}
         {suffixButton && (
-          <div className="absolute right-3 top-1/2 -translate-y-1/2 pointer-events-auto">
+          <div style={{ position: 'absolute', right: 11, top: '50%', transform: 'translateY(-50%)' }}>
             {suffixButton}
           </div>
         )}
       </div>
-      {error && (
-        <p className="font-code text-[10px]" style={{ color: '#F87171' }}>
-          {error}
-        </p>
-      )}
+      {error && <p style={{ fontSize: 11, color: '#EF4444', margin: 0 }}>{error}</p>}
     </div>
   );
 };
