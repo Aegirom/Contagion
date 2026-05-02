@@ -1,9 +1,7 @@
-import { useEffect, useState } from 'react';
-import PositionCard from './Components/PositionCard.jsx';
-import Dropdown from '../SubmissionsPage/Components/Dropdown';
-import axios from 'axios';
-
-const backendURL = import.meta.env.VITE_BACKEND_URL;
+import { useEffect, useState } from "react";
+import PositionCard from "./Components/PositionCard.jsx";
+import Dropdown from "../SubmissionsPage/Components/Dropdown";
+import API from "../../services/api.js";
 
 function Leaderboard() {
   const [leaderboardData, setLeaderboardData] = useState([]);
@@ -13,7 +11,7 @@ function Leaderboard() {
   useEffect(() => {
     const getLeaderboard = async () => {
       try {
-        const res = await axios.get(backendURL + '/leaderboard');
+        const res = await API.get("/leaderboard");
         const mapped = Array.isArray(res.data)
           ? res.data.map((user, i) => ({
             position: i + 1,
@@ -33,8 +31,9 @@ function Leaderboard() {
 
     const getMyPosition = async () => {
       try {
-        const res = await axios.get(backendURL + '/leaderboard/me');
+        const res = await API.get("/leaderboard/me");
         const user = res.data;
+        console.log("UserData: ", user);
         setCurrentUser({
           position: user.position,
           username: user.username,
@@ -46,7 +45,6 @@ function Leaderboard() {
         });
       } catch (err) {
         console.error("Could not retrieve current user position: ", err);
-        // Leave currentUser as null — sticky footer won't render
       }
     };
 
