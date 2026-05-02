@@ -27,7 +27,8 @@ const assertSubmissionAccess = async (submissionId, userId) => {
     .query(`
       SELECT submission_id, author_id, artifact_id, title
       FROM Analysis_Submissions
-      WHERE submission_id = @submission_id AND author_id = @user_id
+      WHERE submission_id = @submission_id
+        AND (author_id = @user_id OR status IN ('Published', 'Pending'))
     `);
 
   return result.recordset[0] || null;

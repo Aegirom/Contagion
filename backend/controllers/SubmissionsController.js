@@ -1,5 +1,6 @@
 import sql from 'mssql';
-import pool from '../config/db.js'
+import pool from '../config/db.js';
+import jwt from 'jsonwebtoken';
 
 async function fetchAllSubmissions() {
   try {
@@ -122,13 +123,14 @@ async function fetchUserStats(userId) {
 
 export const getAllSubmissions = async (req, res) => {
   try {
+    console.log("getAllSubmissions called, user:", req.user?.userId || "unknown");
     const data = await fetchAllSubmissions();
-    console.log("All submissions fetched:", data.length);
+    console.log("All submissions fetched:", data.length, "items");
     res.json(data);
   }
   catch (err) {
-    console.log("Failed to get Submissions: ", err);
-    res.status(500).json({ error: 'Internal Server Error' });
+    console.error("Failed to get Submissions:", err.message);
+    res.status(500).json({ error: 'Internal Server Error', details: err.message });
   }
 }
 
@@ -205,12 +207,30 @@ export const getUserDrafts = async (req, res) => {
   }
 }
 
-export const getSubmissionById = async (req, res) => {
+// Middleware that optionally extracts user from token (doesn't fail if no token)
+export const optionalAuth = (req, res, next) => {
+  let token;
+
+  if (req.headers.authorization && req.headers.authorization.startsWith('Bearer')) {
+    try {
+      token = req.headers.authorization.split(' ')[1];
+      const decoded = jwt.verify(token, process.env.JWT_SECRET);
+      req.user = decoded;
+    } catch (error) {
+      // Silently ignore token errors, just don't set req.user
+    }
+  }
+
+  next();
+};
+
+export const getSubmissionByIdPublic = async (req, res) => {
   try {
-    const result = await pool.request()
-      .input('submission_id', sql.INT, Number(req.params.id))
-      .input('user_id', sql.INT, req.user.userId)
-      .query(`
+    const submissionId = Number(req.params.id);
+
+    // Build query differently based on whether user is authenticated
+    const isAuthenticated = req.user && req.user.userId;
+    const query = `
         SELECT
           s.submission_id,
           s.author_id,
@@ -276,12 +296,101 @@ export const getSubmissionById = async (req, res) => {
           ORDER BY e.queued_at DESC
         ) latest
         WHERE s.submission_id = @submission_id
-          AND (s.author_id = @user_id OR s.status = 'Published')
-      `);
+          ${isAuthenticated ? 'AND (s.author_id = @user_id OR s.status IN (\'Published\', \'Pending\'))' : 'AND s.status IN (\'Published\', \'Pending\')'}
+      `;
+
+    const result = await pool.request()
+      .input('submission_id', sql.INT, submissionId)
+      .input('user_id', sql.INT, isAuthenticated ? req.user.userId : null)
+      .query(query);
 
     const submission = result.recordset[0];
     if (!submission) {
-      return res.status(404).json({ error: 'Submission not found' });
+      // If user is authenticated but submission not found withPublished filter, try without status filter
+      // This allows viewing drafts/pending by the author even if not on the feed
+      if (isAuthenticated) {
+        const draftQuery = `
+          SELECT
+            s.submission_id,
+            s.author_id,
+            s.artifact_id,
+            s.title,
+            s.content,
+            s.status,
+            s.version,
+            s.template_type,
+            s.submitted_at,
+            s.updated_at,
+            u.username,
+            u.reputation_score,
+            a.file_name,
+            a.file_size,
+            a.file_type,
+            a.md5_hash,
+            a.sha256_hash,
+            a.storage_path,
+            a.is_quarantined,
+            a.malware_family,
+            a.malware_category,
+            a.upload_time,
+            latest.execution_id,
+            latest.sandbox_status,
+            latest.environment,
+            latest.os_profile,
+            latest.network_enabled,
+            latest.timeout_seconds,
+            latest.queued_at,
+            latest.started_at,
+            latest.finished_at,
+            latest.error_message,
+            (
+              SELECT
+                l.log_id,
+                l.log_type,
+                l.log_data,
+                l.captured_at
+              FROM Sandbox_Executions e
+              INNER JOIN Behavioral_Logs l ON l.execution_id = e.execution_id
+              WHERE e.submission_id = s.submission_id
+              ORDER BY l.captured_at ASC
+              FOR JSON PATH
+            ) AS behavioral_logs
+          FROM Analysis_Submissions s
+          INNER JOIN Users u ON u.user_id = s.author_id
+          LEFT JOIN Malware_Artifacts a ON a.artifact_id = s.artifact_id
+          OUTER APPLY (
+            SELECT TOP 1
+              e.execution_id,
+              e.status AS sandbox_status,
+              e.environment,
+              e.os_profile,
+              e.network_enabled,
+              e.timeout_seconds,
+              e.queued_at,
+              e.started_at,
+              e.finished_at,
+              e.error_message
+            FROM Sandbox_Executions e
+            WHERE e.submission_id = s.submission_id
+            ORDER BY e.queued_at DESC
+          ) latest
+          WHERE s.submission_id = @submission_id AND s.author_id = @user_id
+        `;
+        const draftResult = await pool.request()
+          .input('submission_id', sql.INT, submissionId)
+          .input('user_id', sql.INT, req.user.userId)
+          .query(draftQuery);
+
+        const draftSubmission = draftResult.recordset[0];
+        if (draftSubmission) {
+          return res.json({
+            ...draftSubmission,
+            behavioral_logs: draftSubmission.behavioral_logs ? JSON.parse(draftSubmission.behavioral_logs) : [],
+          });
+        }
+      }
+
+      return res.status(404).json({ error: 'Submission not found or not published' });
     }
 
     res.json({
@@ -294,6 +403,9 @@ export const getSubmissionById = async (req, res) => {
     res.status(500).json({ error: 'Internal Server Error' });
   }
 }
+
+// Alias for backwards compatibility - uses protect middleware in routes
+export const getSubmissionById = getSubmissionByIdPublic;
 
 export const updateSubmission = async (req, res) => {
   try {
@@ -431,3 +543,4 @@ export const postSubmission = async (req, res) => {
     res.status(400).json({ error: "Bad Request" });
   }
 }
+

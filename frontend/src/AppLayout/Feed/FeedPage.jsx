@@ -9,17 +9,17 @@ const severityFromCategory = (category) => {
 };
 
 const toFeedPost = (submission) => ({
-  id: submission.submission_id,
-  user: submission.username || "Analyst",
+  id: submission?.submission_id || submission?.id,
+  user: submission?.username || "Analyst",
   location: "Contagion Network",
-  hash: submission.sha256_hash || submission.title || "No artifact",
-  family: submission.malware_family || submission.malware_category || submission.template_type || "Analysis",
-  threat: severityFromCategory(submission.malware_category),
-  status: submission.sandbox_status || submission.status,
-  date: submission.submitted_at ? new Date(submission.submitted_at).toLocaleDateString() : "Unknown",
-  score: submission.sandbox_status === "Completed" ? 100 : 0,
+  hash: submission?.sha256_hash || submission?.title || "No artifact",
+  family: submission?.malware_family || submission?.malware_category || submission?.template_type || "Analysis",
+  threat: severityFromCategory(submission?.malware_category || submission?.malware_family),
+  status: submission?.sandbox_status || submission?.status,
+  date: submission?.submitted_at ? new Date(submission.submitted_at).toLocaleDateString() : "Unknown",
+  score: submission?.sandbox_status === "Completed" ? 100 : 0,
   comments: 0,
-  caption: submission.content || "No summary provided.",
+  caption: submission?.content || "No summary provided.",
 });
 
 const FeedPage = () => {
@@ -32,8 +32,11 @@ const FeedPage = () => {
     const loadFeed = async () => {
       try {
         const response = await getAllSubmissions();
-        setSubmissions(Array.isArray(response.data) ? response.data : []);
+        const data = Array.isArray(response.data) ? response.data : [];
+        console.log("Feed - Submissions loaded:", data.length, "items");
+        setSubmissions(data);
       } catch (err) {
+        console.error("Feed - Error loading submissions:", err);
         setError(err.response?.data?.error || "Failed to load feed");
       } finally {
         setLoading(false);

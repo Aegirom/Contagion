@@ -6,7 +6,9 @@ const FeedCard = ({ post }) => {
   const navigate = useNavigate();
 
   const handleCardClick = () => {
-    navigate(`/post/${post.id}`);
+    if (post?.id) {
+      navigate(`/post/${post.id}`);
+    }
   };
 
   return (

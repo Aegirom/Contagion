@@ -157,6 +157,18 @@ export const AuthProvider = ({ children }) => {
     window.location.href = "/login";
   };
 
+  const updateUser = (userData) => {
+    const normalizedUser = normalizeUser(userData);
+    setUser(normalizedUser);
+    
+    // Update whichever storage is being used
+    if (localStorage.getItem("authTokens")) {
+      localStorage.setItem("user", JSON.stringify(normalizedUser));
+    } else if (sessionStorage.getItem("authTokens")) {
+      sessionStorage.setItem("user", JSON.stringify(normalizedUser));
+    }
+  };
+
   const value = {
     user,
     loading,
@@ -165,6 +177,7 @@ export const AuthProvider = ({ children }) => {
     register,
     logout,
     forgotPassword,
+    updateUser,
     // Check if user is authenticated
     isAuthenticated: !!user && !!tokens.accessToken,
   };
