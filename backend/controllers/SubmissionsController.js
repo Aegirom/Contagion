@@ -1,8 +1,45 @@
+import sql from 'mssql';
 import pool from '../config/db.js'
 
 async function fetchAllSubmissions() {
   try {
-    const result = await pool.query`SELECT * FROM Analysis_Submissions`;
+    const result = await pool.request().query(`
+      SELECT
+        s.submission_id,
+        s.author_id,
+        s.artifact_id,
+        s.title,
+        s.content,
+        s.status,
+        s.version,
+        s.template_type,
+        s.submitted_at,
+        s.updated_at,
+        u.username,
+        a.file_name,
+        a.file_size,
+        a.file_type,
+        a.sha256_hash,
+        a.malware_family,
+        a.malware_category,
+        latest.execution_id,
+        latest.sandbox_status,
+        latest.finished_at AS sandbox_finished_at
+      FROM Analysis_Submissions s
+      INNER JOIN Users u ON u.user_id = s.author_id
+      LEFT JOIN Malware_Artifacts a ON a.artifact_id = s.artifact_id
+      OUTER APPLY (
+        SELECT TOP 1
+          e.execution_id,
+          e.status AS sandbox_status,
+          e.finished_at
+        FROM Sandbox_Executions e
+        WHERE e.submission_id = s.submission_id
+        ORDER BY e.queued_at DESC
+      ) latest
+      WHERE s.status <> 'Archived'
+      ORDER BY s.updated_at DESC
+    `);
     return result.recordset;
   }
   catch (err) {
@@ -13,7 +50,45 @@ async function fetchAllSubmissions() {
 
 async function fetchUserSubmissions(userId) {
   try {
-    const result = await pool.query`SELECT * FROM Analysis_Submissions WHERE author_id = ${userId}`;
+    const result = await pool.request()
+      .input('user_id', sql.INT, userId)
+      .query(`
+        SELECT
+          s.submission_id,
+          s.author_id,
+          s.artifact_id,
+          s.title,
+          s.content,
+          s.status,
+          s.version,
+          s.template_type,
+          s.submitted_at,
+          s.updated_at,
+          a.file_name,
+          a.file_size,
+          a.file_type,
+          a.md5_hash,
+          a.sha256_hash,
+          a.malware_family,
+          a.malware_category,
+          latest.execution_id,
+          latest.sandbox_status,
+          latest.finished_at AS sandbox_finished_at
+        FROM Analysis_Submissions s
+        LEFT JOIN Malware_Artifacts a ON a.artifact_id = s.artifact_id
+        OUTER APPLY (
+          SELECT TOP 1
+            e.execution_id,
+            e.status AS sandbox_status,
+            e.finished_at
+          FROM Sandbox_Executions e
+          WHERE e.submission_id = s.submission_id
+          ORDER BY e.queued_at DESC
+        ) latest
+        WHERE s.author_id = @user_id
+          AND s.status <> 'Archived'
+        ORDER BY s.updated_at DESC
+      `);
     return result.recordset;
   }
   catch (err) {
@@ -25,7 +100,7 @@ async function fetchUserSubmissions(userId) {
 async function fetchUserStats(userId) {
   try {
     // Get total submissions count
-    const totalResult = await pool.query`SELECT COUNT(*) AS total FROM Analysis_Submissions WHERE author_id = ${userId}`;
+    const totalResult = await pool.query`SELECT COUNT(*) AS total FROM Analysis_Submissions WHERE author_id = ${userId} AND status <> 'Archived'`;
 
     // Get completed submissions count
     const completedResult = await pool.query`SELECT COUNT(*) AS completed FROM Analysis_Submissions WHERE author_id = ${userId} AND status = 'Published'`;
@@ -90,21 +165,260 @@ export const getUserStats = async (req, res) => {
   }
 }
 
+export const getUserDrafts = async (req, res) => {
+  try {
+    const userId = req.user?.userId;
+    if (!userId) {
+      return res.status(401).json({ error: 'Unauthorized' });
+    }
+
+    const result = await pool.request()
+      .input('user_id', sql.INT, userId)
+      .query(`
+        SELECT
+          s.submission_id,
+          s.author_id,
+          s.artifact_id,
+          s.title,
+          s.content,
+          s.status,
+          s.version,
+          s.template_type,
+          s.submitted_at,
+          s.updated_at,
+          a.file_name,
+          a.sha256_hash,
+          a.malware_family,
+          a.malware_category
+        FROM Analysis_Submissions s
+        LEFT JOIN Malware_Artifacts a ON a.artifact_id = s.artifact_id
+        WHERE s.author_id = @user_id
+          AND s.status = 'Draft'
+        ORDER BY s.updated_at DESC
+      `);
+
+    res.json(result.recordset);
+  }
+  catch (err) {
+    console.log("Failed to get user drafts:", err);
+    res.status(500).json({ error: 'Internal Server Error' });
+  }
+}
+
+export const getSubmissionById = async (req, res) => {
+  try {
+    const result = await pool.request()
+      .input('submission_id', sql.INT, Number(req.params.id))
+      .input('user_id', sql.INT, req.user.userId)
+      .query(`
+        SELECT
+          s.submission_id,
+          s.author_id,
+          s.artifact_id,
+          s.title,
+          s.content,
+          s.status,
+          s.version,
+          s.template_type,
+          s.submitted_at,
+          s.updated_at,
+          u.username,
+          u.reputation_score,
+          a.file_name,
+          a.file_size,
+          a.file_type,
+          a.md5_hash,
+          a.sha256_hash,
+          a.storage_path,
+          a.is_quarantined,
+          a.malware_family,
+          a.malware_category,
+          a.upload_time,
+          latest.execution_id,
+          latest.sandbox_status,
+          latest.environment,
+          latest.os_profile,
+          latest.network_enabled,
+          latest.timeout_seconds,
+          latest.queued_at,
+          latest.started_at,
+          latest.finished_at,
+          latest.error_message,
+          (
+            SELECT
+              l.log_id,
+              l.log_type,
+              l.log_data,
+              l.captured_at
+            FROM Sandbox_Executions e
+            INNER JOIN Behavioral_Logs l ON l.execution_id = e.execution_id
+            WHERE e.submission_id = s.submission_id
+            ORDER BY l.captured_at ASC
+            FOR JSON PATH
+          ) AS behavioral_logs
+        FROM Analysis_Submissions s
+        INNER JOIN Users u ON u.user_id = s.author_id
+        LEFT JOIN Malware_Artifacts a ON a.artifact_id = s.artifact_id
+        OUTER APPLY (
+          SELECT TOP 1
+            e.execution_id,
+            e.status AS sandbox_status,
+            e.environment,
+            e.os_profile,
+            e.network_enabled,
+            e.timeout_seconds,
+            e.queued_at,
+            e.started_at,
+            e.finished_at,
+            e.error_message
+          FROM Sandbox_Executions e
+          WHERE e.submission_id = s.submission_id
+          ORDER BY e.queued_at DESC
+        ) latest
+        WHERE s.submission_id = @submission_id
+          AND (s.author_id = @user_id OR s.status = 'Published')
+      `);
+
+    const submission = result.recordset[0];
+    if (!submission) {
+      return res.status(404).json({ error: 'Submission not found' });
+    }
+
+    res.json({
+      ...submission,
+      behavioral_logs: submission.behavioral_logs ? JSON.parse(submission.behavioral_logs) : [],
+    });
+  }
+  catch (err) {
+    console.log("Failed to get submission:", err);
+    res.status(500).json({ error: 'Internal Server Error' });
+  }
+}
+
+export const updateSubmission = async (req, res) => {
+  try {
+    const userId = req.user?.userId;
+    const submissionId = Number(req.params.id);
+    const {
+      title,
+      content,
+      status,
+      artifact_id,
+      version,
+      template_type,
+    } = req.body;
+
+    if (!userId || !submissionId) {
+      return res.status(400).json({ error: 'Submission id is required' });
+    }
+
+    const normalizedStatus = status && ['Draft', 'Pending', 'Published', 'Rejected', 'Archived'].includes(status)
+      ? status
+      : null;
+
+    if (status && !normalizedStatus) {
+      return res.status(400).json({ error: 'Invalid submission status' });
+    }
+
+    const result = await pool.request()
+      .input('submission_id', sql.INT, submissionId)
+      .input('user_id', sql.INT, userId)
+      .input('title', sql.NVARCHAR(255), title ?? null)
+      .input('content', sql.NVARCHAR(sql.MAX), content ?? null)
+      .input('status', sql.NVARCHAR(20), normalizedStatus)
+      .input('artifact_id', sql.INT, artifact_id ?? null)
+      .input('version', sql.INT, version ?? null)
+      .input('template_type', sql.NVARCHAR(50), template_type ?? null)
+      .query(`
+        UPDATE Analysis_Submissions
+        SET title = COALESCE(@title, title),
+            content = COALESCE(@content, content),
+            status = COALESCE(@status, status),
+            artifact_id = COALESCE(@artifact_id, artifact_id),
+            version = COALESCE(@version, version),
+            template_type = COALESCE(@template_type, template_type),
+            updated_at = GETDATE()
+        OUTPUT INSERTED.submission_id, INSERTED.status
+        WHERE submission_id = @submission_id
+          AND author_id = @user_id
+          AND status <> 'Archived'
+      `);
+
+    if (!result.recordset[0]) {
+      return res.status(404).json({ error: 'Submission not found' });
+    }
+
+    res.json({ message: 'Submission updated', submission: result.recordset[0] });
+  } catch (err) {
+    console.log("Failed to update submission:", err);
+    res.status(500).json({ error: 'Internal Server Error' });
+  }
+}
+
+export const deleteSubmission = async (req, res) => {
+  try {
+    const userId = req.user?.userId;
+    const submissionId = Number(req.params.id);
+
+    if (!userId || !submissionId) {
+      return res.status(400).json({ error: 'Submission id is required' });
+    }
+
+    const result = await pool.request()
+      .input('submission_id', sql.INT, submissionId)
+      .input('user_id', sql.INT, userId)
+      .query(`
+        UPDATE Analysis_Submissions
+        SET status = 'Archived', updated_at = GETDATE()
+        OUTPUT INSERTED.submission_id, INSERTED.status
+        WHERE submission_id = @submission_id
+          AND author_id = @user_id
+          AND status <> 'Archived'
+      `);
+
+    if (!result.recordset[0]) {
+      return res.status(404).json({ error: 'Submission not found or already archived' });
+    }
+
+    res.json({ message: 'Submission archived', submission: result.recordset[0] });
+  } catch (err) {
+    console.log("Failed to delete submission:", err);
+    res.status(500).json({ error: 'Internal Server Error' });
+  }
+}
+
 export const postSubmission = async (req, res) => {
   try {
-    console.log(req.body);
-    const { author_id, artifact_id, title, content, status, version, template_type } = req.body;
+    const authorId = req.user?.userId || req.body.author_id;
+    const { artifact_id, title, content, status = 'Draft', version = 1, template_type = 'MALWARE_ANALYSIS' } = req.body;
 
-    if (!author_id || !title || !content) {
+    if (!authorId || !title || !content) {
       return res.status(400).json({ error: "Required fields missing" })
     }
 
+    const normalizedStatus = ['Draft', 'Pending', 'Published', 'Rejected', 'Archived'].includes(status)
+      ? status
+      : 'Draft';
+
     try {
-      await pool.query`
-      INSERT INTO Analysis_Submissions(author_id, artifact_id, title, content, status, version, template_type)
-      VALUES (${author_id}, ${artifact_id}, ${title}, ${content}, ${status}, ${version}, ${template_type})
-      `;
-      res.status(201).json({ message: "Submission Created" });
+      const result = await pool.request()
+        .input('author_id', sql.INT, authorId)
+        .input('artifact_id', sql.INT, artifact_id || null)
+        .input('title', sql.NVARCHAR(255), title)
+        .input('content', sql.NVARCHAR(sql.MAX), content)
+        .input('status', sql.NVARCHAR(20), normalizedStatus)
+        .input('version', sql.INT, Number(version) || 1)
+        .input('template_type', sql.NVARCHAR(50), template_type)
+        .query(`
+          INSERT INTO Analysis_Submissions(author_id, artifact_id, title, content, status, version, template_type)
+          OUTPUT INSERTED.submission_id
+          VALUES (@author_id, @artifact_id, @title, @content, @status, @version, @template_type)
+        `);
+
+      res.status(201).json({
+        message: "Submission Created",
+        submission_id: result.recordset[0].submission_id,
+      });
     }
     catch (dbErr) {
       console.error("Failed to post submission: ", dbErr);
@@ -117,5 +431,3 @@ export const postSubmission = async (req, res) => {
     res.status(400).json({ error: "Bad Request" });
   }
 }
-
-

@@ -35,3 +35,10 @@
 ![DBeaver](https://img.shields.io/badge/DBeaver-372923?style=for-the-badge)
 
 </div>
+
+## Database Documentation
+
+Database query notes, foreign key behavior, constraints, and optional stored procedures are documented in:
+
+- [docs/DATABASE_README.md](docs/DATABASE_README.md)
+- [database/procedures.sql](database/procedures.sql)

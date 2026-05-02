@@ -1,9 +1,6 @@
 import AiEvaluationScore from "./AiEvaluationScore";
-import { useNavigate } from "react-router-dom";
 
-function Submitted({ id, name, description, status, family, threatLevel, aiScorePercentage, reviewCount, date, onOpenAiEval, gotoPost }) {
-  const navigate = useNavigate();
-
+function Submitted({ name, description, status, family, threatLevel, aiScorePercentage, reviewCount, date, hash, fileName, sandboxStatus, onOpenAiEval, gotoPost, onRunSandbox, onDelete, deleting }) {
   // Logic to determine threat color based on the design system
   const getThreatColor = (level) => {
     const l = level?.toLowerCase();
@@ -37,6 +34,16 @@ function Submitted({ id, name, description, status, family, threatLevel, aiScore
         <p id="submittedThreatLevel" className={`px-3 py-1 rounded text-xs font-mono uppercase border ${getThreatColor(threatLevel)}`}>
           THREAT: {threatLevel}
         </p>
+        {sandboxStatus && (
+          <p className="text-cyan-400 bg-cyan-900/10 border border-cyan-900/50 px-3 py-1 rounded text-xs font-mono uppercase">
+            SANDBOX: {sandboxStatus}
+          </p>
+        )}
+      </div>
+
+      <div className="mb-6 rounded-md border border-phantom/50 bg-slate-dark/40 p-3">
+        <p className="font-code text-[10px] uppercase tracking-widest text-slate-600">{fileName || 'No artifact linked'}</p>
+        <p className="mt-1 break-all font-code text-[11px] text-toxic">{hash || 'Upload an artifact to enable sandbox execution'}</p>
       </div>
 
       {/* AI Evaluation Section */}
@@ -67,6 +74,21 @@ function Submitted({ id, name, description, status, family, threatLevel, aiScore
         </div>
 
         <div id="submittedBottomRightPart" className="flex gap-4">
+          <button
+            onClick={onDelete}
+            disabled={deleting}
+            className="bg-red-900/10 hover:bg-red-900/20 text-red-300 border border-red-900/40 px-3 py-1.5 rounded-sm text-[10px] font-black uppercase tracking-widest transition-all disabled:opacity-50"
+          >
+            {deleting ? 'DELETING' : 'DELETE'}
+          </button>
+          {hash && (
+            <button
+              onClick={onRunSandbox}
+              className="bg-cyan-900/10 hover:bg-cyan-900/20 text-cyan-300 border border-cyan-900/40 px-3 py-1.5 rounded-sm text-[10px] font-black uppercase tracking-widest transition-all"
+            >
+              RUN SANDBOX
+            </button>
+          )}
           <button
             onClick={onOpenAiEval}
             className="bg-toxic/10 hover:bg-toxic/20 text-toxic border border-toxic/30 px-3 py-1.5 rounded-sm text-[10px] font-black uppercase tracking-widest transition-all"

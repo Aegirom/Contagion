@@ -1,8 +1,19 @@
+/* eslint-disable react-refresh/only-export-components */
 import { createContext, useState, useEffect } from 'react';
 import { login as apiLogin, register as apiRegister, forgotPassword as apiForgotPassword } from '../services/authService';
 import API from '../services/api';
 
 export const AuthContext = createContext();
+
+const normalizeUser = (userData) => {
+  if (!userData) return null;
+  const id = userData.user_id || userData.id;
+  return {
+    ...userData,
+    id,
+    user_id: id,
+  };
+};
 
 export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null);
@@ -13,16 +24,18 @@ export const AuthProvider = ({ children }) => {
   useEffect(() => {
     const initAuth = async () => {
       try {
-        const storedUser = localStorage.getItem('user');
         const storedTokens = localStorage.getItem('authTokens');
 
-        if (storedUser && storedTokens) {
-          const userData = JSON.parse(storedUser);
+        if (storedTokens) {
           const authTokens = JSON.parse(storedTokens);
+          API.defaults.headers['Authorization'] = `Bearer ${authTokens.accessToken}`;
+
+          const response = await API.get('/auth/me');
+          const userData = normalizeUser(response.data);
 
           setUser(userData);
           setTokens(authTokens);
-          API.defaults.headers['Authorization'] = `Bearer ${authTokens.accessToken}`;
+          localStorage.setItem('user', JSON.stringify(userData));
         }
       } catch (error) {
         console.error('Error initializing auth:', error);
@@ -40,14 +53,15 @@ export const AuthProvider = ({ children }) => {
     try {
       const response = await apiLogin(email, password);
       const { user: userData, tokens: authTokens } = response;
+      const normalizedUser = normalizeUser(userData);
 
-      setUser(userData);
+      setUser(normalizedUser);
       setTokens(authTokens);
       localStorage.setItem('authTokens', JSON.stringify(authTokens));
-      localStorage.setItem('user', JSON.stringify(userData));
+      localStorage.setItem('user', JSON.stringify(normalizedUser));
       API.defaults.headers['Authorization'] = `Bearer ${authTokens.accessToken}`;
 
-      return { success: true, user: userData, tokens: authTokens };
+      return { success: true, user: normalizedUser, tokens: authTokens };
     } catch (error) {
       console.error('Login error:', error);
       const errorMessage = error.response?.data?.error || 'Login failed';

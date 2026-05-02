@@ -13,6 +13,7 @@ import SubmissionsPage from "./AppLayout/SubmissionsPage/SubmissionsPage";
 import AiEvaluationPage from "./AppLayout/AiEvaluation/AiEvaluationPage";
 import AdminDashboardPage from "./AppLayout/Dashboard/AdminDashboardPage";
 import ProfilePage from "./AppLayout/Profile/ProfilePage";
+import SandboxPage from "./AppLayout/Sandbox/SandboxPage";
 import { AuthProvider } from "./context/AuthContext";
 import AdminRoute from "./AppLayout/AdminRoute";
 import PrivateRoute from "./AppLayout/PrivateRoute";
@@ -114,19 +115,34 @@ function App() {
           />
 
           <Route
+            path="/sandbox"
+            element={
+              <PrivateRoute>
+                <MainLayout
+                  pageName="Sandbox"
+                  sidebarOpen={sidebarOpen}
+                  toggleSidebar={toggleSidebar}
+                >
+                  <SandboxPage />
+                </MainLayout>
+              </PrivateRoute>
+            }
+          />
+
+          <Route
             path="/admin"
             element={
-              <MainLayout
-                pageName="Admin"
-                sidebarOpen={sidebarOpen}
-                toggleSidebar={toggleSidebar}
-              >
-                <PrivateRoute>
+              <PrivateRoute>
+                <MainLayout
+                  pageName="Admin"
+                  sidebarOpen={sidebarOpen}
+                  toggleSidebar={toggleSidebar}
+                >
                   <AdminRoute>
                     <AdminDashboardPage />
                   </AdminRoute>
-                </PrivateRoute>
-              </MainLayout>
+                </MainLayout>
+              </PrivateRoute>
             }
           />
 

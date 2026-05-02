@@ -5,6 +5,8 @@ import submissionsRoutes from "./routes/Submissions.js";
 import leaderboardRoutes from "./routes/Leaderboard.js";
 import authRoutes from "./routes/Auth.js";
 import dashboardRoutes from "./routes/Dashboard.js";
+import sandboxRoutes from "./routes/Sandbox.js";
+import artifactRoutes from "./routes/Artifacts.js";
 import path from 'path';
 import { fileURLToPath } from 'url';
 
@@ -39,8 +41,9 @@ app.use("/submissions", submissionsRoutes);
 app.use("/auth", authRoutes);
 app.use("/leaderboard", leaderboardRoutes);
 app.use("/dashboard", dashboardRoutes);
+app.use("/sandbox", sandboxRoutes);
+app.use("/artifacts", artifactRoutes);
 
 app.listen(3000, () => {
   console.log("Server running on port 3000");
 });
-

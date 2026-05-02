@@ -1,13 +1,10 @@
-import React from "react";
 import { useNavigate } from "react-router-dom";
-
-const BACKEND_URL = import.meta.env.backendURL || "http://localhost:3000";
 
 function DraftCard({ draft, onPublish, onDelete }) {
   const navigate = useNavigate();
 
   const handleEdit = () => {
-    navigate(`/create-post?draftId=${draft.id}`);
+    navigate(`/create-post?draftId=${draft.submission_id}`);
   };
 
   return (
@@ -46,9 +43,10 @@ function DraftCard({ draft, onPublish, onDelete }) {
         style={{ color: "#475569" }}
       >
         <span className="font-code">
-          Last saved: {draft.updatedAt || "Unknown"}
+          Last saved: {draft.updated_at ? new Date(draft.updated_at).toLocaleDateString() : "Unknown"}
         </span>
-        <span className="font-code">v{draft.version || "0.1"}</span>
+        <span className="font-code">v{draft.version || 1}</span>
+        {draft.file_name && <span className="font-code">{draft.file_name}</span>}
       </div>
 
       <div className="flex gap-3">
@@ -71,7 +69,7 @@ function DraftCard({ draft, onPublish, onDelete }) {
           Publish
         </button>
         <button
-          onClick={() => onDelete(draft.id)}
+          onClick={() => onDelete(draft.submission_id)}
           className="py-3 px-4 rounded-lg font-display text-xs font-bold tracking-[0.2em] uppercase transition-all border"
           style={{
             background: "transparent",

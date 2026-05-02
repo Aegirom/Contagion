@@ -1,81 +1,61 @@
-import React, { useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
+import { getAllSubmissions } from "../../services/api";
 import FeedCard from "./components/FeedCard";
 
-const FeedPage = () => {
-  const [sortBy, setSortBy] = useState("hot");
+const severityFromCategory = (category) => {
+  if (["Ransomware", "APT", "Rootkit"].includes(category)) return "CRITICAL";
+  if (["Trojan", "Worm", "Spyware"].includes(category)) return "HIGH";
+  return "INFO";
+};
 
-  const posts = [
-    {
-      id: 1,
-      user: "MalwareHunter",
-      location: "Kiev, Ukraine",
-      hash: "7f3ab9c1d2e4",
-      family: "Emotet",
-      threat: "CRITICAL",
-      status: "Completed",
-      date: "2 HOURS AGO",
-      score: 94,
-      comments: 12,
-      caption:
-        "Just found this Emotet variant in a phishing campaign. Stay safe everyone!",
-    },
-    {
-      id: 2,
-      user: "CyberGuardian",
-      location: "Berlin, Germany",
-      hash: "a1b2c3d4e5f6",
-      family: "AsyncRAT",
-      threat: "HIGH",
-      status: "Analyzing",
-      date: "4 HOURS AGO",
-      score: 81,
-      comments: 5,
-      caption:
-        "New AsyncRAT sample spotted. Seems to be targeting financial institutions.",
-    },
-    {
-      id: 3,
-      user: "Infosec_Joe",
-      location: "New York, USA",
-      hash: "f9e8d7c6b5a4",
-      family: "Mirai Botnet",
-      threat: "HIGH",
-      status: "Peer Review",
-      date: "6 HOURS AGO",
-      score: 77,
-      comments: 24,
-      caption:
-        "Massive Mirai botnet activity detected. Re-analyzing the payload.",
-    },
-    {
-      id: 4,
-      user: "RansomAware",
-      location: "London, UK",
-      hash: "3c4d5e6f7a8b",
-      family: "LockBit 3.0",
-      threat: "CRITICAL",
-      status: "Completed",
-      date: "1 DAY AGO",
-      score: 98,
-      comments: 42,
-      caption:
-        "LockBit 3.0 is getting more sophisticated. Check out the encryption routine.",
-    },
-  ];
+const toFeedPost = (submission) => ({
+  id: submission.submission_id,
+  user: submission.username || "Analyst",
+  location: "Contagion Network",
+  hash: submission.sha256_hash || submission.title || "No artifact",
+  family: submission.malware_family || submission.malware_category || submission.template_type || "Analysis",
+  threat: severityFromCategory(submission.malware_category),
+  status: submission.sandbox_status || submission.status,
+  date: submission.submitted_at ? new Date(submission.submitted_at).toLocaleDateString() : "Unknown",
+  score: submission.sandbox_status === "Completed" ? 100 : 0,
+  comments: 0,
+  caption: submission.content || "No summary provided.",
+});
+
+const FeedPage = () => {
+  const [sortBy, setSortBy] = useState("new");
+  const [submissions, setSubmissions] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
+
+  useEffect(() => {
+    const loadFeed = async () => {
+      try {
+        const response = await getAllSubmissions();
+        setSubmissions(Array.isArray(response.data) ? response.data : []);
+      } catch (err) {
+        setError(err.response?.data?.error || "Failed to load feed");
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    loadFeed();
+  }, []);
+
+  const posts = useMemo(() => {
+    const rows = submissions.map(toFeedPost);
+    if (sortBy === "top") return [...rows].sort((a, b) => b.score - a.score);
+    if (sortBy === "hot") return [...rows].sort((a, b) => (b.comments + b.score) - (a.comments + a.score));
+    return rows;
+  }, [submissions, sortBy]);
 
   const sortOptions = [
     {
       key: "hot",
       label: "Hot",
       icon: (
-        <svg
-          width="16"
-          height="16"
-          viewBox="0 0 24 24"
-          fill="none"
-          stroke="currentColor"
-          strokeWidth="2"
-        >
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
           <path d="M8.5 14.5A2.5 2.5 0 0 0 11 12c0-1.38-.5-2-1-3-1.072-2.143-.224-4.054 2-6 .5 2.5 2 4.9 4 6.5 2 1.6 3 3.5 3 5.5a7 7 0 1 1-14 0c0-1.153.433-2.294 1-3a2.5 2.5 0 0 0 2.5 2.5z" />
         </svg>
       ),
@@ -84,14 +64,7 @@ const FeedPage = () => {
       key: "new",
       label: "New",
       icon: (
-        <svg
-          width="16"
-          height="16"
-          viewBox="0 0 24 24"
-          fill="none"
-          stroke="currentColor"
-          strokeWidth="2"
-        >
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
           <circle cx="12" cy="12" r="10" />
           <polyline points="12 6 12 12 16 14" />
         </svg>
@@ -101,14 +74,7 @@ const FeedPage = () => {
       key: "top",
       label: "Top",
       icon: (
-        <svg
-          width="16"
-          height="16"
-          viewBox="0 0 24 24"
-          fill="none"
-          stroke="currentColor"
-          strokeWidth="2"
-        >
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
           <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z" />
         </svg>
       ),
@@ -118,7 +84,6 @@ const FeedPage = () => {
   return (
     <main className="flex-1 overflow-auto relative z-10">
       <div className="max-w-4xl mx-auto py-8 px-4">
-        {/* Sort Tabs */}
         <div
           className="flex items-center gap-2 mb-6 p-2 rounded-xl"
           style={{
@@ -147,11 +112,28 @@ const FeedPage = () => {
           ))}
         </div>
 
-        {/* Feed List */}
+        {error && (
+          <div className="mb-6 rounded border border-red-900/40 bg-red-900/10 px-4 py-3 font-code text-xs text-red-300">
+            {error}
+          </div>
+        )}
+
         <div className="space-y-2">
-          {posts.map((post) => (
+          {loading && (
+            <div className="py-20 text-center font-code text-xs uppercase tracking-widest text-slate-500">
+              Loading feed...
+            </div>
+          )}
+
+          {!loading && posts.map((post) => (
             <FeedCard key={post.id} post={post} />
           ))}
+
+          {!loading && posts.length === 0 && (
+            <div className="py-20 text-center border border-dashed border-phantom">
+              <p className="font-code text-xs uppercase tracking-widest text-slate-500">No submissions in the feed yet.</p>
+            </div>
+          )}
         </div>
       </div>
     </main>

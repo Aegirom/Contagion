@@ -18,38 +18,21 @@ export const getActivityFeed = async (req, res) => {
           s.title,
           s.status,
           s.submitted_at,
-          t.type_name as template_type
-        FROM Submissions s
-        LEFT JOIN Templates t ON s.template_id = t.template_id
-        WHERE s.user_id = @user_id
+          s.template_type
+        FROM Analysis_Submissions s
+        WHERE s.author_id = @user_id
+          AND s.status <> 'Archived'
         ORDER BY s.submitted_at DESC
-      `);
-
-    // Get user's recent reviews
-    const reviewsResult = await pool.request()
-      .input('user_id', sql.INT, userId)
-      .query(`
-        SELECT TOP 5
-          r.review_id,
-          r.score,
-          r.comments,
-          r.created_at,
-          s.title as submission_title
-        FROM Reviews r
-        LEFT JOIN Submissions s ON r.submission_id = s.submission_id
-        WHERE r.user_id = @user_id
-        ORDER BY r.created_at DESC
       `);
 
     // Get user's recent badges/achievements (from specializations)
     const specializationsResult = await pool.request()
       .input('user_id', sql.INT, userId)
       .query(`
-        SELECT s.name as specialization, us.assigned_at
+        SELECT s.name as specialization, GETDATE() AS assigned_at
         FROM User_Specializations us
         JOIN Specializations s ON us.specialization_id = s.specialization_id
         WHERE us.user_id = @user_id
-        ORDER BY us.assigned_at DESC
       `);
 
     // Format activity items
@@ -68,22 +51,6 @@ export const getActivityFeed = async (req, res) => {
         }),
         color: '#22C55E',
         data: sub
-      });
-    });
-
-    // Add reviews to activity
-    reviewsResult.recordset.forEach(review => {
-      activityItems.push({
-        type: 'review',
-        msg: `Review completed: ${review.submission_title || 'Submission'}`,
-        time: new Date(review.created_at).toLocaleDateString('en-US', {
-          month: 'short',
-          day: 'numeric',
-          hour: '2-digit',
-          minute: '2-digit'
-        }),
-        color: '#8B5CF6',
-        data: review
       });
     });
 
@@ -141,7 +108,7 @@ export const getAnalystReputation = async (req, res) => {
           COUNT(s.submission_id) as total_submissions,
           COUNT(CASE WHEN s.status = 'Published' THEN 1 END) as published_submissions
         FROM Users u
-        LEFT JOIN Submissions s ON u.user_id = s.user_id
+        LEFT JOIN Analysis_Submissions s ON u.user_id = s.author_id AND s.status <> 'Archived'
         WHERE u.user_id = @user_id
         GROUP BY u.reputation_score, u.expertise_level, u.role, u.created_at
       `);
@@ -153,17 +120,6 @@ export const getAnalystReputation = async (req, res) => {
     }
 
     // Get rank among all users (simplified - just based on reputation)
-    const rankResult = await pool.request()
-      .input('user_id', sql.INT, userId)
-      .input('reputation_score', sql.INT, userStats.reputation_score || 0)
-      .query(`
-        SELECT
-          COUNT(*) + 1 as rank,
-          (SELECT reputation_score FROM Users WHERE reputation_score > @reputation_score) as next_rank_score
-        FROM Users
-        WHERE reputation_score > @reputation_score
-      `);
-
     // Calculate XP needed for next rank (placeholder logic)
     const currentScore = userStats.reputation_score || 0;
     const nextRankScore = currentScore + 500; // Simple linear scaling
@@ -211,9 +167,10 @@ export const getQuickActions = async (req, res) => {
     // Return available actions based on user status
     res.json([
       { label: 'Submit Analysis', action: 'submit', icon: 'upload', enabled: true },
+      { label: 'Drafts', action: 'drafts', icon: 'document', enabled: true },
+      { label: 'Submissions', action: 'submissions', icon: 'list', enabled: true },
+      { label: 'Sandbox', action: 'sandbox', icon: 'terminal', enabled: true },
       { label: 'View Leaderboard', action: 'leaderboard', icon: 'star', enabled: true },
-      { label: 'Pending Reviews', action: 'reviews', icon: 'clock', enabled: true },
-      { label: 'Export Data', action: 'export', icon: 'download', enabled: true }
     ]);
   } catch (error) {
     console.error('Get quick actions error:', error);

@@ -41,7 +41,7 @@ const EmptySubmissions = () => (
 );
 
 const DashboardPage = () => {
-  const { user } = useContext(AuthContext);
+  const { user, loading: authLoading } = useContext(AuthContext);
 
   const [stats, setStats]             = useState(null);
   const [submissions, setSubmissions] = useState([]);
@@ -52,11 +52,15 @@ const DashboardPage = () => {
   const [error, setError]             = useState(null);
 
   useEffect(() => {
-    if (!user?.user_id) { setLoading(false); return; }
+    if (authLoading) return;
+    if (!user?.user_id && !user?.id) {
+      const timer = setTimeout(() => setLoading(false), 0);
+      return () => clearTimeout(timer);
+    }
 
     Promise.all([
-      getUserStats(),
-      getUserSubmissions(),
+      getUserStats().then(r => r.data),
+      getUserSubmissions().then(r => r.data),
       getDashboardActivity().then(r => r.data).catch(() => ({ items: [] })),
       getAnalystReputation().then(r => r.data).catch(() => null),
       getQuickActions().then(r => r.data).catch(() => []),
@@ -70,7 +74,7 @@ const DashboardPage = () => {
       })
       .catch(err => { console.error(err); setError(err); })
       .finally(() => setLoading(false));
-  }, [user]);
+  }, [user, authLoading]);
 
   if (error) {
     return (
@@ -87,11 +91,11 @@ const DashboardPage = () => {
 
   const tableRows = submissions.slice(0, 7).map(s => ({
     id:     s.submission_id,
-    hash:   s.title ?? 'N/A',
-    family: s.template_type ?? 'Unknown',
-    status: s.status === 'Published' ? 'Completed' : s.status,
+    hash:   s.sha256_hash || s.title || 'N/A',
+    family: s.malware_family || s.malware_category || s.template_type || 'Unknown',
+    status: s.sandbox_status || (s.status === 'Published' ? 'Completed' : s.status),
     date:   new Date(s.submitted_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric' }),
-    score:  85,
+    score:  s.sandbox_status === 'Completed' ? 100 : 0,
   }));
 
   const feedItems = activityItems.length > 0

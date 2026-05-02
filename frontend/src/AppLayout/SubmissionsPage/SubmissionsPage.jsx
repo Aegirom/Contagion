@@ -5,7 +5,7 @@ import AiEvaluationModal from "./Components/AiEvaluationModal";
 import { useNavigate } from "react-router-dom";
 import PlusButton from "../Dashboard/Components/Buttons.jsx";
 import { AuthContext } from "../../context/AuthContext";
-import { getUserSubmissions } from "../../services/api";
+import { deleteSubmission, evaluateSandboxFile, getUserSubmissions } from "../../services/api";
 
 function SubmissionsPage() {
   const { user, loading: authLoading } = useContext(AuthContext);
@@ -20,6 +20,9 @@ function SubmissionsPage() {
   const [dataLoading, setDataLoading] = useState(true);
   const [selectedSubmission, setSelectedSubmission] = useState(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [actionError, setActionError] = useState("");
+  const [runningSandboxId, setRunningSandboxId] = useState(null);
+  const [deletingId, setDeletingId] = useState(null);
 
   useEffect(() => {
     const getData = async () => {
@@ -34,10 +37,16 @@ function SubmissionsPage() {
       }
     };
 
-    if (user?.user_id) {
-      getData();
+    if (authLoading) {
+      return;
     }
-  }, [user]);
+
+    if (user?.user_id || user?.id) {
+      getData();
+    } else {
+      setDataLoading(false);
+    }
+  }, [user, authLoading]);
 
   const handleFilterChange = (key, value) => {
     setFilters(prev => ({ ...prev, [key]: value }));
@@ -51,6 +60,48 @@ function SubmissionsPage() {
   const handleOpenEvaluation = (submission) => {
     setSelectedSubmission(submission);
     setIsModalOpen(true);
+  };
+
+  const refreshSubmissions = async () => {
+    const res = await getUserSubmissions();
+    setSubmissions(Array.isArray(res.data) ? res.data : []);
+  };
+
+  const handleRunSandbox = async (submission) => {
+    if (!submission.hash) return;
+    setActionError("");
+    setRunningSandboxId(submission.id);
+    try {
+      await evaluateSandboxFile({
+        submission_id: submission.id,
+        file_hash: submission.hash,
+        environment: "Docker",
+        os_profile: "Windows10",
+        network_enabled: false,
+        timeout_seconds: 120,
+      });
+      await refreshSubmissions();
+    } catch (err) {
+      setActionError(err.response?.data?.error || "Sandbox evaluation failed");
+    } finally {
+      setRunningSandboxId(null);
+    }
+  };
+
+  const handleDeleteSubmission = async (submission) => {
+    const confirmed = window.confirm(`Delete "${submission.name}"? This archives the submission and removes it from active lists.`);
+    if (!confirmed) return;
+
+    setActionError("");
+    setDeletingId(submission.id);
+    try {
+      await deleteSubmission(submission.id);
+      setSubmissions((prev) => prev.filter((item) => item.submission_id !== submission.id));
+    } catch (err) {
+      setActionError(err.response?.data?.error || "Failed to delete submission");
+    } finally {
+      setDeletingId(null);
+    }
   };
 
   const handleCloseModal = () => {
@@ -71,11 +122,15 @@ function SubmissionsPage() {
     name: sub.title || 'Untitled',
     description: sub.content?.substring(0, 100) || '',
     status: sub.status,
-    family: sub.template_type || 'General',
-    threatLevel: 'MEDIUM',
-    aiScorePercentage: '85%',
+    family: sub.malware_family || sub.malware_category || sub.template_type || 'General',
+    threatLevel: sub.malware_category || 'Unknown',
+    aiScorePercentage: sub.sandbox_status === 'Completed' ? '100%' : '0%',
     reviewCount: 0,
-    date: sub.submitted_at ? new Date(sub.submitted_at).toLocaleDateString() : 'Unknown'
+    date: sub.submitted_at ? new Date(sub.submitted_at).toLocaleDateString() : 'Unknown',
+    artifactId: sub.artifact_id,
+    hash: sub.sha256_hash,
+    fileName: sub.file_name,
+    sandboxStatus: sub.sandbox_status || 'Not queued',
   }));
 
   // Filter submissions
@@ -106,6 +161,12 @@ function SubmissionsPage() {
           <SearchBar filters={filters} onFilterChange={handleFilterChange} />
         </div>
 
+        {actionError && (
+          <div className="mb-6 rounded border border-red-900/40 bg-red-900/10 px-4 py-3 font-code text-xs text-red-300">
+            {actionError}
+          </div>
+        )}
+
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6 max-w-7xl mx-auto">
           <div className="col-span-full flex items-center gap-4 mb-2">
             <span className="text-[10px] text-slate-600 font-black uppercase tracking-[0.3em]">
@@ -118,8 +179,12 @@ function SubmissionsPage() {
             <Submitted
               key={item.id}
               {...item}
+              aiScorePercentage={runningSandboxId === item.id ? '...' : item.aiScorePercentage}
               onOpenAiEval={() => handleOpenEvaluation(item)}
               gotoPost={() => handleViewDetails(item)}
+              onRunSandbox={() => handleRunSandbox(item)}
+              onDelete={() => handleDeleteSubmission(item)}
+              deleting={deletingId === item.id}
             />
           ))}
 

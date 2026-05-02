@@ -11,26 +11,18 @@ import { getFullUserProfile, updateFullUserProfile, uploadAvatar } from '../cont
 export const protect = (req, res, next) => {
   let token;
 
-  console.log('=== PROTECT MIDDLEWARE DEBUG ===');
-  console.log('Authorization header:', req.headers.authorization ? 'present' : 'missing');
-  console.log('Full auth header:', req.headers.authorization);
-
   if (req.headers.authorization && req.headers.authorization.startsWith('Bearer')) {
     try {
       token = req.headers.authorization.split(' ')[1];
-      console.log('Token extracted:', token ? token.substring(0, 20) + '...' : 'null');
       const decoded = jwt.verify(token, process.env.JWT_SECRET);
       req.user = decoded;
-      console.log('User decoded:', decoded);
       next();
     } catch (error) {
-      console.log('Token verification failed:', error.message);
       return res.status(401).json({ error: 'Not authorized, token failed' });
     }
   }
 
   if (!token) {
-    console.log('No token found');
     return res.status(401).json({ error: 'Not authorized, no token provided' });
   }
 };

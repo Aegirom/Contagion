@@ -1,82 +1,51 @@
-import React, { useState, useEffect } from "react";
+import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import DraftCard from "./Components/DraftCard";
 import PlusButton from "../Dashboard/Components/Buttons.jsx";
-import axios from "axios";
-
-const BACKEND_URL = import.meta.env.backendURL || "http://localhost:3000";
-
-const INITIAL_DRAFTS = [
-  {
-    id: 1,
-    title: "Emotet Variant Analysis",
-    content: "Preliminary findings on the new Emotet campaign targeting...",
-    version: "0.3",
-    updatedAt: "2024-02-15",
-  },
-  {
-    id: 2,
-    title: "",
-    content: "Initial notes on Cobalt Strike beacon patterns...",
-    version: "0.1",
-    updatedAt: "2024-02-10",
-  },
-];
+import { deleteSubmission, getUserDrafts, updateSubmission } from "../../services/api";
 
 function Drafts() {
   const navigate = useNavigate();
-  const [drafts, setDrafts] = useState(INITIAL_DRAFTS);
-  const [isLoading, setIsLoading] = useState(false);
+  const [drafts, setDrafts] = useState([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState("");
 
-  useEffect(() => {
-    const getDrafts = async () => {
-      try {
-        const res = await axios.get(`${BACKEND_URL}/drafts/get/`);
-        console.log("Drafts received");
-        setDrafts(Array.isArray(res.data) ? res.data : INITIAL_DRAFTS);
-      } catch (err) {
-        console.log("Could not fetch drafts:", err);
-      }
-    };
-
-    getDrafts();
-  }, []);
-
-  const handlePublish = async (draft) => {
-    setIsLoading(true);
+  const loadDrafts = async () => {
+    setError("");
     try {
-      const response = await fetch(`${BACKEND_URL}/submissions/post`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ ...draft, status: "PENDING" }),
-      });
-
-      const data = await response.json();
-
-      if (response.ok) {
-        console.log("Published:", data.message);
-        setDrafts((prev) => prev.filter((d) => d.id !== draft.id));
-        navigate("/feed");
-      } else {
-        alert(`Error: ${data.error}`);
-      }
-    } catch (error) {
-      console.error("Network error:", error);
-      alert("Failed to connect to the server.");
+      const response = await getUserDrafts();
+      setDrafts(Array.isArray(response.data) ? response.data : []);
+    } catch (err) {
+      setError(err.response?.data?.error || "Could not fetch drafts");
     } finally {
       setIsLoading(false);
     }
   };
 
-  const handleDelete = async (id) => {
-    if (!confirm("Are you sure you want to delete this draft?")) return;
+  useEffect(() => {
+    loadDrafts();
+  }, []);
 
+  const handlePublish = async (draft) => {
+    setError("");
     try {
-      await axios.delete(`${BACKEND_URL}/drafts/delete/${id}`);
-      console.log("Draft deleted");
-      setDrafts((prev) => prev.filter((d) => d.id !== id));
+      await updateSubmission(draft.submission_id, { status: "Pending" });
+      setDrafts((prev) => prev.filter((item) => item.submission_id !== draft.submission_id));
+      navigate("/submissions");
     } catch (err) {
-      console.log("Could not delete draft:", err);
+      setError(err.response?.data?.error || "Failed to publish draft");
+    }
+  };
+
+  const handleDelete = async (id) => {
+    if (!window.confirm("Delete this draft? This archives it and removes it from active lists.")) return;
+
+    setError("");
+    try {
+      await deleteSubmission(id);
+      setDrafts((prev) => prev.filter((draft) => draft.submission_id !== id));
+    } catch (err) {
+      setError(err.response?.data?.error || "Could not delete draft");
     }
   };
 
@@ -94,6 +63,12 @@ function Drafts() {
         <PlusButton text={"New Draft"} />
       </div>
 
+      {error && (
+        <div className="mb-6 rounded border border-red-900/40 bg-red-900/10 px-4 py-3 font-code text-xs text-red-300">
+          {error}
+        </div>
+      )}
+
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6 max-w-7xl mx-auto">
         <div className="col-span-full flex items-center gap-4 mb-2">
           <span className="text-[10px] text-slate-600 font-black uppercase tracking-[0.3em]">
@@ -102,16 +77,23 @@ function Drafts() {
           <div className="h-[1px] flex-grow bg-phantom"></div>
         </div>
 
-        {drafts.map((draft) => (
+        {isLoading && (
+          <div className="col-span-full py-20 text-center">
+            <div className="inline-block animate-spin rounded-full h-12 w-12 border-4 border-toxic border-t-transparent mb-4"></div>
+            <p className="text-slate-500 font-mono text-sm uppercase">Loading drafts...</p>
+          </div>
+        )}
+
+        {!isLoading && drafts.map((draft) => (
           <DraftCard
-            key={draft.id}
+            key={draft.submission_id}
             draft={draft}
             onPublish={handlePublish}
             onDelete={handleDelete}
           />
         ))}
 
-        {drafts.length === 0 && (
+        {!isLoading && drafts.length === 0 && (
           <div className="col-span-full py-20 text-center border border-dashed border-phantom rounded-xl">
             <p className="text-slate-500 font-mono text-sm uppercase">
               No drafts saved yet.

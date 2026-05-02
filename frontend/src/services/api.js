@@ -12,7 +12,14 @@ const API = axios.create({
 // Request Interceptor - adding token to every request
 API.interceptors.request.use(
   (config) => {
-    const token = localStorage.getItem('accessToken');
+    const storedTokens = localStorage.getItem('authTokens');
+    let parsedTokens = {};
+    try {
+      parsedTokens = storedTokens ? JSON.parse(storedTokens) : {};
+    } catch {
+      parsedTokens = {};
+    }
+    const token = localStorage.getItem('accessToken') || parsedTokens.accessToken;
     if (token) {
       config.headers['Authorization'] = `Bearer ${token}`;
     }
@@ -60,12 +67,31 @@ export const authAPI = {
 };
 
 // User Submissions API functions
+export const getAllSubmissions = () => API.get('/submissions/get');
 export const getUserSubmissions = () => API.get('/submissions/mine');
 export const getUserStats = () => API.get('/submissions/stats');
+export const getUserDrafts = () => API.get('/submissions/drafts');
+export const getSubmissionById = (id) => API.get(`/submissions/${id}`);
+export const createSubmission = (payload) => API.post('/submissions/post', payload);
+export const updateSubmission = (id, payload) => API.patch(`/submissions/${id}`, payload);
+export const deleteSubmission = (id) => API.delete(`/submissions/${id}`);
+
+// Artifact API functions
+export const uploadArtifact = (formData, onUploadProgress) => API.post('/artifacts/upload', formData, {
+  headers: { 'Content-Type': 'multipart/form-data' },
+  onUploadProgress,
+});
+export const getArtifacts = () => API.get('/artifacts');
+export const getArtifactDownloadUrl = (id) => API.get(`/artifacts/${id}/download`);
 
 // Dashboard API functions
 export const getDashboardActivity = () => API.get('/dashboard/activity');
 export const getAnalystReputation = () => API.get('/dashboard/reputation');
 export const getQuickActions = () => API.get('/dashboard/quick-actions');
+
+// Sandbox API functions
+export const getSandboxSubmissions = () => API.get('/sandbox/submissions');
+export const getSandboxExecutions = () => API.get('/sandbox/executions');
+export const evaluateSandboxFile = (payload) => API.post('/sandbox/evaluate', payload);
 
 export default API;
