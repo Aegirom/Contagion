@@ -7,38 +7,52 @@ const backendURL = import.meta.env.VITE_BACKEND_URL;
 
 function Leaderboard() {
   const [leaderboardData, setLeaderboardData] = useState([]);
+  const [currentUser, setCurrentUser] = useState(null);
   const [duration, setDuration] = useState("all");
-  console.log("backendURL: ", backendURL);
+
   useEffect(() => {
     const getLeaderboard = async () => {
       try {
         const res = await axios.get(backendURL + '/leaderboard');
-        const mapped = Array.isArray(res.data) ? res.data.map((user, i) => ({
-          position: i + 1,
+        const mapped = Array.isArray(res.data)
+          ? res.data.map((user, i) => ({
+            position: i + 1,
+            username: user.username,
+            userpfp: user.avatar_url || "/pfp1.png",
+            trophies: user.reputation_score ?? 0,
+            analyses: 0,
+            reviews: 0,
+            avgScore: 0,
+          }))
+          : [];
+        setLeaderboardData(mapped);
+      } catch (err) {
+        console.error("Could not receive leaderboard data: ", err);
+      }
+    };
+
+    const getMyPosition = async () => {
+      try {
+        const res = await axios.get(backendURL + '/leaderboard/me');
+        const user = res.data;
+        setCurrentUser({
+          position: user.position,
           username: user.username,
           userpfp: user.avatar_url || "/pfp1.png",
           trophies: user.reputation_score ?? 0,
-          analyses: 0,   // not in DB yet
-          reviews: 0,    // not in DB yet
-          avgScore: 0,   // not in DB yet
-        })) : [];
-        setLeaderboardData(mapped);
+          analyses: 0,
+          reviews: 0,
+          avgScore: 0,
+        });
       } catch (err) {
-        console.log("Could not receive leaderboard ratings: ", err);
+        console.error("Could not retrieve current user position: ", err);
+        // Leave currentUser as null — sticky footer won't render
       }
     };
-    getLeaderboard();
-  }, []);
 
-  const currentUser = {
-    position: 17,
-    username: "You",
-    userpfp: "/pfp1.png",
-    trophies: 22,
-    analyses: 15,
-    reviews: 9,
-    avgScore: 81,
-  };
+    getLeaderboard();
+    getMyPosition();
+  }, []);
 
   return (
     <div className="min-h-screen bg-abyss text-slate-100 px-6 py-12 md:px-12 lg:px-20">
@@ -75,11 +89,13 @@ function Leaderboard() {
         )}
       </div>
 
-      <div className="sticky bottom-0 mt-6 pt-4 bg-abyss">
-        <div className="border-t border-phantom/40 pt-4">
-          <PositionCard {...currentUser} />
+      {currentUser && (
+        <div className="sticky bottom-0 mt-6 pt-4 bg-abyss">
+          <div className="border-t border-phantom/40 pt-4">
+            <PositionCard {...currentUser} />
+          </div>
         </div>
-      </div>
+      )}
     </div>
   );
 }
