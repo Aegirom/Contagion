@@ -191,7 +191,11 @@ export const createSignedR2DownloadUrl = ({ key, expiresSeconds = 300 }) =>
 
 export const convertR2ToHttpUrl = (storagePath) => {
   if (!storagePath?.startsWith("r2://")) return storagePath;
-  const match = /^r2:\/\/[^/]+\/(.+)$/.exec(storagePath);
-  if (!match) return storagePath;
-  return `/avatar/${match[1]}`;
+  try {
+    const key = storagePath.split("/").slice(3).join("/");
+    return createSignedR2DownloadUrl({ key });
+  } catch (error) {
+    console.error("Error creating signed R2 URL:", error);
+    return null;
+  }
 };

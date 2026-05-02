@@ -37,23 +37,45 @@ API.interceptors.response.use(
   (response) => response,
   async (error) => {
     const originalRequest = error.config;
-
     if (error.response?.status === 401 && !originalRequest._retry) {
       originalRequest._retry = true;
       try {
-        const refreshToken = localStorage.getItem("refreshToken");
-        if (refreshToken) {
-          const response = await API.post("/auth/refresh-token", {
-            refreshToken,
-          });
-          localStorage.setItem("accessToken", response.data.accessToken);
-          localStorage.setItem("refreshToken", response.data.refreshToken);
-          originalRequest.headers["Authorization"] =
-            `Bearer ${response.data.accessToken}`;
-          return API(originalRequest);
+        const stored =
+          localStorage.getItem("authTokens") ||
+          sessionStorage.getItem("authTokens");
+
+        if (stored) {
+          const parsedTokens = JSON.parse(stored);
+          const refreshToken = parsedTokens.refreshToken;
+
+          if (refreshToken) {
+            const response = await API.post("/auth/refresh-token", {
+              refreshToken,
+            });
+
+            const newTokens = {
+              accessToken: response.data.accessToken,
+              refreshToken: response.data.refreshToken,
+            };
+
+            // Write back to whichever storage had the tokens
+            if (localStorage.getItem("authTokens")) {
+              localStorage.setItem("authTokens", JSON.stringify(newTokens));
+            } else {
+              sessionStorage.setItem("authTokens", JSON.stringify(newTokens));
+            }
+
+            API.defaults.headers["Authorization"] =
+              `Bearer ${newTokens.accessToken}`;
+            originalRequest.headers["Authorization"] =
+              `Bearer ${newTokens.accessToken}`;
+
+            return API(originalRequest);
+          }
         }
       } catch (err) {
         localStorage.clear();
+        sessionStorage.clear();
         window.location.href = "/login";
         return Promise.reject(err);
       }

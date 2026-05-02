@@ -16,7 +16,9 @@ function Leaderboard() {
           ? res.data.map((user, i) => ({
             position: i + 1,
             username: user.username,
-            userpfp: user.avatar_url || "/pfp1.png",
+            userpfp:
+              user.avatar_url ||
+              `https://ui-avatars.com/api/?name=${encodeURIComponent(user.username)}&background=10b981&color=fff&size=256`,
             trophies: user.reputation_score ?? 0,
             analyses: 0,
             reviews: 0,
@@ -33,11 +35,12 @@ function Leaderboard() {
       try {
         const res = await API.get("/leaderboard/me");
         const user = res.data;
-        console.log("UserData: ", user);
         setCurrentUser({
           position: user.position,
           username: user.username,
-          userpfp: user.avatar_url || "/pfp1.png",
+          userpfp:
+            user.avatar_url ||
+            `https://ui-avatars.com/api/?name=${encodeURIComponent(user.username)}&background=10b981&color=fff&size=256`,
           trophies: user.reputation_score ?? 0,
           analyses: 0,
           reviews: 0,
