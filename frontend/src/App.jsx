@@ -207,7 +207,7 @@ function App() {
           />
 
           {/* Default redirect */}
-          <Route path="/" element={<Navigate to="/feed" replace />} />
+          <Route path="/" element={<Navigate to="/login" replace />} />
         </Routes>
       </AuthProvider>
     </BrowserRouter>
