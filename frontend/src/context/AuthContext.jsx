@@ -27,16 +27,16 @@ export const AuthProvider = ({ children }) => {
     refreshToken: null,
   });
 
-  // Load user and tokens from localStorage on mount
+  // Load user and tokens from storage on mount
   useEffect(() => {
     const initAuth = async () => {
       try {
-        const storedTokens =
-          localStorage.getItem("authTokens") ||
-          sessionStorage.getItem("authTokens");
+        const localTokens = localStorage.getItem("authTokens");
+        const sessionTokens = sessionStorage.getItem("authTokens");
 
-        if (storedTokens) {
-          const authTokens = JSON.parse(storedTokens);
+        // localStorage takes priority (remember me was active)
+        if (localTokens) {
+          const authTokens = JSON.parse(localTokens);
           API.defaults.headers["Authorization"] =
             `Bearer ${authTokens.accessToken}`;
 
@@ -45,16 +45,25 @@ export const AuthProvider = ({ children }) => {
 
           setUser(userData);
           setTokens(authTokens);
-          // Determine which storage to use based on where tokens were found
-          if (localStorage.getItem("authTokens")) {
-            localStorage.setItem("user", JSON.stringify(userData));
-          } else if (sessionStorage.getItem("authTokens")) {
-            sessionStorage.setItem("user", JSON.stringify(userData));
-          }
+          localStorage.setItem("user", JSON.stringify(userData));
+        } else if (sessionTokens) {
+          const authTokens = JSON.parse(sessionTokens);
+          API.defaults.headers["Authorization"] =
+            `Bearer ${authTokens.accessToken}`;
+
+          const response = await API.get("/auth/me");
+          const userData = normalizeUser(response.data);
+
+          setUser(userData);
+          setTokens(authTokens);
+          sessionStorage.setItem("user", JSON.stringify(userData));
         }
       } catch (error) {
         console.error("Error initializing auth:", error);
-        localStorage.clear();
+        localStorage.removeItem("authTokens");
+        localStorage.removeItem("user");
+        sessionStorage.removeItem("authTokens");
+        sessionStorage.removeItem("user");
       } finally {
         setLoading(false);
       }
@@ -72,9 +81,19 @@ export const AuthProvider = ({ children }) => {
 
       setUser(normalizedUser);
       setTokens(authTokens);
-      const storage = rememberMe ? localStorage : sessionStorage;
-      storage.setItem("authTokens", JSON.stringify(authTokens));
-      storage.setItem("user", JSON.stringify(normalizedUser));
+
+      if (rememberMe) {
+        sessionStorage.removeItem("authTokens");
+        sessionStorage.removeItem("user");
+        localStorage.setItem("authTokens", JSON.stringify(authTokens));
+        localStorage.setItem("user", JSON.stringify(normalizedUser));
+      } else {
+        localStorage.removeItem("authTokens");
+        localStorage.removeItem("user");
+        sessionStorage.setItem("authTokens", JSON.stringify(authTokens));
+        sessionStorage.setItem("user", JSON.stringify(normalizedUser));
+      }
+
       API.defaults.headers["Authorization"] =
         `Bearer ${authTokens.accessToken}`;
 

@@ -134,15 +134,16 @@ const CreatePost = () => {
 
   return (
     <main className="flex-1 overflow-auto relative z-10">
-      <div className="max-w-2xl mx-auto py-12 px-4 sm:px-6">
-        <div className="mb-8">
-          <h2
-            className="font-display text-2xl font-bold"
-            style={{ color: "#F1F5F9" }}
-          >
-            {draftId ? "Edit" : "New"}{" "}
-            <span style={{ color: "#22C55E" }}>Analysis Report</span>
-          </h2>
+      <div className="bg-abyss text-slate-100 px-6 py-12 md:px-12 lg:px-20">
+        <div className="flex flex-row justify-between items-end mb-10 pb-6 border-b border-phantom">
+          <div className="space-y-1">
+            <div className="flex items-center gap-2">
+              <div className="w-1 h-6 bg-toxic shadow-[0_0_8px_#22C55E]"></div>
+              <h3 className="text-3xl font-black text-slate-100 tracking-tighter uppercase">
+                {draftId ? "Edit" : "New"} Analysis
+              </h3>
+            </div>
+          </div>
         </div>
 
         {isLoadingDraft ? (
@@ -151,19 +152,10 @@ const CreatePost = () => {
           </div>
         ) : (
           <form onSubmit={handleSubmit} className="space-y-6">
-            <div
-              className="rounded-xl p-8 border space-y-6"
-              style={{
-                background: "rgba(12,13,20,0.8)",
-                border: "1px solid rgba(30,34,51,0.8)",
-              }}
-            >
+            <div className="rounded-xl p-8 border space-y-6 glass-panel shadow-card">
               {/* Title Field (Maps to title in DB) */}
               <div className="space-y-2">
-                <label
-                  className="font-code text-[10px] uppercase tracking-widest block"
-                  style={{ color: "#475569" }}
-                >
+                <label className="font-code text-[10px] uppercase tracking-widest block text-slate-500">
                   Report Title (Malware Family)
                 </label>
                 <input
@@ -172,8 +164,7 @@ const CreatePost = () => {
                   value={formData.title}
                   onChange={handleChange}
                   placeholder="e.g. LockBit 3.0 Analysis"
-                  className="w-full px-4 py-3 rounded-lg bg-[#0A0B10] border border-white/5 text-sm focus:outline-none focus:border-[#22C55E]/40"
-                  style={{ color: "#F1F5F9" }}
+                  className="w-full px-4 py-3 rounded-lg bg-void border border-phantom text-sm text-slate-100 focus:outline-none focus:border-toxic/40 transition-colors"
                   required
                 />
               </div>
@@ -181,18 +172,14 @@ const CreatePost = () => {
               <ArtifactUploader />
 
               <div className="space-y-2">
-                <label
-                  className="font-code text-[10px] uppercase tracking-widest block"
-                  style={{ color: "#475569" }}
-                >
+                <label className="font-code text-[10px] uppercase tracking-widest block text-slate-500">
                   Malware Category
                 </label>
                 <select
                   name="malware_category"
                   value={formData.malware_category}
                   onChange={handleChange}
-                  className="w-full px-4 py-3 rounded-lg bg-[#0A0B10] border border-white/5 text-sm focus:outline-none focus:border-[#22C55E]/40"
-                  style={{ color: "#F1F5F9" }}
+                  className="w-full px-4 py-3 rounded-lg bg-void border border-phantom text-sm text-slate-100 focus:outline-none focus:border-toxic/40 transition-colors"
                 >
                   <option>Ransomware</option>
                   <option>Trojan</option>
@@ -206,10 +193,7 @@ const CreatePost = () => {
 
               {/* Analysis Summary (Maps to content in DB) */}
               <div className="space-y-2">
-                <label
-                  className="font-code text-[10px] uppercase tracking-widest block"
-                  style={{ color: "#475569" }}
-                >
+                <label className="font-code text-[10px] uppercase tracking-widest block text-slate-500">
                   Analysis Summary (Content)
                 </label>
                 <textarea
@@ -218,21 +202,17 @@ const CreatePost = () => {
                   onChange={handleChange}
                   placeholder="Describe your findings..."
                   rows="6"
-                  className="w-full px-4 py-3 rounded-lg bg-[#0A0B10] border border-white/5 text-sm focus:outline-none focus:border-[#22C55E]/40 resize-none"
-                  style={{ color: "#F1F5F9" }}
+                  className="w-full px-4 py-3 rounded-lg bg-void border border-phantom text-sm text-slate-100 focus:outline-none focus:border-toxic/40 transition-colors resize-none"
                   required
                 />
               </div>
 
-              <label className="flex items-center justify-between rounded-lg border border-white/5 bg-[#0A0B10] px-4 py-3">
+              <label className="flex items-center justify-between rounded-lg border border-phantom bg-void px-4 py-3">
                 <span>
-                  <span
-                    className="block font-code text-[10px] uppercase tracking-widest"
-                    style={{ color: "#F1F5F9" }}
-                  >
+                  <span className="block font-code text-[10px] uppercase tracking-widest text-slate-400">
                     Run sandbox after submit
                   </span>
-                  <span className="text-xs" style={{ color: "#64748B" }}>
+                  <span className="text-xs text-slate-600">
                     Uses the uploaded artifact hash for automated evaluation.
                   </span>
                 </span>
@@ -240,7 +220,7 @@ const CreatePost = () => {
                   type="checkbox"
                   checked={runSandbox}
                   onChange={(event) => setRunSandbox(event.target.checked)}
-                  className="h-5 w-5 accent-[#22C55E]"
+                  className="h-5 w-5 accent-toxic"
                 />
               </label>
 
