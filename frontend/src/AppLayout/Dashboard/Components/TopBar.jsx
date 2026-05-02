@@ -138,9 +138,8 @@ const TopBar = ({ pageName }) => {
             <div
               className="w-7 h-7 rounded-full overflow-hidden flex items-center justify-center font-display text-xs font-bold"
               style={{
-                background: "linear-gradient(135deg, #22C55E, #16A34A)",
-                color: "#050508",
-                boxShadow: "0 0 10px rgba(34,197,94,0.4)",
+                background: "#1e2233",
+                color: "#22C55E",
               }}
             >
               {user?.profile?.avatar_url ? (
