@@ -1,55 +1,90 @@
+import { useState } from 'react';
 import { useCounter } from './HooksAndBadges';
 
-const StatCard = ({ label, value, suffix = '', change, changePos, color, icon, delay, loading = false }) => {
-  const numericTarget = loading ? 0 : parseInt(String(value).replace(/[^0-9]/g, ''), 10) || 0;
-  const counted = useCounter(numericTarget, 1000, loading ? 0 : delay);
-  const displayValue = loading ? '...' : value.includes(',') ? counted.toLocaleString() : counted.toString();
+const hex2rgb = (hex) => {
+  const h = hex.replace('#', '');
+  return [parseInt(h.slice(0,2),16), parseInt(h.slice(2,4),16), parseInt(h.slice(4,6),16)].join(',');
+};
+
+const StatCard = ({ label, value, suffix = '', change, changePos, color, icon, delay = 0, loading = false }) => {
+  const [hovered, setHovered] = useState(false);
+  const raw = String(value).replace(/[^0-9]/g, '');
+  const numericTarget = loading ? 0 : parseInt(raw, 10) || 0;
+  const counted = useCounter(numericTarget, 1200, loading ? 0 : delay);
+  const displayValue = loading
+    ? '—'
+    : String(value).includes(',')
+    ? counted.toLocaleString()
+    : counted.toString();
+
+  const rgb = hex2rgb(color);
 
   return (
     <div
-      className={`rounded-lg border p-6 hover:border-opacity-40 transition-all ${loading ? 'opacity-75' : ''}`}
-      style={{ background: '#0F1118', borderColor: '#1E2233' }}
+      className="rounded-xl overflow-hidden transition-all duration-300 cursor-default"
+      style={{
+        background: '#0A0B10',
+        border: `1px solid ${hovered ? `rgba(${rgb}, 0.25)` : '#1E2233'}`,
+        boxShadow: hovered ? `0 0 24px rgba(${rgb}, 0.06)` : 'none',
+      }}
+      onMouseEnter={() => setHovered(true)}
+      onMouseLeave={() => setHovered(false)}
     >
-      <div className="flex items-start justify-between mb-5">
-        <div
-          className="w-12 h-12 rounded-xl flex items-center justify-center"
-          style={{
-            background: `rgba(${parseInt(color, 16)}, 0.1)`,
-            borderColor: `rgba(${parseInt(color, 16)}, 0.2)`,
-          }}
-        >
-          {icon}
-        </div>
-        {change && (
-          <span
-            className="px-3 py-1 rounded text-[10px] font-black uppercase tracking-wider"
+      {/* Colored accent top line */}
+      <div
+        style={{
+          height: '2px',
+          background: loading
+            ? '#1E2233'
+            : `linear-gradient(to right, ${color}, transparent)`,
+          transition: 'opacity 0.3s',
+          opacity: hovered ? 1 : 0.6,
+        }}
+      />
+
+      <div className="p-5">
+        <div className="flex items-start justify-between mb-5">
+          <div
+            className="w-9 h-9 rounded-lg flex items-center justify-center flex-shrink-0"
             style={{
-              background: changePos ? 'rgba(34,197,94,0.1)' : 'rgba(239,68,68,0.1)',
-              color: changePos ? '#4ADE80' : '#F87171',
-              border: `1px solid ${changePos ? 'rgba(34,197,94,0.2)' : 'rgba(239,68,68,0.2)'}`,
+              background: loading ? '#141720' : `rgba(${rgb}, 0.08)`,
+              border: `1px solid rgba(${rgb}, 0.12)`,
             }}
           >
-            {change}
-          </span>
-        )}
-      </div>
+            {icon}
+          </div>
+          {change && (
+            <span
+              className="font-mono text-[10px] font-bold px-2 py-0.5 rounded-md"
+              style={{
+                background: changePos ? 'rgba(34,197,94,0.07)' : 'rgba(239,68,68,0.07)',
+                color: changePos ? '#4ADE80' : '#F87171',
+                border: `1px solid ${changePos ? 'rgba(34,197,94,0.15)' : 'rgba(239,68,68,0.15)'}`,
+              }}
+            >
+              {change}
+            </span>
+          )}
+        </div>
 
-      <div className="flex items-baseline gap-2">
-        <span
-          className="font-display text-3xl font-bold tracking-tight text-white"
-        >
-          {displayValue}
-        </span>
-        {suffix && (
-          <span className="font-body text-sm" style={{ color: '#64748B' }}>
-            {suffix}
+        <div className="flex items-baseline gap-1.5 mb-1">
+          <span
+            className="font-display text-3xl font-bold tracking-tight"
+            style={{ color: loading ? '#1E2233' : '#F1F5F9' }}
+          >
+            {displayValue}
           </span>
-        )}
-      </div>
+          {suffix && (
+            <span className="font-mono text-xs" style={{ color: '#334155' }}>
+              {suffix}
+            </span>
+          )}
+        </div>
 
-      <p className="font-body text-sm mt-2" style={{ color: '#475569' }}>
-        {label}
-      </p>
+        <p className="font-body text-xs" style={{ color: '#475569' }}>
+          {label}
+        </p>
+      </div>
     </div>
   );
 };

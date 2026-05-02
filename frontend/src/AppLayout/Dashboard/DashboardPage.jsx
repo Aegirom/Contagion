@@ -1,6 +1,12 @@
 import { useState, useEffect, useContext } from 'react';
 import { AuthContext } from '../../context/AuthContext';
-import { getUserSubmissions, getUserStats, getDashboardActivity, getAnalystReputation, getQuickActions } from '../../services/api';
+import {
+  getUserSubmissions,
+  getUserStats,
+  getDashboardActivity,
+  getAnalystReputation,
+  getQuickActions,
+} from '../../services/api';
 import StatCard from './Components/StatCard';
 import ActivityFeed from './Components/ActivityFeed';
 import QuickActions from './Components/QuickActions';
@@ -8,165 +14,242 @@ import SubmissionsTable from './Components/SubmissionsTable';
 import RankPanel from './Components/RankPanel';
 import PlusButton from './Components/Buttons';
 
+const EMPTY_STATS = { total_submissions: 0, published_submissions: 0, pending_submissions: 0 };
+
+const EmptySubmissions = () => (
+  <div
+    className="rounded-xl flex flex-col items-center justify-center gap-4 p-16 text-center"
+    style={{ border: '1px dashed #1E2233', background: 'rgba(10,11,16,0.5)' }}
+  >
+    <div
+      className="w-12 h-12 rounded-xl flex items-center justify-center"
+      style={{ background: '#141720', border: '1px solid #1E2233' }}
+    >
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#334155" strokeWidth="1.5">
+        <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
+        <polyline points="14 2 14 8 20 8" />
+      </svg>
+    </div>
+    <div>
+      <p className="font-display text-sm font-bold text-white mb-1">No submissions yet</p>
+      <p className="font-body text-xs" style={{ color: '#334155' }}>
+        Start your first analysis to build your portfolio.
+      </p>
+    </div>
+    <PlusButton text="Create Analysis" />
+  </div>
+);
+
 const DashboardPage = () => {
   const { user } = useContext(AuthContext);
-  const [stats, setStats] = useState(null);
+
+  const [stats, setStats]             = useState(null);
   const [submissions, setSubmissions] = useState([]);
-  const [activityItems, setActivityItems] = useState([]);
-  const [reputation, setReputation] = useState(null);
-  const [quickActions, setQuickActions] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
+  const [activityItems, setActivity]  = useState([]);
+  const [reputation, setReputation]   = useState(null);
+  const [quickActions, setActions]    = useState([]);
+  const [loading, setLoading]         = useState(true);
+  const [error, setError]             = useState(null);
 
-  // Fetch all dashboard data on mount
   useEffect(() => {
-    const fetchData = async () => {
-      try {
-        const [statsData, submissionsData, activityData, reputationData, quickActionsData] = await Promise.all([
-          getUserStats(),
-          getUserSubmissions(),
-          getDashboardActivity().then(r => r.data).catch(() => ({ items: [] })),
-          getAnalystReputation().then(r => r.data).catch(() => null),
-          getQuickActions().then(r => r.data).catch(() => [])
-        ]);
+    if (!user?.user_id) { setLoading(false); return; }
 
+    Promise.all([
+      getUserStats(),
+      getUserSubmissions(),
+      getDashboardActivity().then(r => r.data).catch(() => ({ items: [] })),
+      getAnalystReputation().then(r => r.data).catch(() => null),
+      getQuickActions().then(r => r.data).catch(() => []),
+    ])
+      .then(([statsData, subsData, actData, repData, actionsData]) => {
         setStats(statsData);
-        setSubmissions(Array.isArray(submissionsData) ? submissionsData : []);
-        setActivityItems(activityData.items || []);
-        setReputation(reputationData);
-        setQuickActions(quickActionsData);
-      } catch (err) {
-        console.error('Error fetching dashboard data:', err);
-        setError(err);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    if (user?.user_id) {
-      fetchData();
-    } else {
-      setLoading(false);
-    }
+        setSubmissions(Array.isArray(subsData) ? subsData : []);
+        setActivity(actData?.items ?? []);
+        setReputation(repData);
+        setActions(actionsData);
+      })
+      .catch(err => { console.error(err); setError(err); })
+      .finally(() => setLoading(false));
   }, [user]);
 
-  // Placeholder data for when no data is available
-  const placeholderStats = {
-    total_submissions: 0,
-    published_submissions: 0,
-    pending_submissions: 0
-  };
+  if (error) {
+    return (
+      <main className="flex-1 flex items-center justify-center" style={{ background: '#050508' }}>
+        <p className="font-mono text-xs" style={{ color: '#EF4444' }}>
+          Failed to load dashboard.
+        </p>
+      </main>
+    );
+  }
 
-  const statsData = stats || placeholderStats;
+  const sd = stats ?? EMPTY_STATS;
+  const reputationScore = reputation?.reputation_score ?? user?.reputation_score ?? 0;
 
-  // Transform submissions for the table component
-  const transformedSubmissions = submissions.map((sub) => ({
-    id: sub.submission_id,
-    hash: sub.title?.substring(0, 8) || 'N/A',
-    family: sub.template_type || 'Unknown',
-    threat: 'MEDIUM',
-    status: sub.status === 'Published' ? 'Completed' : sub.status,
-    date: new Date(sub.submitted_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' }),
-    score: 85
-  })).slice(0, 6);
+  const tableRows = submissions.slice(0, 7).map(s => ({
+    id:     s.submission_id,
+    hash:   s.title ?? 'N/A',
+    family: s.template_type ?? 'Unknown',
+    status: s.status === 'Published' ? 'Completed' : s.status,
+    date:   new Date(s.submitted_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric' }),
+    score:  85,
+  }));
 
-  // Activity items - use API data or fallback placeholder
-  const displayActivityItems = loading
-    ? [{ type: 'placeholder', msg: 'Loading activity...', time: '...', color: '#475569' }]
-    : (activityItems.length > 0 ? activityItems : [{ type: 'placeholder', msg: 'No activity yet', time: 'Join now', color: '#475569' }]);
-
-  // Empty state for submissions
-  const hasNoSubmissions = !loading && transformedSubmissions.length === 0;
+  const feedItems = activityItems.length > 0
+    ? activityItems
+    : [{ msg: 'No recent activity', time: '—', color: '#1E2233' }];
 
   return (
-    <main className="flex-1 overflow-auto relative z-10">
-      <div className="px-8 py-10 max-w-[1600px] mx-auto space-y-8">
+    <main
+      className="flex-1 overflow-auto relative"
+      style={{ background: '#050508' }}
+    >
+      {/* Ambient lighting — passive atmosphere */}
+      <div className="pointer-events-none absolute inset-0 overflow-hidden" style={{ zIndex: 0 }}>
+        <div style={{
+          position: 'absolute',
+          width: '900px', height: '600px',
+          top: '-200px', left: '-300px',
+          background: 'radial-gradient(ellipse, rgba(34,197,94,0.055) 0%, transparent 65%)',
+          borderRadius: '50%',
+        }} />
+        <div style={{
+          position: 'absolute',
+          width: '700px', height: '700px',
+          bottom: '-250px', right: '-150px',
+          background: 'radial-gradient(ellipse, rgba(109,40,217,0.04) 0%, transparent 65%)',
+          borderRadius: '50%',
+        }} />
+        {/* Subtle grid texture */}
+        <div
+          className="absolute inset-0"
+          style={{
+            backgroundImage:
+              'linear-gradient(rgba(34,197,94,0.018) 1px, transparent 1px), linear-gradient(90deg, rgba(34,197,94,0.018) 1px, transparent 1px)',
+            backgroundSize: '48px 48px',
+          }}
+        />
+      </div>
 
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-6">
+      {/* Page content */}
+      <div className="relative px-7 py-8 max-w-[1440px] mx-auto space-y-6" style={{ zIndex: 1 }}>
+
+        {/* ── Page Header ─────────────────────────────────────── */}
+        <div className="flex items-start justify-between gap-4">
           <div>
-            <h2 className="font-display text-3xl font-black tracking-tight text-white">
-              Welcome back, <span style={{ color: '#22C55E' }}>{user?.username || 'Analyst'}</span>
-            </h2>
-            <p className="font-body text-sm mt-2" style={{ color: '#475569' }}>
-              Threat intelligence overview
+            <div className="flex items-center gap-2 mb-1">
+              <div
+                className="w-1.5 h-1.5 rounded-full"
+                style={{ background: '#22C55E', boxShadow: '0 0 8px rgba(34,197,94,0.8)' }}
+              />
+              <span className="font-mono text-[10px] uppercase tracking-widest" style={{ color: '#22C55E' }}>
+                System Online
+              </span>
+            </div>
+            <h1 className="font-display text-2xl font-bold tracking-tight text-white">
+              {loading ? (
+                <span style={{ color: '#1E2233' }}>Loading…</span>
+              ) : (
+                <>
+                  Welcome back,{' '}
+                  <span style={{ color: '#22C55E' }}>{user?.username ?? 'Analyst'}</span>
+                </>
+              )}
+            </h1>
+            <p className="font-mono text-[10px] mt-1" style={{ color: '#2D3748' }}>
+              Threat intelligence overview — {new Date().toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' })}
             </p>
           </div>
-          <PlusButton text="New Analysis" />
+          <div className="flex-shrink-0 mt-1">
+            <PlusButton text="New Analysis" />
+          </div>
         </div>
 
-        {/* Stats Cards */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+        {/* ── Stat Cards ──────────────────────────────────────── */}
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
           <StatCard
             label="Total Analyses"
-            value={statsData.total_submissions || '0'}
-            suffix=""
+            value={String(sd.total_submissions)}
             change="+14%"
-            changePos={true}
-            color="22C55E"
+            changePos
+            color="#22C55E"
+            delay={0}
             loading={loading}
-            icon={<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#22C55E" strokeWidth="2"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14" /><polyline points="22 4 12 14.01 9 11.01" /></svg>}
+            icon={
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#22C55E" strokeWidth="1.75">
+                <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14" />
+                <polyline points="22 4 12 14.01 9 11.01" />
+              </svg>
+            }
           />
           <StatCard
             label="Published"
-            value={statsData.published_submissions || '0'}
-            suffix=""
-            change={statsData.published_submissions > 0 ? '+Active' : 'N/A'}
-            changePos={true}
-            color="8B5CF6"
+            value={String(sd.published_submissions)}
+            change={sd.published_submissions > 0 ? 'Active' : 'None'}
+            changePos={sd.published_submissions > 0}
+            color="#8B5CF6"
+            delay={80}
             loading={loading}
-            icon={<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#8B5CF6" strokeWidth="2"><path d="M15 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7z" /><polyline points="15 2 15 7 20 7" /><line x1="16" y1="11" x2="8" y2="11" /><line x1="16" y1="17" x2="8" y2="17" /><polyline points="10 9 9 9 8 9" /></svg>}
+            icon={
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#8B5CF6" strokeWidth="1.75">
+                <path d="M15 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7z" />
+                <polyline points="15 2 15 7 20 7" />
+                <line x1="16" y1="11" x2="8" y2="11" />
+                <line x1="16" y1="17" x2="8" y2="17" />
+              </svg>
+            }
           />
           <StatCard
-            label="Reputation Score"
-            value={reputation?.reputation_score || user?.reputation_score || '0'}
-            suffix=" XP"
-            change={reputation?.reputation_score || user?.reputation_score > 0 ? '+180' : 'N/A'}
-            changePos={true}
-            color="F59E0B"
+            label="Reputation XP"
+            value={String(reputationScore)}
+            suffix="xp"
+            change={reputationScore > 0 ? '+180' : 'N/A'}
+            changePos={reputationScore > 0}
+            color="#F59E0B"
+            delay={160}
             loading={loading}
-            icon={<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#F59E0B" strokeWidth="2"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2" /></svg>}
+            icon={
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#F59E0B" strokeWidth="1.75">
+                <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2" />
+              </svg>
+            }
           />
           <StatCard
             label="Pending Reviews"
-            value={statsData.pending_submissions || '0'}
-            suffix=""
-            change={statsData.pending_submissions > 0 ? 'LIVE' : 'All Clear'}
-            changePos={true}
-            color="22D3EE"
+            value={String(sd.pending_submissions)}
+            change={sd.pending_submissions > 0 ? 'Live' : 'Clear'}
+            changePos
+            color="#22D3EE"
+            delay={240}
             loading={loading}
-            icon={<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#22D3EE" strokeWidth="2"><rect x="2" y="3" width="20" height="14" rx="2" ry="2" /><line x1="8" y1="21" x2="16" y2="21" /><line x1="12" y1="17" x2="12" y2="21" /></svg>}
+            icon={
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#22D3EE" strokeWidth="1.75">
+                <circle cx="12" cy="12" r="10" />
+                <polyline points="12 6 12 12 16 14" />
+              </svg>
+            }
           />
         </div>
 
-        <div className="grid grid-cols-1 xl:grid-cols-3 gap-6">
+        {/* ── Main Content Grid ────────────────────────────────── */}
+        <div className="grid grid-cols-1 xl:grid-cols-3 gap-5">
+          {/* Submissions — 2 cols */}
           <div className="xl:col-span-2">
-            {hasNoSubmissions ? (
-              <div className="border-2 border-dashed border-phantom rounded-xl p-12 text-center">
-                <div className="mx-auto w-16 h-16 rounded-full bg-[#1E2233] flex items-center justify-center mb-4">
-                  <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#64748B" strokeWidth="2">
-                    <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
-                    <polyline points="14 2 14 8 20 8" />
-                    <line x1="16" y1="13" x2="8" y2="13" />
-                    <line x1="16" y1="17" x2="8" y2="17" />
-                    <polyline points="10 9 9 9 8 9" />
-                  </svg>
-                </div>
-                <h3 className="font-display text-xl font-bold text-white mb-2">No Submissions Yet</h3>
-                <p className="text-[#475569] mb-6">Start your first malware analysis submission to build your portfolio.</p>
-                <PlusButton text="Create Analysis" />
-              </div>
-            ) : (
-              <SubmissionsTable submissions={transformedSubmissions} loading={loading} />
-            )}
+            {!loading && tableRows.length === 0
+              ? <EmptySubmissions />
+              : <SubmissionsTable submissions={tableRows} loading={loading} />
+            }
           </div>
 
-          <div className="space-y-6">
-            <ActivityFeed items={displayActivityItems} loading={loading} />
+          {/* Right column — activity + quick actions */}
+          <div className="flex flex-col gap-4">
+            <ActivityFeed items={feedItems} loading={loading} />
             <QuickActions loading={loading} actions={quickActions} />
           </div>
         </div>
 
+        {/* ── Rank Panel ──────────────────────────────────────── */}
         <RankPanel loading={loading} reputation={reputation} />
+
       </div>
     </main>
   );
