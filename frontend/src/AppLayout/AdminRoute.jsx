@@ -1,9 +1,13 @@
-import React from 'react';
+import { useContext } from 'react';
 import { Navigate } from 'react-router-dom';
-import useAuth from '../hooks/useAuth';
+import { AuthContext } from '../context/AuthContext';
 
+/**
+ * Admin-only route component that checks if user has Administrator role
+ * Redirects to dashboard if user is not an admin
+ */
 const AdminRoute = ({ children }) => {
-  const { user, loading } = useAuth();
+  const { user, loading, isAuthenticated } = useContext(AuthContext);
 
   if (loading) {
     return (
@@ -13,7 +17,8 @@ const AdminRoute = ({ children }) => {
     );
   }
 
-  if (!user || !user.isAdmin) {
+  // Check if user is authenticated and has Administrator role
+  if (!isAuthenticated || user?.role !== 'Administrator') {
     // Redirect non-admins to dashboard
     return <Navigate to="/dashboard" replace />;
   }
@@ -22,3 +27,4 @@ const AdminRoute = ({ children }) => {
 };
 
 export default AdminRoute;
+

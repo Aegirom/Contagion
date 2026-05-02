@@ -1,43 +1,43 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useContext } from "react";
 import SearchBar from "./Components/SearchBar";
 import Submitted from "./Components/Submitted";
 import AiEvaluationModal from "./Components/AiEvaluationModal";
 import { useNavigate } from "react-router-dom";
 import PlusButton from "../Dashboard/Components/Buttons.jsx";
-import axios from 'axios';
-
-const backendURL = import.meta.env.VITE_BACKEND_URL;
-
-const INITIAL_SUBMISSIONS = [
-  { id: 1, name: "hola", description: "bonjour.", status: "merheba", family: "khush amdeed", threatLevel: "hello", aiScorePercentage: "98%", reviewCount: 2, date: "2024-02-13" },
-];
+import { AuthContext } from "../../context/AuthContext";
+import { getUserSubmissions } from "../../services/api";
 
 function SubmissionsPage() {
+  const { user, loading: authLoading } = useContext(AuthContext);
   const navigate = useNavigate();
 
-  const [submissions, setSubmissions] = useState(INITIAL_SUBMISSIONS);
+  const [submissions, setSubmissions] = useState([]);
   const [filters, setFilters] = useState({
     query: "",
     status: "all",
     family: "all"
   });
-
+  const [dataLoading, setDataLoading] = useState(true);
   const [selectedSubmission, setSelectedSubmission] = useState(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
 
   useEffect(() => {
     const getData = async () => {
       try {
-        const res = await axios.get(backendURL + '/submissions/get/');
-        console.log("Submissions Received");
-        setSubmissions(Array.isArray(res.data) ? res.data : INITIAL_SUBMISSIONS);
+        const res = await getUserSubmissions();
+        console.log("User submissions Received");
+        setSubmissions(Array.isArray(res.data) ? res.data : []);
       } catch (err) {
         console.log("Could not receive submissions: ", err);
+      } finally {
+        setDataLoading(false);
       }
     };
 
-    getData();
-  }, []);
+    if (user?.user_id) {
+      getData();
+    }
+  }, [user]);
 
   const handleFilterChange = (key, value) => {
     setFilters(prev => ({ ...prev, [key]: value }));
@@ -45,7 +45,7 @@ function SubmissionsPage() {
 
   const handleViewDetails = (submission) => {
     setSelectedSubmission(submission);
-    navigate(`/post/${submission.id}`);
+    navigate(`/post/${submission.submission_id || submission.id}`);
   };
 
   const handleOpenEvaluation = (submission) => {
@@ -60,12 +60,26 @@ function SubmissionsPage() {
 
   const handleViewFullReport = () => {
     if (selectedSubmission) {
-      navigate(`/submissions/${selectedSubmission.id}/ai-evaluation`);
+      navigate(`/submissions/${selectedSubmission.submission_id || selectedSubmission.id}/ai-evaluation`);
     }
     handleCloseModal();
   };
 
-  const filteredSubmissions = submissions.filter(item => {
+  // Transform API data to match component format
+  const transformedSubmissions = submissions.map(sub => ({
+    id: sub.submission_id,
+    name: sub.title || 'Untitled',
+    description: sub.content?.substring(0, 100) || '',
+    status: sub.status,
+    family: sub.template_type || 'General',
+    threatLevel: 'MEDIUM',
+    aiScorePercentage: '85%',
+    reviewCount: 0,
+    date: sub.submitted_at ? new Date(sub.submitted_at).toLocaleDateString() : 'Unknown'
+  }));
+
+  // Filter submissions
+  const filteredSubmissions = transformedSubmissions.filter(item => {
     const matchesQuery = item.name.toLowerCase().includes(filters.query.toLowerCase()) ||
       item.description.toLowerCase().includes(filters.query.toLowerCase());
 
@@ -109,9 +123,16 @@ function SubmissionsPage() {
             />
           ))}
 
-          {filteredSubmissions.length === 0 && (
+          {filteredSubmissions.length === 0 && !dataLoading && (
             <div className="col-span-full py-20 text-center border border-dashed border-phantom">
               <p className="text-slate-500 font-mono text-sm uppercase">No intelligence found matching current parameters.</p>
+            </div>
+          )}
+
+          {dataLoading && filteredSubmissions.length === 0 && (
+            <div className="col-span-full py-20 text-center">
+              <div className="inline-block animate-spin rounded-full h-12 w-12 border-4 border-toxic border-t-transparent mb-4"></div>
+              <p className="text-slate-500 font-mono text-sm uppercase">Loading submissions...</p>
             </div>
           )}
         </div>

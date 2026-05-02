@@ -1,12 +1,39 @@
-import { createContext, useState } from 'react';
+import { createContext, useState, useEffect } from 'react';
 import { login as apiLogin, register as apiRegister, forgotPassword as apiForgotPassword } from '../services/authService';
+import API from '../services/api';
 
 export const AuthContext = createContext();
 
 export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null);
-  const [loading, setLoading] = useState(false);
+  const [loading, setLoading] = useState(true);
   const [tokens, setTokens] = useState({ accessToken: null, refreshToken: null });
+
+  // Load user and tokens from localStorage on mount
+  useEffect(() => {
+    const initAuth = async () => {
+      try {
+        const storedUser = localStorage.getItem('user');
+        const storedTokens = localStorage.getItem('authTokens');
+
+        if (storedUser && storedTokens) {
+          const userData = JSON.parse(storedUser);
+          const authTokens = JSON.parse(storedTokens);
+
+          setUser(userData);
+          setTokens(authTokens);
+          API.defaults.headers['Authorization'] = `Bearer ${authTokens.accessToken}`;
+        }
+      } catch (error) {
+        console.error('Error initializing auth:', error);
+        localStorage.clear();
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    initAuth();
+  }, []);
 
   const login = async (email, password) => {
     setLoading(true);
@@ -18,6 +45,7 @@ export const AuthProvider = ({ children }) => {
       setTokens(authTokens);
       localStorage.setItem('authTokens', JSON.stringify(authTokens));
       localStorage.setItem('user', JSON.stringify(userData));
+      API.defaults.headers['Authorization'] = `Bearer ${authTokens.accessToken}`;
 
       return { success: true, user: userData, tokens: authTokens };
     } catch (error) {
@@ -67,7 +95,9 @@ export const AuthProvider = ({ children }) => {
     setTokens({ accessToken: null, refreshToken: null });
     localStorage.removeItem('authTokens');
     localStorage.removeItem('user');
+    delete API.defaults.headers['Authorization'];
     console.log('Logged out');
+    window.location.href = '/login';
   };
 
   const value = {
@@ -77,7 +107,9 @@ export const AuthProvider = ({ children }) => {
     login,
     register,
     logout,
-    forgotPassword
+    forgotPassword,
+    // Check if user is authenticated
+    isAuthenticated: !!user && !!tokens.accessToken,
   };
 
   return (

@@ -1,4 +1,11 @@
-const RankPanel = ({ loading }) => {
+const RankPanel = ({ loading, reputation }) => {
+  // Use API data or create placeholder
+  const reputationData = loading && !reputation
+    ? { reputation_score: 0, xp_until_next_rank: 500, progress_percent: 0, badges: [] }
+    : (reputation || { reputation_score: 0, xp_until_next_rank: 500, progress_percent: 82, badges: ['Beginner Analyst', 'New Member', 'Learning'] });
+
+  const progressPercent = loading ? 40 : reputationData.progress_percent;
+
   return (
     <div className="rounded-lg border" style={{ background: '#0F1118', borderColor: '#1E2233' }}>
       <div className="px-5 py-3 border-b flex items-center justify-between" style={{ borderColor: '#1E2233' }}>
@@ -20,12 +27,12 @@ const RankPanel = ({ loading }) => {
               className="font-display text-3xl font-bold tracking-tight"
               style={{ color: loading ? '#475569' : '#8B5CF6' }}
             >
-              {loading ? '...' : '2,450'}
+              {loading ? '...' : reputationData.reputation_score || 2450}
             </span>
             <span className="font-body text-sm" style={{ color: '#64748B' }}>XP</span>
           </div>
           <p className="font-body text-xs mt-1" style={{ color: '#475569' }}>
-            {loading ? '...' : '550 XP until Rank #41'}
+            {loading ? '...' : `${reputationData.xp_until_next_rank || 500} XP until next rank`}
           </p>
         </div>
 
@@ -35,7 +42,7 @@ const RankPanel = ({ loading }) => {
               PROGRESS
             </span>
             <span className="font-code text-[9px]" style={{ color: loading ? '#475569' : '#8B5CF6' }}>
-              {loading ? '...' : '82%'}
+              {loading ? '...' : `${progressPercent}%`}
             </span>
           </div>
 
@@ -43,7 +50,7 @@ const RankPanel = ({ loading }) => {
             <div
               className="h-full rounded-full"
               style={{
-                width: loading ? '40%' : '82%',
+                width: `${progressPercent}%`,
                 background: 'linear-gradient(to right, #6D28D9, #8B5CF6)',
               }}
             />
@@ -55,7 +62,8 @@ const RankPanel = ({ loading }) => {
             { label: loading ? '...' : 'Ransomware Hunter', color: '#F59E0B' },
             { label: loading ? '...' : 'APT Analyst', color: '#8B5CF6' },
             { label: loading ? '...' : 'Top Reviewer', color: '#22C55E' },
-          ].map((badge, i) => (
+            ...reputationData.badges?.map(b => ({ label: b, color: '#22D3EE' }))
+          ].slice(0, 5).map((badge, i) => (
             <span
               key={i}
               className="px-2 py-1 rounded text-[10px] font-black uppercase tracking-wider"

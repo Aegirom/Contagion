@@ -6,16 +6,13 @@ const TopBar = ({ pageName, toggleSidebar, sidebarOpen }) => {
   const { user, logout: authLogout } = useContext(AuthContext);
   const navigate = useNavigate();
   const [currentTime, setCurrentTime] = useState(new Date());
+  const [profileOpen, setProfileOpen] = useState(false);
+  const profileRef = useRef(null);
 
   useEffect(() => {
     const t = setInterval(() => setCurrentTime(new Date()), 1000);
     return () => clearInterval(t);
   }, []);
-
-  const formatDate = (d) => d.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' });
-
-  const [profileOpen, setProfileOpen] = useState(false);
-  const profileRef = useRef(null);
 
   useEffect(() => {
     const handler = (e) => {
@@ -27,7 +24,13 @@ const TopBar = ({ pageName, toggleSidebar, sidebarOpen }) => {
     return () => document.removeEventListener('mousedown', handler);
   }, []);
 
+  const formatDate = (d) => d.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' });
   const formatTime = (d) => d.toLocaleTimeString('en-US', { hour12: false });
+
+  const handleProfileClick = () => {
+    setProfileOpen(false);
+    navigate('/profile');
+  };
 
   const logout = () => {
     authLogout();
@@ -121,26 +124,43 @@ const TopBar = ({ pageName, toggleSidebar, sidebarOpen }) => {
                 <p className="font-body text-sm font-semibold" style={{ color: '#F1F5F9' }}>{user?.username || 'Analyst'}</p>
                 <p className="font-code text-xs mt-0.5" style={{ color: '#475569' }}>{user?.email || 'analyst@contagion.sec'}</p>
                 <div className="flex items-center gap-1.5 mt-2">
-                  <span className="badge-info text-[9px]">ANALYST</span>
+                  <span className="badge-info text-[9px]">{user?.role || 'ANALYST'}</span>
                   <span className="badge-low text-[9px]">RANK #42</span>
                 </div>
               </div>
-              {[
-                { label: 'Profile Settings', icon: '⚙' },
-                { label: 'Security', icon: '🔒' },
-                { label: 'API Keys', icon: '🔑' },
-              ].map((item) => (
-                <button
-                  key={item.label}
-                  className="w-full flex items-center gap-3 px-4 py-3 text-left font-body text-sm transition-all duration-150"
-                  style={{ color: '#64748B' }}
-                  onMouseEnter={(e) => { e.currentTarget.style.background = 'rgba(255,255,255,0.03)'; e.currentTarget.style.color = '#94A3B8'; }}
-                  onMouseLeave={(e) => { e.currentTarget.style.background = 'transparent'; e.currentTarget.style.color = '#64748B'; }}
-                >
-                  <span className="text-base">{item.icon}</span>
-                  {item.label}
-                </button>
-              ))}
+              <Link
+                to="/profile"
+                onClick={() => setProfileOpen(false)}
+                className="block w-full text-left px-4 py-3 font-body text-sm transition-all duration-150"
+                style={{ color: '#64748B' }}
+                onMouseEnter={(e) => { e.currentTarget.style.background = 'rgba(255,255,255,0.03)'; e.currentTarget.style.color = '#94A3B8'; }}
+                onMouseLeave={(e) => { e.currentTarget.style.background = 'transparent'; e.currentTarget.style.color = '#64748B'; }}
+              >
+                <span className="text-base">⚙</span>
+                Profile Settings
+              </Link>
+              <Link
+                to="/profile"
+                onClick={() => setProfileOpen(false)}
+                className="block w-full text-left px-4 py-3 font-body text-sm transition-all duration-150"
+                style={{ color: '#64748B' }}
+                onMouseEnter={(e) => { e.currentTarget.style.background = 'rgba(255,255,255,0.03)'; e.currentTarget.style.color = '#94A3B8'; }}
+                onMouseLeave={(e) => { e.currentTarget.style.background = 'transparent'; e.currentTarget.style.color = '#64748B'; }}
+              >
+                <span className="text-base">🔒</span>
+                Security
+              </Link>
+              <Link
+                to="/profile"
+                onClick={() => setProfileOpen(false)}
+                className="block w-full text-left px-4 py-3 font-body text-sm transition-all duration-150"
+                style={{ color: '#64748B' }}
+                onMouseEnter={(e) => { e.currentTarget.style.background = 'rgba(255,255,255,0.03)'; e.currentTarget.style.color = '#94A3B8'; }}
+                onMouseLeave={(e) => { e.currentTarget.style.background = 'transparent'; e.currentTarget.style.color = '#64748B'; }}
+              >
+                <span className="text-base">🔑</span>
+                API Keys
+              </Link>
               <div style={{ borderTop: '1px solid rgba(30,34,51,0.6)' }}>
                 <button
                   onClick={logout}

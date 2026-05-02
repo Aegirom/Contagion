@@ -12,8 +12,10 @@ import CreatePost from "./AppLayout/CreatePost/CreatePost";
 import SubmissionsPage from "./AppLayout/SubmissionsPage/SubmissionsPage";
 import AiEvaluationPage from "./AppLayout/AiEvaluation/AiEvaluationPage";
 import AdminDashboardPage from "./AppLayout/Dashboard/AdminDashboardPage";
+import ProfilePage from "./AppLayout/Profile/ProfilePage";
 import { AuthProvider } from "./context/AuthContext";
 import AdminRoute from "./AppLayout/AdminRoute";
+import PrivateRoute from "./AppLayout/PrivateRoute";
 import Leaderboard from "./AppLayout/Leaderboard/Leaderboard";
 import Post from "./AppLayout/Post/Post";
 import Drafts from "./AppLayout/Drafts/Drafts";
@@ -35,69 +37,79 @@ function App() {
           <Route path="/verify-email" element={<VerifyEmailPage />} />
           <Route path="/reset-password" element={<ResetPasswordPage />} />
 
-          {/* Dashboard & Main Layout Routes */}
+          {/* Protected Routes */}
           <Route
             path="/dashboard"
             element={
-              <MainLayout
-                pageName="Dashboard"
-                sidebarOpen={sidebarOpen}
-                toggleSidebar={toggleSidebar}
-              >
-                <DashboardPage />
-              </MainLayout>
+              <PrivateRoute>
+                <MainLayout
+                  pageName="Dashboard"
+                  sidebarOpen={sidebarOpen}
+                  toggleSidebar={toggleSidebar}
+                >
+                  <DashboardPage />
+                </MainLayout>
+              </PrivateRoute>
             }
           />
 
           <Route
             path="/submissions"
             element={
-              <MainLayout
-                pageName="Submissions"
-                sidebarOpen={sidebarOpen}
-                toggleSidebar={toggleSidebar}
-              >
-                <SubmissionsPage />
-              </MainLayout>
+              <PrivateRoute>
+                <MainLayout
+                  pageName="Submissions"
+                  sidebarOpen={sidebarOpen}
+                  toggleSidebar={toggleSidebar}
+                >
+                  <SubmissionsPage />
+                </MainLayout>
+              </PrivateRoute>
             }
           />
 
           <Route
             path="/leaderboard"
             element={
-              <MainLayout
-                pageName="Leaderboard"
-                sidebarOpen={sidebarOpen}
-                toggleSidebar={toggleSidebar}
-              >
-                <Leaderboard />
-              </MainLayout>
+              <PrivateRoute>
+                <MainLayout
+                  pageName="Leaderboard"
+                  sidebarOpen={sidebarOpen}
+                  toggleSidebar={toggleSidebar}
+                >
+                  <Leaderboard />
+                </MainLayout>
+              </PrivateRoute>
             }
           />
 
           <Route
             path="/post/:postId"
             element={
-              <MainLayout
-                pageName="Post"
-                sidebarOpen={sidebarOpen}
-                toggleSidebar={toggleSidebar}
-              >
-                <Post />
-              </MainLayout>
+              <PrivateRoute>
+                <MainLayout
+                  pageName="Post"
+                  sidebarOpen={sidebarOpen}
+                  toggleSidebar={toggleSidebar}
+                >
+                  <Post />
+                </MainLayout>
+              </PrivateRoute>
             }
           />
 
           <Route
             path="/submissions/:submissionId/ai-evaluation"
             element={
-              <MainLayout
-                pageName="AI Evaluation"
-                sidebarOpen={sidebarOpen}
-                toggleSidebar={toggleSidebar}
-              >
-                <AiEvaluationPage />
-              </MainLayout>
+              <PrivateRoute>
+                <MainLayout
+                  pageName="AI Evaluation"
+                  sidebarOpen={sidebarOpen}
+                  toggleSidebar={toggleSidebar}
+                >
+                  <AiEvaluationPage />
+                </MainLayout>
+              </PrivateRoute>
             }
           />
 
@@ -109,9 +121,11 @@ function App() {
                 sidebarOpen={sidebarOpen}
                 toggleSidebar={toggleSidebar}
               >
-                <AdminRoute>
-                  <AdminDashboardPage />
-                </AdminRoute>
+                <PrivateRoute>
+                  <AdminRoute>
+                    <AdminDashboardPage />
+                  </AdminRoute>
+                </PrivateRoute>
               </MainLayout>
             }
           />
@@ -119,39 +133,60 @@ function App() {
           <Route
             path="/feed"
             element={
-              <MainLayout
-                pageName="Feed"
-                sidebarOpen={sidebarOpen}
-                toggleSidebar={toggleSidebar}
-              >
-                <FeedPage />
-              </MainLayout>
+              <PrivateRoute>
+                <MainLayout
+                  pageName="Feed"
+                  sidebarOpen={sidebarOpen}
+                  toggleSidebar={toggleSidebar}
+                >
+                  <FeedPage />
+                </MainLayout>
+              </PrivateRoute>
             }
           />
 
           <Route
             path="/create-post"
             element={
-              <MainLayout
-                pageName="Create Analysis"
-                sidebarOpen={sidebarOpen}
-                toggleSidebar={toggleSidebar}
-              >
-                <CreatePost />
-              </MainLayout>
+              <PrivateRoute>
+                <MainLayout
+                  pageName="Create Analysis"
+                  sidebarOpen={sidebarOpen}
+                  toggleSidebar={toggleSidebar}
+                >
+                  <CreatePost />
+                </MainLayout>
+              </PrivateRoute>
             }
           />
 
           <Route
             path="/drafts"
             element={
-              <MainLayout
-                pageName="Drafts"
-                sidebarOpen={sidebarOpen}
-                toggleSidebar={toggleSidebar}
-              >
-                <Drafts />
-              </MainLayout>
+              <PrivateRoute>
+                <MainLayout
+                  pageName="Drafts"
+                  sidebarOpen={sidebarOpen}
+                  toggleSidebar={toggleSidebar}
+                >
+                  <Drafts />
+                </MainLayout>
+              </PrivateRoute>
+            }
+          />
+
+          <Route
+            path="/profile"
+            element={
+              <PrivateRoute>
+                <MainLayout
+                  pageName="Profile"
+                  sidebarOpen={sidebarOpen}
+                  toggleSidebar={toggleSidebar}
+                >
+                  <ProfilePage />
+                </MainLayout>
+              </PrivateRoute>
             }
           />
 

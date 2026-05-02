@@ -1,6 +1,6 @@
 import pool from '../config/db.js'
 
-async function fetchSubmissions(userId) {
+async function fetchAllSubmissions() {
   try {
     const result = await pool.query`SELECT * FROM Analysis_Submissions`;
     return result.recordset;
@@ -11,15 +11,81 @@ async function fetchSubmissions(userId) {
   }
 }
 
+async function fetchUserSubmissions(userId) {
+  try {
+    const result = await pool.query`SELECT * FROM Analysis_Submissions WHERE author_id = ${userId}`;
+    return result.recordset;
+  }
+  catch (err) {
+    console.log("Failed to fetch user submissions: ", err);
+    return [];
+  }
+}
+
+async function fetchUserStats(userId) {
+  try {
+    // Get total submissions count
+    const totalResult = await pool.query`SELECT COUNT(*) AS total FROM Analysis_Submissions WHERE author_id = ${userId}`;
+
+    // Get completed submissions count
+    const completedResult = await pool.query`SELECT COUNT(*) AS completed FROM Analysis_Submissions WHERE author_id = ${userId} AND status = 'Published'`;
+
+    // Get pending submissions count
+    const pendingResult = await pool.query`SELECT COUNT(*) AS pending FROM Analysis_Submissions WHERE author_id = ${userId} AND status IN ('Draft', 'Pending')`;
+
+    return {
+      total_submissions: totalResult.recordset[0]?.total || 0,
+      published_submissions: completedResult.recordset[0]?.completed || 0,
+      pending_submissions: pendingResult.recordset[0]?.pending || 0
+    };
+  }
+  catch (err) {
+    console.log("Failed to fetch user stats: ", err);
+    return { total_submissions: 0, published_submissions: 0, pending_submissions: 0 };
+  }
+}
+
 export const getAllSubmissions = async (req, res) => {
   try {
-    const userId = 0;
-    const data = await fetchSubmissions(userId);
-    console.log(data);
+    const data = await fetchAllSubmissions();
+    console.log("All submissions fetched:", data.length);
     res.json(data);
   }
   catch (err) {
     console.log("Failed to get Submissions: ", err);
+    res.status(500).json({ error: 'Internal Server Error' });
+  }
+}
+
+export const getUserSubmissions = async (req, res) => {
+  try {
+    const userId = req.user?.userId;
+    if (!userId) {
+      return res.status(401).json({ error: 'Unauthorized' });
+    }
+
+    const data = await fetchUserSubmissions(userId);
+    console.log(`Submissions fetched for user ${userId}:`, data.length);
+    res.json(data);
+  }
+  catch (err) {
+    console.log("Failed to get user Submissions: ", err);
+    res.status(500).json({ error: 'Internal Server Error' });
+  }
+}
+
+export const getUserStats = async (req, res) => {
+  try {
+    const userId = req.user?.userId;
+    if (!userId) {
+      return res.status(401).json({ error: 'Unauthorized' });
+    }
+
+    const stats = await fetchUserStats(userId);
+    res.json(stats);
+  }
+  catch (err) {
+    console.log("Failed to get user stats: ", err);
     res.status(500).json({ error: 'Internal Server Error' });
   }
 }

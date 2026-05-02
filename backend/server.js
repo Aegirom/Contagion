@@ -4,10 +4,28 @@ import rateLimit from 'express-rate-limit'
 import submissionsRoutes from "./routes/Submissions.js";
 import leaderboardRoutes from "./routes/Leaderboard.js";
 import authRoutes from "./routes/Auth.js";
+import dashboardRoutes from "./routes/Dashboard.js";
+import path from 'path';
+import { fileURLToPath } from 'url';
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+
 const app = express();
 
-app.use(cors());
+// CORS with explicit options - must not use * with credentials
+app.use(cors({
+  origin: 'http://localhost:5173',
+  credentials: true,
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS', 'PATCH'],
+  allowedHeaders: ['Content-Type', 'Authorization'],
+  exposedHeaders: ['Authorization']
+}));
+
 app.use(express.json({ limit: '100kb' }));
+
+// Serve uploaded avatars
+app.use('/uploads', express.static(path.join(__dirname, 'public/uploads')));
 
 const limiter = rateLimit({
   windowMs: 15 * 60 * 1000,
@@ -20,6 +38,7 @@ app.use(limiter);
 app.use("/submissions", submissionsRoutes);
 app.use("/auth", authRoutes);
 app.use("/leaderboard", leaderboardRoutes);
+app.use("/dashboard", dashboardRoutes);
 
 app.listen(3000, () => {
   console.log("Server running on port 3000");

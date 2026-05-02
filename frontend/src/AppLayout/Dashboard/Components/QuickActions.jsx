@@ -1,15 +1,20 @@
-const QuickActions = ({ loading }) => {
+const QuickActions = ({ loading, actions }) => {
+  // Use API data or default static actions
   const displayActions = loading ? [
     { label: 'Loading...', color: '#475569', icon: '...' },
     { label: '...', color: '#475569', icon: '...' },
     { label: '...', color: '#475569', icon: '...' },
     { label: '...', color: '#475569', icon: '...' },
-  ] : [
+  ] : (actions && actions.length > 0 ? actions.map(a => ({
+    label: a.label,
+    color: a.color || '#475569',
+    icon: a.icon || '...'
+  })) : [
     { label: 'Submit', color: '#22C55E', icon: '↑' },
     { label: 'Leaderboard', color: '#8B5CF6', icon: '★' },
     { label: 'Pending', color: '#22D3EE', icon: '◎' },
     { label: 'Export', color: '#F59E0B', icon: '⤓' },
-  ];
+  ]);
 
   return (
     <div className="rounded-lg border" style={{ background: '#0F1118', borderColor: '#1E2233' }}>
