@@ -2,8 +2,10 @@ import React from "react";
 import Dropdown from "./Dropdown";
 
 function SearchBar({ filters, onFilterChange }) {
-  const inputBaseStyles = "bg-abyss border border-phantom text-slate-100 py-2 px-4 focus:outline-none focus:border-toxic focus:ring-1 focus:ring-toxic/30 transition-all duration-200 placeholder:text-slate-600 font-mono text-sm";
-  const selectBaseStyles = "bg-obsidian border border-phantom text-slate-300 py-2 px-3 focus:outline-none focus:border-toxic cursor-pointer font-mono text-xs uppercase tracking-wider";
+  const inputBaseStyles =
+    "bg-void border border-phantom text-slate-100 py-2 px-4 focus:outline-none focus:border-toxic focus:ring-1 focus:ring-toxic/30 transition-all duration-200 placeholder:text-slate-600 font-mono text-sm";
+  const selectBaseStyles =
+    "bg-void border border-phantom text-slate-300 py-2 px-3 focus:outline-none focus:border-toxic cursor-pointer font-mono text-xs uppercase tracking-wider";
 
   // Helper to update specific filter keys
   const handleChange = (e) => {
@@ -12,7 +14,7 @@ function SearchBar({ filters, onFilterChange }) {
   };
 
   return (
-    <div className="flex flex-wrap items-center gap-3 p-4 bg-void/50 border-b border-phantom">
+    <div className="flex flex-wrap items-center gap-3 p-4 bg-abyss border-b border-phantom">
       {/* Search Input */}
       <div className="relative flex-grow max-w-md">
         <span className="absolute left-3 top-1/2 -translate-y-1/2 text-toxic/50 font-mono pointer-events-none">
@@ -35,7 +37,7 @@ function SearchBar({ filters, onFilterChange }) {
           { value: "Approved", label: "Approved" },
           { value: "Under Review", label: "Under Review" },
           { value: "Archived", label: "Archived" },
-          { value: "Draft", label: "Draft" }
+          { value: "Draft", label: "Draft" },
         ]}
         defaultValue="all"
         onChange={handleChange}
@@ -60,7 +62,9 @@ function SearchBar({ filters, onFilterChange }) {
       {/* Terminal Pulse Indicator */}
       <div className="ml-auto flex items-center gap-2">
         <div className="w-2 h-2 rounded-full bg-toxic animate-pulse shadow-[0_0_8px_#22C55E]"></div>
-        <span className="text-[10px] text-toxic font-mono font-bold uppercase tracking-widest">Live Uplink</span>
+        <span className="text-[10px] text-toxic font-mono font-bold uppercase tracking-widest">
+          Live Uplink
+        </span>
       </div>
     </div>
   );
