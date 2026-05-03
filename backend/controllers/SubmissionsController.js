@@ -23,40 +23,23 @@ async function fetchAllSubmissions() {
         a.sha256_hash,
         a.malware_family,
         a.malware_category,
-        latest.execution_id,
-        latest.sandbox_status,
-        latest.finished_at AS sandbox_finished_at,
-        ISNULL(like_counts.like_count, 0) AS like_count,
-        ISNULL(comment_counts.comment_count, 0) AS comment_count,
-        ISNULL(share_counts.share_count, 0) AS share_count
+        e.execution_id,
+        e.sandbox_status,
+        e.finished_at AS sandbox_finished_at,
+        ISNULL(lc.like_count, 0) AS like_count,
+        ISNULL(cc.comment_count, 0) AS comment_count,
+        ISNULL(sc.share_count, 0) AS share_count
       FROM Analysis_Submissions s
       INNER JOIN Users u ON u.user_id = s.author_id
       LEFT JOIN Malware_Artifacts a ON a.artifact_id = s.artifact_id
-      OUTER APPLY (
-        SELECT TOP 1
-          e.execution_id,
-          e.status AS sandbox_status,
-          e.finished_at
-        FROM Sandbox_Executions e
-        WHERE e.submission_id = s.submission_id
-        ORDER BY e.queued_at DESC
-      ) latest
-      OUTER APPLY (
-        SELECT COUNT(*) AS like_count
-        FROM Post_Likes pl
-        WHERE pl.submission_id = s.submission_id
-      ) like_counts
-      OUTER APPLY (
-        SELECT COUNT(*) AS comment_count
-        FROM Post_Comments pc
-        WHERE pc.submission_id = s.submission_id
-      ) comment_counts
-      OUTER APPLY (
-        SELECT COUNT(*) AS share_count
-        FROM Post_Shares ps
-        WHERE ps.submission_id = s.submission_id
-      ) share_counts
-      WHERE s.status <> 'Archived'
+      LEFT JOIN (
+        SELECT se.submission_id, se.execution_id, se.status AS sandbox_status, se.finished_at,
+               ROW_NUMBER() OVER(PARTITION BY se.submission_id ORDER BY se.queued_at DESC) AS rn
+        FROM Sandbox_Executions se
+      ) e ON e.submission_id = s.submission_id AND e.rn = 1
+      LEFT JOIN (SELECT submission_id, COUNT(*) AS like_count FROM Post_Likes GROUP BY submission_id) lc ON lc.submission_id = s.submission_id
+      LEFT JOIN (SELECT submission_id, COUNT(*) AS comment_count FROM Post_Comments GROUP BY submission_id) cc ON cc.submission_id = s.submission_id
+      LEFT JOIN (SELECT submission_id, COUNT(*) AS share_count FROM Post_Shares GROUP BY submission_id) sc ON sc.submission_id = s.submission_id
       ORDER BY s.updated_at DESC
     `);
     return result.recordset;
@@ -90,22 +73,17 @@ async function fetchUserSubmissions(userId) {
           a.sha256_hash,
           a.malware_family,
           a.malware_category,
-          latest.execution_id,
-          latest.sandbox_status,
-          latest.finished_at AS sandbox_finished_at
+          e.execution_id,
+          e.sandbox_status,
+          e.finished_at AS sandbox_finished_at
         FROM Analysis_Submissions s
         LEFT JOIN Malware_Artifacts a ON a.artifact_id = s.artifact_id
-        OUTER APPLY (
-          SELECT TOP 1
-            e.execution_id,
-            e.status AS sandbox_status,
-            e.finished_at
-          FROM Sandbox_Executions e
-          WHERE e.submission_id = s.submission_id
-          ORDER BY e.queued_at DESC
-        ) latest
+        LEFT JOIN (
+          SELECT se.submission_id, se.execution_id, se.status AS sandbox_status, se.finished_at,
+                 ROW_NUMBER() OVER(PARTITION BY se.submission_id ORDER BY se.queued_at DESC) AS rn
+          FROM Sandbox_Executions se
+        ) e ON e.submission_id = s.submission_id AND e.rn = 1
         WHERE s.author_id = @user_id
-          AND s.status <> 'Archived'
         ORDER BY s.updated_at DESC
       `);
     return result.recordset;
@@ -118,14 +96,17 @@ async function fetchUserSubmissions(userId) {
 
 async function fetchUserStats(userId) {
   try {
-    // Get total submissions count
-    const totalResult = await pool.query`SELECT COUNT(*) AS total FROM Analysis_Submissions WHERE author_id = ${userId} AND status <> 'Archived'`;
+    const totalResult = await pool.request()
+      .input('user_id', sql.INT, userId)
+      .query('SELECT COUNT(*) AS total FROM Analysis_Submissions WHERE author_id = @user_id AND status <> \'Archived\'');
 
-    // Get completed submissions count
-    const completedResult = await pool.query`SELECT COUNT(*) AS completed FROM Analysis_Submissions WHERE author_id = ${userId} AND status = 'Published'`;
+    const completedResult = await pool.request()
+      .input('user_id', sql.INT, userId)
+      .query('SELECT COUNT(*) AS completed FROM Analysis_Submissions WHERE author_id = @user_id AND status = \'Published\'');
 
-    // Get pending submissions count
-    const pendingResult = await pool.query`SELECT COUNT(*) AS pending FROM Analysis_Submissions WHERE author_id = ${userId} AND status IN ('Draft', 'Pending')`;
+    const pendingResult = await pool.request()
+      .input('user_id', sql.INT, userId)
+      .query('SELECT COUNT(*) AS pending FROM Analysis_Submissions WHERE author_id = @user_id AND status IN (\'Draft\', \'Pending\', \'Archived\')');
 
     return {
       total_submissions: totalResult.recordset[0]?.total || 0,
@@ -246,7 +227,6 @@ export const getSubmissionByIdPublic = async (req, res) => {
   try {
     const submissionId = Number(req.params.id);
 
-    // Build query differently based on whether user is authenticated
     const isAuthenticated = req.user && req.user.userId;
     const query = `
         SELECT
@@ -272,149 +252,49 @@ export const getSubmissionByIdPublic = async (req, res) => {
           a.malware_family,
           a.malware_category,
           a.upload_time,
-          latest.execution_id,
-          latest.sandbox_status,
-          latest.environment,
-          latest.os_profile,
-          latest.network_enabled,
-          latest.timeout_seconds,
-          latest.queued_at,
-          latest.started_at,
-          latest.finished_at,
-          latest.error_message,
-          (
-            SELECT
-              l.log_id,
-              l.log_type,
-              l.log_data,
-              l.captured_at
-            FROM Sandbox_Executions e
-            INNER JOIN Behavioral_Logs l ON l.execution_id = e.execution_id
-            WHERE e.submission_id = s.submission_id
-            ORDER BY l.captured_at ASC
-            FOR JSON PATH
-          ) AS behavioral_logs
+          e.execution_id,
+          e.status AS sandbox_status,
+          e.environment,
+          e.os_profile,
+          e.network_enabled,
+          e.timeout_seconds,
+          e.queued_at,
+          e.started_at,
+          e.finished_at,
+          e.error_message
         FROM Analysis_Submissions s
         INNER JOIN Users u ON u.user_id = s.author_id
         LEFT JOIN Malware_Artifacts a ON a.artifact_id = s.artifact_id
-        OUTER APPLY (
-          SELECT TOP 1
-            e.execution_id,
-            e.status AS sandbox_status,
-            e.environment,
-            e.os_profile,
-            e.network_enabled,
-            e.timeout_seconds,
-            e.queued_at,
-            e.started_at,
-            e.finished_at,
-            e.error_message
-          FROM Sandbox_Executions e
-          WHERE e.submission_id = s.submission_id
-          ORDER BY e.queued_at DESC
-        ) latest
+        LEFT JOIN (
+          SELECT se.submission_id, se.execution_id, se.status, se.environment,
+                 se.os_profile, se.network_enabled, se.timeout_seconds,
+                 se.queued_at, se.started_at, se.finished_at, se.error_message,
+                 ROW_NUMBER() OVER(PARTITION BY se.submission_id ORDER BY se.queued_at DESC) AS rn
+          FROM Sandbox_Executions se
+        ) e ON e.submission_id = s.submission_id AND e.rn = 1
         WHERE s.submission_id = @submission_id
-          ${isAuthenticated ? 'AND (s.author_id = @user_id OR s.status = \'Published\')' : 'AND s.status = \'Published\''}
       `;
 
     const result = await pool.request()
       .input('submission_id', sql.INT, submissionId)
-      .input('user_id', sql.INT, isAuthenticated ? req.user.userId : null)
       .query(query);
 
     const submission = result.recordset[0];
     if (!submission) {
-      // If user is authenticated but submission not found withPublished filter, try without status filter
-      // This allows viewing drafts/pending by the author even if not on the feed
-      if (isAuthenticated) {
-        const draftQuery = `
-          SELECT
-            s.submission_id,
-            s.author_id,
-            s.artifact_id,
-            s.title,
-            s.content,
-            s.status,
-            s.version,
-            s.template_type,
-            s.submitted_at,
-            s.updated_at,
-            u.username,
-            u.reputation_score,
-            a.file_name,
-            a.file_size,
-            a.file_type,
-            a.md5_hash,
-            a.sha256_hash,
-            a.storage_path,
-            a.is_quarantined,
-            a.malware_family,
-            a.malware_category,
-            a.upload_time,
-            latest.execution_id,
-            latest.sandbox_status,
-            latest.environment,
-            latest.os_profile,
-            latest.network_enabled,
-            latest.timeout_seconds,
-            latest.queued_at,
-            latest.started_at,
-            latest.finished_at,
-            latest.error_message,
-            (
-              SELECT
-                l.log_id,
-                l.log_type,
-                l.log_data,
-                l.captured_at
-              FROM Sandbox_Executions e
-              INNER JOIN Behavioral_Logs l ON l.execution_id = e.execution_id
-              WHERE e.submission_id = s.submission_id
-              ORDER BY l.captured_at ASC
-              FOR JSON PATH
-            ) AS behavioral_logs
-          FROM Analysis_Submissions s
-          INNER JOIN Users u ON u.user_id = s.author_id
-          LEFT JOIN Malware_Artifacts a ON a.artifact_id = s.artifact_id
-          OUTER APPLY (
-            SELECT TOP 1
-              e.execution_id,
-              e.status AS sandbox_status,
-              e.environment,
-              e.os_profile,
-              e.network_enabled,
-              e.timeout_seconds,
-              e.queued_at,
-              e.started_at,
-              e.finished_at,
-              e.error_message
-            FROM Sandbox_Executions e
-            WHERE e.submission_id = s.submission_id
-            ORDER BY e.queued_at DESC
-          ) latest
-          WHERE s.submission_id = @submission_id AND s.author_id = @user_id
-        `;
-        const draftResult = await pool.request()
-          .input('submission_id', sql.INT, submissionId)
-          .input('user_id', sql.INT, req.user.userId)
-          .query(draftQuery);
-
-        const draftSubmission = draftResult.recordset[0];
-        if (draftSubmission) {
-          return res.json({
-            ...draftSubmission,
-            behavioral_logs: draftSubmission.behavioral_logs ? JSON.parse(draftSubmission.behavioral_logs) : [],
-          });
-        }
-      }
-
-      return res.status(404).json({ error: 'Submission not found or not published' });
+      return res.status(404).json({ error: 'Submission not found' });
     }
 
-    res.json({
-      ...submission,
-      behavioral_logs: submission.behavioral_logs ? JSON.parse(submission.behavioral_logs) : [],
-    });
+    const logs = await pool.request()
+      .input('submission_id', sql.INT, submissionId)
+      .query(`
+        SELECT l.log_id, l.log_type, l.log_data, l.captured_at
+        FROM Sandbox_Executions e
+        INNER JOIN Behavioral_Logs l ON l.execution_id = e.execution_id
+        WHERE e.submission_id = @submission_id
+        ORDER BY l.captured_at ASC
+      `);
+
+    res.json({ ...submission, behavioral_logs: logs.recordset || [] });
   }
   catch (err) {
     console.log("Failed to get submission:", err);

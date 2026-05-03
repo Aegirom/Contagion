@@ -12,9 +12,18 @@ import notificationRoutes from "./routes/Notifications.js";
 import path from "path";
 import { fileURLToPath } from "url";
 import { protect } from "./routes/Auth.js";
+import { recreatePool } from "./config/db.js";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
+
+process.on("unhandledRejection", (reason) => {
+  console.error("[Server] Unhandled Promise Rejection:", reason);
+});
+
+process.on("uncaughtException", (error) => {
+  console.error("[Server] Uncaught Exception:", error.message);
+});
 
 const app = express();
 

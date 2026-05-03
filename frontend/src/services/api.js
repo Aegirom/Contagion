@@ -60,6 +60,7 @@ const AUTH_ENDPOINTS = [
   "/auth/forgot-password",
   "/auth/reset-password",
   "/auth/verify-email",
+  "/auth/refresh-token",
 ];
 
 const isAuthEndpoint = (url) => {

@@ -46,6 +46,7 @@ const Post = () => {
   const [loading, setLoading] = useState(true);
   const [running, setRunning] = useState(false);
   const [publishing, setPublishing] = useState(false);
+  const [archiving, setArchiving] = useState(false);
   const [actionError, setActionError] = useState('');
   
   const [likes, setLikes] = useState(0);
@@ -177,7 +178,7 @@ const Post = () => {
 
   const handleLike = async () => {
     if (!isAuthenticated) return showLoginPrompt();
-    if (isPending) return;
+    if (isNonInteractive) return;
     try {
       const response = await togglePostLike(postId);
       setIsLiked(response.data.isLiked);
@@ -201,7 +202,7 @@ const Post = () => {
 
   const handleShare = async () => {
     if (!isAuthenticated) return showLoginPrompt();
-    if (isPending) return;
+    if (isNonInteractive) return;
     try {
       const response = await togglePostShare(postId);
       setIsShared(response.data.isShared);
@@ -217,7 +218,7 @@ const Post = () => {
 
   const handleSave = async () => {
     if (!isAuthenticated) return showLoginPrompt();
-    if (isPending) return;
+    if (isNonInteractive) return;
     try {
       const response = await togglePostSave(postId);
       setIsSaved(response.data.isSaved);
@@ -233,7 +234,7 @@ const Post = () => {
   const handleAddComment = async (e) => {
     e.preventDefault();
     if (!isAuthenticated) return showLoginPrompt();
-    if (isPending) return;
+    if (isNonInteractive) return;
     if (!newComment.trim()) return;
     
     try {
@@ -291,9 +292,37 @@ const Post = () => {
     }
   };
 
+  const handleArchive = async () => {
+    setArchiving(true);
+    setActionError('');
+    try {
+      await updateSubmission(postId, { status: 'Archived' });
+      await loadPost();
+    } catch (err) {
+      setActionError(err.response?.data?.error || 'Failed to archive submission');
+    } finally {
+      setArchiving(false);
+    }
+  };
+
+  const handleUnarchive = async () => {
+    setArchiving(true);
+    setActionError('');
+    try {
+      await updateSubmission(postId, { status: 'Draft' });
+      await loadPost();
+    } catch (err) {
+      setActionError(err.response?.data?.error || 'Failed to unarchive submission');
+    } finally {
+      setArchiving(false);
+    }
+  };
+
   const isAuthor = user?.user_id === post?.author_id || user?.id === post?.author_id;
   const isPending = post?.status === 'Pending';
   const isPublished = post?.status === 'Published';
+  const isArchived = post?.status === 'Archived';
+  const isNonInteractive = isPending || isArchived;
 
   if (loading) {
     return (
@@ -356,6 +385,22 @@ const Post = () => {
           </div>
         )}
 
+        {isArchived && (
+          <div className="mb-6 rounded-lg border px-4 py-3 flex items-center gap-3" style={{ background: 'rgba(100,116,139,0.06)', border: '1px solid rgba(100,116,139,0.2)', color: '#64748B' }}>
+            <svg className="w-4 h-4 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" /></svg>
+            <span className="text-xs">This analysis has been archived. It will not appear in the feed.</span>
+            {isAuthor && (
+              <button
+                onClick={handleUnarchive}
+                disabled={archiving}
+                className="ml-auto font-code text-[10px] uppercase tracking-wider px-3 py-1 rounded bg-[#22C55E] text-[#0A0B10] disabled:opacity-50"
+              >
+                {archiving ? 'Unarchiving...' : 'Unarchive'}
+              </button>
+            )}
+          </div>
+        )}
+
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           <div className="lg:col-span-2 space-y-6">
             <div
@@ -377,7 +422,7 @@ const Post = () => {
                   <div className="flex items-center gap-4 mt-3">
                     <button
                       onClick={handleLike}
-                      disabled={isPending}
+                      disabled={isNonInteractive}
                       className="flex items-center gap-2 font-code text-xs transition-all hover:scale-105 disabled:opacity-30 disabled:cursor-not-allowed disabled:hover:scale-100"
                       style={{ color: isLiked ? '#EF4444' : '#475569' }}
                     >
@@ -396,7 +441,7 @@ const Post = () => {
                     </button>
                     <button
                       onClick={() => setShowCommentForm(!showCommentForm)}
-                      disabled={isPending}
+                      disabled={isNonInteractive}
                       className="flex items-center gap-2 font-code text-xs transition-all hover:scale-105 disabled:opacity-30 disabled:cursor-not-allowed disabled:hover:scale-100"
                       style={{ color: '#475569' }}
                     >
@@ -414,7 +459,7 @@ const Post = () => {
                     </button>
                     <button
                       onClick={handleShare}
-                      disabled={isPending}
+                      disabled={isNonInteractive}
                       className="flex items-center gap-2 font-code text-xs transition-all hover:scale-105 disabled:opacity-30 disabled:cursor-not-allowed disabled:hover:scale-100"
                       style={{ color: isShared ? '#22C55E' : '#475569' }}
                     >
@@ -432,7 +477,7 @@ const Post = () => {
                     </button>
                     <button
                       onClick={handleSave}
-                      disabled={isPending}
+                      disabled={isNonInteractive}
                       className="flex items-center gap-2 font-code text-xs transition-all hover:scale-105 disabled:opacity-30 disabled:cursor-not-allowed disabled:hover:scale-100"
                       style={{ color: isSaved ? '#F59E0B' : '#475569' }}
                     >
@@ -457,6 +502,11 @@ const Post = () => {
                       PENDING
                     </span>
                   )}
+                  {isArchived && (
+                    <span className="px-2 py-0.5 rounded font-code text-[9px] tracking-widest border border-slate-500/20 bg-slate-500/10 text-slate-400">
+                      ARCHIVED
+                    </span>
+                  )}
                   <StatusBadge status={post.sandbox_status || post.status} />
                 </div>
               </div>
@@ -479,7 +529,7 @@ const Post = () => {
                   </h3>
                   
                   {/* Comment Form */}
-                  {showCommentForm && !isPending && (
+                  {showCommentForm && !isNonInteractive && (
                     <form onSubmit={handleAddComment} className="mb-6">
                       <div className="relative">
                         <textarea
@@ -511,9 +561,9 @@ const Post = () => {
                   )}
 
                   {/* Comments List */}
-                  {isPending ? (
+                  {isNonInteractive ? (
                     <p className="text-center font-code text-xs py-4" style={{ color: '#475569' }}>
-                      Comments will be available once this analysis is published.
+                      {isArchived ? 'This analysis is archived. Comments are disabled.' : 'Comments will be available once this analysis is published.'}
                     </p>
                   ) : (
                     <div className="space-y-4">
@@ -564,7 +614,7 @@ const Post = () => {
                 </div>
               </div>
 
-              {(isAuthor || !isPending) && (
+              {(isAuthor || !isNonInteractive) && (
                 <PeerReviewSection
                   reviews={reviews}
                   aggregate={aggregate}
@@ -583,13 +633,13 @@ const Post = () => {
                 {post.sha256_hash && (
                   <button
                     onClick={handleRunSandbox}
-                    disabled={running}
-                    className="rounded-lg bg-[#22C55E] px-5 py-3 font-display text-xs font-bold uppercase tracking-[0.2em] text-[#0A0B10] disabled:opacity-50"
+                    disabled={running || isArchived}
+                    className="rounded-lg bg-[#22C55E] px-5 py-3 font-display text-xs font-bold uppercase tracking-[0.2em] text-[#0A0B10] disabled:opacity-50 disabled:cursor-not-allowed"
                   >
                     {running ? 'Running Sandbox...' : 'Run Sandbox'}
                   </button>
                 )}
-                {isAuthor && (
+                {isAuthor && !isArchived && (
                   <button
                     onClick={handlePublishToggle}
                     disabled={publishing}
@@ -604,6 +654,19 @@ const Post = () => {
                       : post.status === 'Published'
                       ? 'Unpublish'
                       : 'Publish'}
+                  </button>
+                )}
+                {isAuthor && (
+                  <button
+                    onClick={isArchived ? handleUnarchive : handleArchive}
+                    disabled={archiving}
+                    className={`rounded-lg px-5 py-3 font-display text-xs font-bold uppercase tracking-[0.2em] disabled:opacity-50 disabled:cursor-not-allowed transition-all ${
+                      isArchived
+                        ? 'bg-[#22C55E] text-[#0A0B10] hover:bg-[#4ADE80]'
+                        : 'bg-[#3F1216] text-[#EF4444] hover:bg-[#4A1519]'
+                    }`}
+                  >
+                    {archiving ? (isArchived ? 'Unarchiving...' : 'Archiving...') : (isArchived ? 'Unarchive' : 'Archive')}
                   </button>
                 )}
               </div>
