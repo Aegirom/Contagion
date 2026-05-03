@@ -155,6 +155,8 @@ router.post("/login", async (req, res) => {
         email: user.email,
         role: user.role,
         expertise_level: user.expertise_level,
+        reputation_score: user.reputation_score,
+        created_at: user.created_at,
       },
       tokens: {
         accessToken,
