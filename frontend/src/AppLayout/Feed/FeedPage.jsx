@@ -8,7 +8,7 @@ const severityFromCategory = (category) => {
   return "INFO";
 };
 
-const toFeedPost = (submission) => ({
+const toFeedPost = (submission, likedPosts) => ({
   id: submission?.submission_id || submission?.id,
   user: submission?.username || "Analyst",
   location: "Contagion Network",
@@ -17,8 +17,10 @@ const toFeedPost = (submission) => ({
   threat: severityFromCategory(submission?.malware_category || submission?.malware_family),
   status: submission?.sandbox_status || submission?.status,
   date: submission?.submitted_at ? new Date(submission.submitted_at).toLocaleDateString() : "Unknown",
-  score: submission?.sandbox_status === "Completed" ? 100 : 0,
-  comments: 0,
+  score: submission?.like_count || 0,
+  isLiked: likedPosts?.[submission?.submission_id || submission?.id] !== undefined,
+  comments: submission?.comment_count || 0,
+  shares: submission?.share_count || 0,
   caption: submission?.content || "No summary provided.",
 });
 
@@ -27,6 +29,7 @@ const FeedPage = () => {
   const [submissions, setSubmissions] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
+  const likedPosts = JSON.parse(localStorage.getItem('likedPosts') || '{}');
 
   useEffect(() => {
     const loadFeed = async () => {
@@ -47,7 +50,7 @@ const FeedPage = () => {
   }, []);
 
   const posts = useMemo(() => {
-    const rows = submissions.map(toFeedPost);
+    const rows = submissions.map(s => toFeedPost(s, likedPosts));
     if (sortBy === "top") return [...rows].sort((a, b) => b.score - a.score);
     if (sortBy === "hot") return [...rows].sort((a, b) => (b.comments + b.score) - (a.comments + a.score));
     return rows;
@@ -113,6 +116,12 @@ const FeedPage = () => {
               {option.label}
             </button>
           ))}
+
+          {!loading && posts.length === 0 && (
+            <div className="py-20 text-center border border-dashed border-phantom">
+              <p className="font-code text-xs uppercase tracking-widest text-slate-500">No submissions in the feed yet.</p>
+            </div>
+          )}
         </div>
 
         {error && (
@@ -129,7 +138,7 @@ const FeedPage = () => {
           )}
 
           {!loading && posts.map((post) => (
-            <FeedCard key={post.id} post={post} />
+            <FeedCard key={post.id} post={post} onInteract={() => setSubmissions(prev => [...prev])} />
           ))}
 
           {!loading && posts.length === 0 && (

@@ -127,4 +127,17 @@ export const getSandboxExecutions = () => API.get("/sandbox/executions");
 export const evaluateSandboxFile = (payload) =>
   API.post("/sandbox/evaluate", payload);
 
+// Post Interaction API functions
+export const getPostComments = (submissionId) => API.get(`/posts/${submissionId}/comments`);
+export const addPostComment = (submissionId, content) => API.post(`/posts/${submissionId}/comments`, { content });
+export const deletePostComment = (commentId) => API.delete(`/posts/comments/${commentId}`);
+export const getPostLikes = (submissionId) => API.get(`/posts/${submissionId}/likes`);
+export const getUserPostLike = (submissionId) => API.get(`/posts/${submissionId}/likes/me`);
+export const togglePostLike = (submissionId) => API.post(`/posts/${submissionId}/likes`);
+export const getPostShares = (submissionId) => API.get(`/posts/${submissionId}/shares`);
+export const togglePostShare = (submissionId) => API.post(`/posts/${submissionId}/shares`);
+export const getPostSaves = (submissionId) => API.get(`/posts/${submissionId}/saves`);
+export const getUserPostSave = (submissionId) => API.get(`/posts/${submissionId}/saves/me`);
+export const togglePostSave = (submissionId) => API.post(`/posts/${submissionId}/saves`);
+
 export default API;

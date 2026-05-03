@@ -25,7 +25,10 @@ async function fetchAllSubmissions() {
         a.malware_category,
         latest.execution_id,
         latest.sandbox_status,
-        latest.finished_at AS sandbox_finished_at
+        latest.finished_at AS sandbox_finished_at,
+        ISNULL(like_counts.like_count, 0) AS like_count,
+        ISNULL(comment_counts.comment_count, 0) AS comment_count,
+        ISNULL(share_counts.share_count, 0) AS share_count
       FROM Analysis_Submissions s
       INNER JOIN Users u ON u.user_id = s.author_id
       LEFT JOIN Malware_Artifacts a ON a.artifact_id = s.artifact_id
@@ -38,6 +41,21 @@ async function fetchAllSubmissions() {
         WHERE e.submission_id = s.submission_id
         ORDER BY e.queued_at DESC
       ) latest
+      OUTER APPLY (
+        SELECT COUNT(*) AS like_count
+        FROM Post_Likes pl
+        WHERE pl.submission_id = s.submission_id
+      ) like_counts
+      OUTER APPLY (
+        SELECT COUNT(*) AS comment_count
+        FROM Post_Comments pc
+        WHERE pc.submission_id = s.submission_id
+      ) comment_counts
+      OUTER APPLY (
+        SELECT COUNT(*) AS share_count
+        FROM Post_Shares ps
+        WHERE ps.submission_id = s.submission_id
+      ) share_counts
       WHERE s.status <> 'Archived'
       ORDER BY s.updated_at DESC
     `);

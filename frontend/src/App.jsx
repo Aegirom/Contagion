@@ -15,6 +15,7 @@ import AdminDashboardPage from "./AppLayout/Dashboard/AdminDashboardPage";
 import ProfilePage from "./AppLayout/Profile/ProfilePage";
 import SandboxPage from "./AppLayout/Sandbox/SandboxPage";
 import { AuthProvider } from "./context/AuthContext";
+import { NotificationProvider } from "./context/NotificationContext";
 import AdminRoute from "./AppLayout/AdminRoute";
 import PrivateRoute from "./AppLayout/PrivateRoute";
 import Leaderboard from "./AppLayout/Leaderboard/Leaderboard";
@@ -30,7 +31,8 @@ function App() {
   return (
     <BrowserRouter>
       <AuthProvider>
-        <Routes>
+        <NotificationProvider>
+          <Routes>
           {/* Auth routes */}
           <Route path="/login" element={<LoginPage />} />
           <Route path="/register" element={<RegisterPage />} />
@@ -206,9 +208,70 @@ function App() {
             }
           />
 
+          <Route
+            path="/feed"
+            element={
+              <PrivateRoute>
+                <MainLayout
+                  pageName="Feed"
+                  sidebarOpen={sidebarOpen}
+                  toggleSidebar={toggleSidebar}
+                >
+                  <FeedPage />
+                </MainLayout>
+              </PrivateRoute>
+            }
+          />
+
+          <Route
+            path="/create-post"
+            element={
+              <PrivateRoute>
+                <MainLayout
+                  pageName="Create Analysis"
+                  sidebarOpen={sidebarOpen}
+                  toggleSidebar={toggleSidebar}
+                >
+                  <CreatePost />
+                </MainLayout>
+              </PrivateRoute>
+            }
+          />
+
+          <Route
+            path="/drafts"
+            element={
+              <PrivateRoute>
+                <MainLayout
+                  pageName="Drafts"
+                  sidebarOpen={sidebarOpen}
+                  toggleSidebar={toggleSidebar}
+                >
+                  <Drafts />
+                </MainLayout>
+              </PrivateRoute>
+            }
+          />
+
+          <Route
+            path="/profile"
+            element={
+              <PrivateRoute>
+                <MainLayout
+                  pageName="Profile"
+                  sidebarOpen={sidebarOpen}
+                  toggleSidebar={toggleSidebar}
+                >
+                  <ProfilePage />
+                </MainLayout>
+              </PrivateRoute>
+            }
+          />
+
           {/* Default redirect */}
           <Route path="/" element={<Navigate to="/login" replace />} />
-        </Routes>
+          </Routes>
+        </NotificationProvider>
       </AuthProvider>
     </BrowserRouter>
   );

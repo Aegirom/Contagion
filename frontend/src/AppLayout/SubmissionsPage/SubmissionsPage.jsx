@@ -186,7 +186,7 @@ function SubmissionsPage() {
           </div>
         )}
 
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 max-w-7xl mx-auto">
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 w-full">
           <div className="col-span-full flex items-center gap-4 mb-2">
             <span className="text-[10px] text-slate-600 font-black uppercase tracking-[0.3em]">
               Query Results ({filteredSubmissions.length})
@@ -203,7 +203,7 @@ function SubmissionsPage() {
               }
               onOpenAiEval={() => handleOpenEvaluation(item)}
               gotoPost={() => handleViewDetails(item)}
-              onRunSandbox={() => handleRunSandbox(item)}
+              onRunSandbox={() => navigate(`/sandbox?submission=${item.id}`)}
               onDelete={() => handleDeleteSubmission(item)}
               deleting={deletingId === item.id}
             />

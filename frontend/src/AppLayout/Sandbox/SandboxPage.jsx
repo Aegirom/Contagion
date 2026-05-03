@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
+import { useSearchParams } from "react-router-dom";
 import {
   evaluateSandboxFile,
   getSandboxExecutions,
@@ -29,9 +30,10 @@ const CountTile = ({ label, value, accent = "text-slate-100" }) => (
 );
 
 function SandboxPage() {
+  const [searchParams] = useSearchParams();
   const [submissions, setSubmissions] = useState([]);
   const [executions, setExecutions] = useState([]);
-  const [selectedSubmissionId, setSelectedSubmissionId] = useState("");
+  const [selectedSubmissionId, setSelectedSubmissionId] = useState(searchParams.get("submission") || "");
   const [fileHash, setFileHash] = useState("");
   const [networkEnabled, setNetworkEnabled] = useState(false);
   const [osProfile, setOsProfile] = useState("Windows10");

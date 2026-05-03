@@ -7,7 +7,6 @@ import {
 } from "../../services/userService";
 import { Link, useNavigate } from "react-router-dom";
 import AvatarCropper from "./Components/AvatarCropper";
-import PlusButton from "../Dashboard/Components/Buttons.jsx";
 
 const ProfilePage = () => {
   const { user, logout, updateUser } = useContext(AuthContext);
@@ -231,7 +230,7 @@ const ProfilePage = () => {
           <div className="flex flex-col sm:flex-row gap-3">
             <button
               onClick={() => navigate(-1)}
-              className="flex items-center gap-2 px-4 py-2 rounded-lg font-code text-xs uppercase tracking-wider transition-colors"
+              className="flex items-center gap-2 px-4 py-2 rounded-lg font-code text-xs uppercase tracking-wider transition-all hover:border-toxic/30 hover:text-[#22C55E]"
               style={{
                 background: "rgba(10,11,16,0.5)",
                 border: "1px solid rgba(30,34,51,0.8)",
@@ -255,7 +254,7 @@ const ProfilePage = () => {
             </button>
             <button
               onClick={logout}
-              className="flex items-center gap-2 px-4 py-2 rounded-lg font-code text-xs uppercase tracking-wider transition-colors"
+              className="flex items-center gap-2 px-4 py-2 rounded-lg font-code text-xs uppercase tracking-wider transition-all hover:bg-red-500/10 hover:border-red-500/40 hover:shadow-glow-red"
               style={{
                 background: "rgba(239,68,68,0.05)",
                 border: "1px solid rgba(239,68,68,0.2)",
@@ -340,37 +339,30 @@ const ProfilePage = () => {
                 </p>
 
                 <div className="flex flex-wrap gap-2 justify-center mb-6">
-                  <span
-                    className="px-3 py-1 rounded-lg text-xs font-bold uppercase tracking-wider border"
-                    style={{
-                      background: "rgba(30,34,51,0.5)",
-                      border: "1px solid rgba(30,34,51,0.8)",
-                      color: "#94a3b8",
-                    }}
-                  >
-                    {user?.role || "Analyst"}
+                  <span className="badge-info">
+                    {user?.role || "ANALYST"}
                   </span>
                   <span
-                    className="px-3 py-1 rounded-lg text-xs font-bold uppercase tracking-wider border"
+                    className="px-2.5 py-1 text-[10px] font-bold uppercase tracking-wider rounded"
                     style={{
                       background:
                         expertiseLevel === "Expert"
-                          ? "rgba(139,92,246,0.1)"
+                          ? "rgba(139,92,246,0.15)"
                           : expertiseLevel === "Advanced"
-                            ? "rgba(59,130,246,0.1)"
-                            : "rgba(34,197,94,0.1)",
+                            ? "rgba(59,130,246,0.15)"
+                            : "rgba(74,222,128,0.15)",
                       border:
                         expertiseLevel === "Expert"
                           ? "1px solid rgba(139,92,246,0.3)"
                           : expertiseLevel === "Advanced"
                             ? "1px solid rgba(59,130,246,0.3)"
-                            : "1px solid rgba(34,197,94,0.3)",
+                            : "1px solid rgba(74,222,128,0.3)",
                       color:
                         expertiseLevel === "Expert"
-                          ? "#a78bfa"
+                          ? "#A78BFA"
                           : expertiseLevel === "Advanced"
-                            ? "#60a5fa"
-                            : "#22c55e",
+                            ? "#60A5FA"
+                            : "#4ADE80",
                     }}
                   >
                     {expertiseLevel}
@@ -383,13 +375,12 @@ const ProfilePage = () => {
                   <div
                     className="text-center p-4 rounded-lg"
                     style={{
-                      background: "rgba(30,34,51,0.3)",
-                      border: "1px solid rgba(30,34,51,0.5)",
+                      background: "#0A0B10",
+                      border: "1px solid #1E2233",
                     }}
                   >
                     <p
-                      className="text-[9px] text-slate-600 uppercase tracking-[0.2em] mb-1 font-bold"
-                      style={{ fontFamily: "monospace" }}
+                      className="font-body text-xs text-slate-500 uppercase tracking-wider mb-1 font-bold"
                     >
                       Reputation
                     </p>
@@ -403,17 +394,16 @@ const ProfilePage = () => {
                   <div
                     className="text-center p-4 rounded-lg"
                     style={{
-                      background: "rgba(30,34,51,0.3)",
-                      border: "1px solid rgba(30,34,51,0.5)",
+                      background: "#0A0B10",
+                      border: "1px solid #1E2233",
                     }}
                   >
                     <p
-                      className="text-[9px] text-slate-600 uppercase tracking-[0.2em] mb-1 font-bold"
-                      style={{ fontFamily: "monospace" }}
+                      className="font-body text-xs text-slate-500 uppercase tracking-wider mb-1 font-bold"
                     >
                       Joined
                     </p>
-                    <p className="font-mono text-xs text-slate-200 mt-1">
+                    <p className="font-code text-xs text-slate-300 mt-1">
                       {user?.created_at
                         ? new Date(user.created_at).toLocaleDateString(
                             undefined,
@@ -500,7 +490,6 @@ const ProfilePage = () => {
               >
                 <h3
                   className="font-display text-lg font-bold text-slate-100 flex items-center gap-3 pb-4 border-b border-phantom"
-                  style={{ fontFamily: "Inter, sans-serif" }}
                 >
                   <span
                     className="w-8 h-8 rounded-lg flex items-center justify-center"
@@ -530,7 +519,7 @@ const ProfilePage = () => {
                   <div>
                     <label
                       className="font-code text-[10px] uppercase tracking-widest block text-slate-500 mb-2"
-                      style={{ fontFamily: "monospace" }}
+                      
                     >
                       Full Name
                     </label>
@@ -540,11 +529,11 @@ const ProfilePage = () => {
                       value={profile.full_name}
                       onChange={handleChange}
                       placeholder="e.g., John Doe"
-                      className="w-full px-4 py-3 rounded-lg font-body text-sm transition-colors"
+                      className="w-full px-4 py-3 rounded-lg font-body text-sm transition-colors focus:outline-none focus:border-toxic focus:ring-1 focus:ring-toxic/20"
                       style={{
                         background: "rgba(12,13,20,0.8)",
                         border: "1px solid rgba(30,34,51,0.8)",
-                        color: "#e2e8f0",
+                        color: "#F1F5F9",
                       }}
                     />
                   </div>
@@ -552,7 +541,7 @@ const ProfilePage = () => {
                   <div>
                     <label
                       className="font-code text-[10px] uppercase tracking-widest block text-slate-500 mb-2"
-                      style={{ fontFamily: "monospace" }}
+                      
                     >
                       Agent Bio
                     </label>
@@ -562,11 +551,11 @@ const ProfilePage = () => {
                       onChange={handleChange}
                       placeholder="Describe your background and interests..."
                       rows="4"
-                      className="w-full px-4 py-3 rounded-lg font-body text-sm transition-colors resize-none"
+                      className="w-full px-4 py-3 rounded-lg font-body text-sm transition-colors resize-none focus:outline-none focus:border-toxic focus:ring-1 focus:ring-toxic/20"
                       style={{
                         background: "rgba(12,13,20,0.8)",
                         border: "1px solid rgba(30,34,51,0.8)",
-                        color: "#e2e8f0",
+                        color: "#F1F5F9",
                       }}
                     />
                   </div>
@@ -583,7 +572,6 @@ const ProfilePage = () => {
               >
                 <h3
                   className="font-display text-lg font-bold text-slate-100 flex items-center gap-3 pb-4 border-b border-phantom"
-                  style={{ fontFamily: "Inter, sans-serif" }}
                 >
                   <span
                     className="w-8 h-8 rounded-lg flex items-center justify-center"
@@ -623,11 +611,11 @@ const ProfilePage = () => {
                         <div
                           key={index}
                           className="group flex items-center gap-2 px-3 py-1.5 rounded-lg transition-colors"
-                          style={{
-                            background: "rgba(30,34,51,0.5)",
-                            border: "1px solid rgba(30,34,51,0.8)",
-                            color: "#e2e8f0",
-                          }}
+                            style={{
+                              background: "rgba(30,34,51,0.5)",
+                              border: "1px solid rgba(30,34,51,0.8)",
+                              color: "#F1F5F9",
+                            }}
                         >
                           <span className="font-body text-sm">{spec}</span>
                           <button
@@ -663,17 +651,17 @@ const ProfilePage = () => {
                         e.key === "Enter" && handleAddSpecialization(e)
                       }
                       placeholder="Add a specialization (e.g., Malware Analysis, Cryptography)"
-                      className="flex-1 px-4 py-3 rounded-lg font-body text-sm transition-colors"
+                      className="flex-1 px-4 py-3 rounded-lg font-body text-sm transition-colors focus:outline-none focus:border-toxic focus:ring-1 focus:ring-toxic/20"
                       style={{
                         background: "rgba(12,13,20,0.8)",
                         border: "1px solid rgba(30,34,51,0.8)",
-                        color: "#e2e8f0",
+                        color: "#F1F5F9",
                       }}
                     />
                     <button
                       type="button"
                       onClick={handleAddSpecialization}
-                      className="flex items-center gap-2 px-6 py-3 rounded-lg font-mono text-xs uppercase tracking-wider transition-colors"
+                      className="flex items-center gap-2 px-6 py-3 rounded-lg font-code text-xs uppercase tracking-wider transition-all hover:bg-[#4ADE80] hover:shadow-glow-green"
                       style={{
                         background: "#22C55E",
                         color: "#0c0d10",
@@ -697,7 +685,7 @@ const ProfilePage = () => {
                   </div>
                   <p
                     className="font-code text-[9px] uppercase tracking-widest text-slate-500"
-                    style={{ fontFamily: "monospace" }}
+                    
                   >
                     Press Enter or click Add to register expertise
                   </p>
@@ -715,7 +703,7 @@ const ProfilePage = () => {
                 <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
                   <p
                     className="font-mono text-xs text-slate-500 hidden sm:block"
-                    style={{ fontFamily: "monospace" }}
+                    
                   >
                     Changes will be propagated across the network.
                   </p>
@@ -723,7 +711,7 @@ const ProfilePage = () => {
                   <button
                     type="submit"
                     disabled={saving}
-                    className="flex-1 sm:flex-none flex items-center justify-center gap-2 px-8 py-3 rounded-lg font-display text-sm font-bold uppercase tracking-wider transition-all"
+                    className="flex-1 sm:flex-none flex items-center justify-center gap-2 px-8 py-3 rounded-lg font-display text-sm font-bold uppercase tracking-wider transition-all hover:bg-[#4ADE80] hover:shadow-glow-green disabled:opacity-50 disabled:cursor-not-allowed"
                     style={{
                       background: "#22C55E",
                       color: "#0c0d10",

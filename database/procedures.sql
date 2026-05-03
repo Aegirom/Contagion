@@ -5,6 +5,31 @@
 -- ============================================================
 
 -- ------------------------------------------------------------
+-- 0. Notifications table
+-- ------------------------------------------------------------
+IF NOT EXISTS (SELECT * FROM sys.objects WHERE object_id = OBJECT_ID(N'dbo.Notifications') AND type IN (N'U'))
+BEGIN
+    CREATE TABLE dbo.Notifications (
+        notification_id INT IDENTITY(1,1) PRIMARY KEY,
+        user_id INT NOT NULL,
+        type NVARCHAR(50) NOT NULL,
+        message NVARCHAR(500) NOT NULL,
+        actor_username NVARCHAR(100) NOT NULL,
+        related_submission_id INT NULL,
+        related_comment_id INT NULL,
+        is_read BIT NOT NULL DEFAULT 0,
+        created_at DATETIME NOT NULL DEFAULT GETDATE(),
+        CONSTRAINT FK_Notifications_User FOREIGN KEY (user_id) REFERENCES dbo.Users(user_id) ON DELETE CASCADE,
+        CONSTRAINT FK_Notifications_Submission FOREIGN KEY (related_submission_id) REFERENCES dbo.Analysis_Submissions(submission_id) ON DELETE SET NULL,
+        CONSTRAINT FK_Notifications_Comment FOREIGN KEY (related_comment_id) REFERENCES dbo.Post_Comments(comment_id) ON DELETE SET NULL
+    );
+
+    CREATE INDEX IX_Notifications_UserId_IsRead ON dbo.Notifications(user_id, is_read);
+    CREATE INDEX IX_Notifications_CreatedAt ON dbo.Notifications(created_at DESC);
+END;
+GO
+
+-- ------------------------------------------------------------
 -- 1. Create a submission atomically and return submission_id.
 -- ------------------------------------------------------------
 CREATE OR ALTER PROCEDURE dbo.sp_CreateAnalysisSubmission

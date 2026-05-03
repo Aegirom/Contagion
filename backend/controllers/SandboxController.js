@@ -6,6 +6,27 @@ const HASH_PATTERN = /^[a-fA-F0-9]{32}$|^[a-fA-F0-9]{40}$|^[a-fA-F0-9]{64}$/;
 const ALLOWED_ENVIRONMENTS = new Set(['Docker', 'VirtualBox', 'KVM']);
 let cachedSha1Column = null;
 
+const createNotification = async ({ userId, type, message, actorUsername, relatedSubmissionId }) => {
+  try {
+    console.log(`[Notification] Creating: user=${userId}, type=${type}, actor=${actorUsername}, submission=${relatedSubmissionId}`);
+    const result = await pool.request()
+      .input("userId", sql.Int, Number(userId))
+      .input("type", sql.NVarChar(50), type)
+      .input("message", sql.NVarChar(500), message)
+      .input("actorUsername", sql.NVarChar(100), actorUsername)
+      .input("relatedSubmissionId", sql.Int, relatedSubmissionId ? Number(relatedSubmissionId) : null)
+      .query(`
+        INSERT INTO Notifications (user_id, type, message, actor_username, related_submission_id, is_read)
+        OUTPUT INSERTED.notification_id
+        VALUES (@userId, @type, @message, @actorUsername, @relatedSubmissionId, 0)
+      `);
+    console.log(`[Notification] Created notification_id=${result.recordset[0].notification_id}`);
+  } catch (error) {
+    console.error("[Notification] Error creating notification:", error.message);
+    console.error("[Notification] SQL details:", error);
+  }
+};
+
 const getSha1Column = async () => {
   if (cachedSha1Column) return cachedSha1Column;
 
@@ -367,6 +388,18 @@ export const evaluateFile = async (req, res) => {
 
     await storeBehaviorLogs(executionId, fileReport, behaviorSummary, verdict);
     await updateExecution(executionId, 'Completed');
+
+    const notifierResult = await pool.request()
+      .input('userId', sql.INT, req.user.userId)
+      .query('SELECT username FROM Users WHERE user_id = @userId');
+
+    await createNotification({
+      userId: req.user.userId,
+      type: 'sandbox',
+      message: `Sandbox analysis completed for "${submission.title}"`,
+      actorUsername: notifierResult.recordset[0]?.username || 'System',
+      relatedSubmissionId: submission.submission_id,
+    });
 
     res.status(201).json({
       execution_id: executionId,

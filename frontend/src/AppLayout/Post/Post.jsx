@@ -1,7 +1,8 @@
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { SeverityBadge, StatusBadge } from '../Dashboard/Components/HooksAndBadges';
-import { evaluateSandboxFile, getSubmissionById } from '../../services/api';
+import { evaluateSandboxFile, getSubmissionById, getPostComments, addPostComment, deletePostComment, getPostLikes, getUserPostLike, togglePostLike, getPostShares, togglePostShare, getPostSaves, togglePostSave } from '../../services/api';
+import { AuthContext } from '../../context/AuthContext';
 
 const formatBytes = (bytes) => {
   if (!bytes) return '0 B';
@@ -39,22 +40,76 @@ const severityFromCategory = (category) => {
 const Post = () => {
   const { postId } = useParams();
   const navigate = useNavigate();
+  const { user } = React.useContext(AuthContext);
   const [post, setPost] = useState(null);
   const [loading, setLoading] = useState(true);
   const [running, setRunning] = useState(false);
-  const [error, setError] = useState('');
+  const [actionError, setActionError] = useState('');
+  
+  const [likes, setLikes] = useState(0);
+  const [isLiked, setIsLiked] = useState(false);
+  const [isShared, setIsShared] = useState(false);
+  const [isSaved, setIsSaved] = useState(false);
+  const [shareCount, setShareCount] = useState(0);
+  const [comments, setComments] = useState([]);
+  const [newComment, setNewComment] = useState('');
+  const [showCommentForm, setShowCommentForm] = useState(false);
+
+  const isAuthenticated = !!user;
 
   const loadPost = useCallback(async () => {
-    setError('');
+    setActionError('');
     try {
-      const response = await getSubmissionById(postId);
-      setPost(response.data);
+      const postRes = await getSubmissionById(postId);
+      setPost(postRes.data);
+      
+      let likesCount = 0;
+      let userLiked = false;
+      let sharesCount = 0;
+      let userSaved = false;
+      let commentsData = [];
+      
+      try {
+        const likesRes = await getPostLikes(postId);
+        likesCount = likesRes.data?.like_count || 0;
+      } catch (e) { console.log('Likes not available'); }
+      
+      try {
+        if (isAuthenticated) {
+          const likedRes = await getUserPostLike(postId);
+          userLiked = likedRes.data?.isLiked || false;
+        }
+      } catch (e) { console.log('User like check not available'); }
+      
+      try {
+        const sharesRes = await getPostShares(postId);
+        sharesCount = sharesRes.data?.share_count || 0;
+      } catch (e) { console.log('Shares not available'); }
+      
+      try {
+        if (isAuthenticated) {
+          const savedRes = await getUserPostSave(postId);
+          userSaved = savedRes.data?.isSaved || false;
+        }
+      } catch (e) { console.log('User save check not available'); }
+      
+      try {
+        const commentsRes = await getPostComments(postId);
+        commentsData = commentsRes.data || [];
+      } catch (e) { console.log('Comments not available'); }
+      
+      setLikes(likesCount);
+      setIsLiked(userLiked);
+      setShareCount(sharesCount);
+      setIsShared(false);
+      setIsSaved(userSaved);
+      setComments(commentsData);
     } catch (err) {
-      setError(err.response?.data?.error || 'Failed to load analysis report');
+      setActionError(err.response?.data?.error || 'Failed to load analysis report');
     } finally {
       setLoading(false);
     }
-  }, [postId]);
+  }, [postId, isAuthenticated]);
 
   useEffect(() => {
     loadPost();
@@ -67,7 +122,7 @@ const Post = () => {
   const handleRunSandbox = async () => {
     if (!post?.sha256_hash) return;
     setRunning(true);
-    setError('');
+    setActionError('');
     try {
       await evaluateSandboxFile({
         submission_id: post.submission_id,
@@ -79,9 +134,101 @@ const Post = () => {
       });
       await loadPost();
     } catch (err) {
-      setError(err.response?.data?.error || 'Sandbox evaluation failed');
+      setActionError(err.response?.data?.error || 'Sandbox evaluation failed');
     } finally {
       setRunning(false);
+    }
+  };
+
+  const showLoginPrompt = () => {
+    navigate('/login', { state: { from: `/post/${postId}` } });
+  };
+
+  const handleLike = async () => {
+    if (!isAuthenticated) {
+      return showLoginPrompt();
+    }
+    try {
+      const response = await togglePostLike(postId);
+      setIsLiked(response.data.isLiked);
+      setLikes(response.data.like_count);
+      
+      const likedPosts = JSON.parse(localStorage.getItem('likedPosts') || '{}');
+      if (response.data.isLiked) {
+        likedPosts[postId] = response.data.like_count;
+      } else {
+        delete likedPosts[postId];
+      }
+      localStorage.setItem('likedPosts', JSON.stringify(likedPosts));
+    } catch (err) {
+      if (err.response?.status === 401) {
+        navigate('/login', { state: { from: `/post/${postId}` } });
+      } else {
+        console.error('Failed to toggle like:', err);
+      }
+    }
+  };
+
+  const handleShare = async () => {
+    if (!isAuthenticated) {
+      return showLoginPrompt();
+    }
+    try {
+      const response = await togglePostShare(postId);
+      setIsShared(response.data.isShared);
+      setShareCount(response.data.share_count);
+    } catch (err) {
+      if (err.response?.status === 401) {
+        navigate('/login', { state: { from: `/post/${postId}` } });
+      } else {
+        console.error('Failed to toggle share:', err);
+      }
+    }
+  };
+
+  const handleSave = async () => {
+    if (!isAuthenticated) {
+      return showLoginPrompt();
+    }
+    try {
+      const response = await togglePostSave(postId);
+      setIsSaved(response.data.isSaved);
+    } catch (err) {
+      if (err.response?.status === 401) {
+        navigate('/login', { state: { from: `/post/${postId}` } });
+      } else {
+        console.error('Failed to toggle save:', err);
+      }
+    }
+  };
+
+  const handleAddComment = async (e) => {
+    e.preventDefault();
+    if (!isAuthenticated) {
+      return showLoginPrompt();
+    }
+    if (!newComment.trim()) return;
+    
+    try {
+      const response = await addPostComment(postId, newComment.trim());
+      setComments([...comments, response.data]);
+      setNewComment('');
+      setShowCommentForm(false);
+    } catch (err) {
+      if (err.response?.status === 401) {
+        navigate('/login', { state: { from: `/post/${postId}` } });
+      } else {
+        console.error('Failed to add comment:', err);
+      }
+    }
+  };
+
+  const handleDeleteComment = async (commentId) => {
+    try {
+      await deletePostComment(commentId);
+      setComments(comments.filter(c => c.comment_id !== commentId));
+    } catch (err) {
+      console.error('Failed to delete comment:', err);
     }
   };
 
@@ -99,7 +246,7 @@ const Post = () => {
     return (
       <main className="flex-1 overflow-auto relative z-10">
         <div className="max-w-4xl mx-auto py-20 px-4 text-center">
-          <p className="font-code text-sm text-red-400">{error || 'Analysis report not found'}</p>
+          <p className="font-code text-sm text-red-400">{actionError || 'Analysis report not found'}</p>
           <button onClick={() => navigate('/submissions')} className="mt-4 font-code text-xs uppercase tracking-widest text-toxic">
             Return to submissions
           </button>
@@ -124,9 +271,9 @@ const Post = () => {
           RETURN
         </button>
 
-        {error && (
+        {actionError && (
           <div className="mb-6 rounded border border-red-900/40 bg-red-900/10 px-4 py-3 font-code text-xs text-red-300">
-            {error}
+            {actionError}
           </div>
         )}
 
@@ -148,6 +295,77 @@ const Post = () => {
                   <p className="font-code text-xs mt-2" style={{ color: '#475569' }}>
                     SUBMITTED BY <span style={{ color: '#22C55E' }}>{post.username}</span> • {new Date(post.submitted_at).toLocaleString()}
                   </p>
+                  <div className="flex items-center gap-4 mt-3">
+                    <button
+                      onClick={handleLike}
+                      className="flex items-center gap-2 font-code text-xs transition-all hover:scale-105"
+                      style={{ color: isLiked ? '#EF4444' : '#475569' }}
+                    >
+                      <svg
+                        width="16"
+                        height="16"
+                        viewBox="0 0 24 24"
+                        fill={isLiked ? '#EF4444' : 'none'}
+                        stroke="currentColor"
+                        strokeWidth="2"
+                        className="transition-transform hover:rotate-12"
+                      >
+                        <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z" />
+                      </svg>
+                      <span>{likes}</span>
+                    </button>
+                    <button
+                      onClick={() => setShowCommentForm(!showCommentForm)}
+                      className="flex items-center gap-2 font-code text-xs transition-all hover:scale-105"
+                      style={{ color: '#475569' }}
+                    >
+                      <svg
+                        width="16"
+                        height="16"
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        stroke="currentColor"
+                        strokeWidth="2"
+                      >
+                        <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" />
+                      </svg>
+                      <span>{comments.length}</span>
+                    </button>
+                    <button
+                      onClick={handleShare}
+                      className="flex items-center gap-2 font-code text-xs transition-all hover:scale-105"
+                      style={{ color: isShared ? '#22C55E' : '#475569' }}
+                    >
+                      <svg
+                        width="16"
+                        height="16"
+                        viewBox="0 0 24 24"
+                        fill={isShared ? '#22C55E' : 'none'}
+                        stroke="currentColor"
+                        strokeWidth="2"
+                      >
+                        <path d="M4 12v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8M16 6l-4-4-4 4M12 2v13" />
+                      </svg>
+                      <span>{shareCount}</span>
+                    </button>
+                    <button
+                      onClick={handleSave}
+                      className="flex items-center gap-2 font-code text-xs transition-all hover:scale-105"
+                      style={{ color: isSaved ? '#F59E0B' : '#475569' }}
+                    >
+                      <svg
+                        width="16"
+                        height="16"
+                        viewBox="0 0 24 24"
+                        fill={isSaved ? '#F59E0B' : 'none'}
+                        stroke="currentColor"
+                        strokeWidth="2"
+                      >
+                        <path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z" />
+                      </svg>
+                      <span>{isSaved ? 'Saved' : 'Save'}</span>
+                    </button>
+                  </div>
                 </div>
                 <div className="flex flex-col items-end gap-2">
                   <SeverityBadge level={threat} />
@@ -165,6 +383,91 @@ const Post = () => {
                 <p className="font-body text-sm leading-relaxed whitespace-pre-wrap" style={{ color: '#94A3B8' }}>
                   {post.content}
                 </p>
+
+                {/* Comments Section */}
+                <div className="mt-8 pt-6 border-t border-[rgba(30,34,51,0.5)]">
+                  <h3 className="font-display text-sm font-bold uppercase tracking-wider mb-4" style={{ color: '#F1F5F9' }}>
+                    Comments ({comments.length})
+                  </h3>
+                  
+                  {/* Comment Form */}
+                  {showCommentForm && (
+                    <form onSubmit={handleAddComment} className="mb-6">
+                      <div className="relative">
+                        <textarea
+                          value={newComment}
+                          onChange={(e) => setNewComment(e.target.value)}
+                          placeholder="Write your insight..."
+                          className="w-full px-4 py-3 rounded-lg font-body text-sm bg-[#0A0B10] border border-[rgba(30,34,51,0.8)] text-[#F1F5F9] placeholder-slate-500 focus:outline-none focus:border-toxic focus:ring-1 focus:ring-toxic/20 resize-none"
+                          rows="3"
+                        />
+                        <div className="flex justify-end gap-2 mt-2">
+                          <button
+                            type="button"
+                            onClick={() => setShowCommentForm(false)}
+                            className="px-4 py-2 rounded-lg font-code text-xs uppercase tracking-wider transition-colors"
+                            style={{ color: '#64748B' }}
+                          >
+                            Cancel
+                          </button>
+                          <button
+                            type="submit"
+                            disabled={!newComment.trim()}
+                            className="px-4 py-2 rounded-lg font-code text-xs uppercase tracking-wider transition-all bg-[#22C55E] text-[#0A0B10] disabled:opacity-50 hover:bg-[#4ADE80]"
+                          >
+                            Post
+                          </button>
+                        </div>
+                      </div>
+                    </form>
+                  )}
+
+                  {/* Comments List */}
+                  <div className="space-y-4">
+                    {comments.map((comment) => (
+                      <div
+                        key={comment.comment_id}
+                        className="p-4 rounded-lg"
+                        style={{
+                          background: 'rgba(10,11,16,0.6)',
+                          border: '1px solid rgba(30,34,51,0.6)',
+                        }}
+                      >
+                        <div className="flex items-center gap-2 mb-2">
+                          <div
+                            className="w-6 h-6 rounded-full flex items-center justify-center font-display text-[10px] font-bold"
+                            style={{ background: 'rgba(34,197,94,0.2)', color: '#22C55E' }}
+                          >
+                            {comment.username?.charAt(0).toUpperCase()}
+                          </div>
+                          <span className="font-body text-sm font-semibold" style={{ color: '#F1F5F9' }}>
+                            {comment.username}
+                          </span>
+                          <span className="font-code text-[10px]" style={{ color: '#475569' }}>
+                            • {new Date(comment.created_at).toLocaleString()}
+                          </span>
+                          {user?.user_id === comment.user_id && (
+                            <button
+                              onClick={() => handleDeleteComment(comment.comment_id)}
+                              className="ml-auto font-code text-[10px] text-red-400 hover:text-red-300"
+                            >
+                              Delete
+                            </button>
+                          )}
+                        </div>
+                        <p className="font-body text-sm pl-8" style={{ color: '#94A3B8' }}>
+                          {comment.content}
+                        </p>
+                      </div>
+                    ))}
+                    
+                    {comments.length === 0 && (
+                      <p className="text-center font-code text-xs" style={{ color: '#475569' }}>
+                        No comments yet. Be the first to share your insights.
+                      </p>
+                    )}
+                  </div>
+                </div>
               </div>
 
               {post.sha256_hash && (

@@ -13,8 +13,10 @@ const EyeIcon = ({ open }) => open
 const LoginForm = () => {
   const { login } = useContext(AuthContext);
   const navigate = useNavigate();
-  const [formData, setFormData] = useState({ email: '', password: '' });
-  const [rememberMe, setRememberMe] = useState(false);
+  const savedTokens = localStorage.getItem("authTokens");
+  const savedUser = (() => { try { return JSON.parse(localStorage.getItem("user")); } catch { return null; } })();
+  const [formData, setFormData] = useState({ email: savedUser?.email || '', password: '' });
+  const [rememberMe, setRememberMe] = useState(!!savedTokens);
   const [showPass, setShowPass] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
@@ -124,15 +126,47 @@ const LoginForm = () => {
         </div>
 
         {/* Remember me */}
-        <label style={{ display: 'flex', alignItems: 'center', gap: 7, cursor: 'pointer', marginTop: 2 }}>
-          <input
-            type="checkbox"
-            checked={rememberMe}
-            onChange={e => setRememberMe(e.target.checked)}
-            style={{ accentColor: ACCENT, width: 12, height: 12 }}
-          />
-          <span style={{ fontSize: 11, color: '#555' }}>Remember me</span>
-        </label>
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginTop: 2 }}>
+          <button
+            type="button"
+            onClick={() => setRememberMe(!rememberMe)}
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: 10,
+              background: 'none',
+              border: 'none',
+              cursor: 'pointer',
+              padding: 0,
+            }}
+          >
+            <div
+              style={{
+                width: 32,
+                height: 18,
+                borderRadius: 9,
+                background: rememberMe ? ACCENT : '#1a1a1a',
+                border: `1px solid ${rememberMe ? ACCENT : '#2A2A2A'}`,
+                position: 'relative',
+                transition: 'all 0.2s ease',
+              }}
+            >
+              <div
+                style={{
+                  width: 14,
+                  height: 14,
+                  borderRadius: '50%',
+                  background: rememberMe ? '#000' : '#404040',
+                  position: 'absolute',
+                  top: 1,
+                  left: rememberMe ? 15 : 1,
+                  transition: 'all 0.2s ease',
+                }}
+              />
+            </div>
+            <span style={{ fontSize: 11, color: rememberMe ? '#888' : '#555', transition: 'color 0.2s' }}>Remember me</span>
+          </button>
+        </div>
 
         {/* Submit */}
         <button
