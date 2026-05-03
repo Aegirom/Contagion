@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { SeverityBadge } from "../../Dashboard/Components/HooksAndBadges";
-import { togglePostLike, togglePostShare } from "../../../services/api";
+import { togglePostLike, togglePostShare, togglePostSave } from "../../../services/api";
 import VerifiedBadge from "../../Dashboard/Components/VerifiedBadge";
 
 const ShareMenu = ({ isOpen, onClose, postId, onShare }) => {
@@ -75,13 +75,15 @@ const ShareMenu = ({ isOpen, onClose, postId, onShare }) => {
 const FeedCard = ({ post, onInteract }) => {
   const navigate = useNavigate();
   const [isLiked, setIsLiked] = useState(post.isLiked || false);
+  const [isSaved, setIsSaved] = useState(post.isSaved || false);
   const [likeCount, setLikeCount] = useState(post.score || 0);
   const [showShareMenu, setShowShareMenu] = useState(false);
 
   useEffect(() => {
     setIsLiked(post.isLiked || false);
+    setIsSaved(post.isSaved || false);
     setLikeCount(post.score || 0);
-  }, [post.isLiked, post.score]);
+  }, [post.isLiked, post.isSaved, post.score]);
 
   const isInteractive = post.submissionStatus === "Published";
 
@@ -106,6 +108,28 @@ const FeedCard = ({ post, onInteract }) => {
         delete likedPosts[post.id];
       }
       localStorage.setItem('likedPosts', JSON.stringify(likedPosts));
+      
+      onInteract?.();
+    } catch (err) {
+      if (err.response?.status === 401) {
+        navigate('/login', { state: { from: `/feed` } });
+      }
+    }
+  };
+
+  const handleSave = async (e) => {
+    e.stopPropagation();
+    try {
+      const response = await togglePostSave(post.id);
+      setIsSaved(response.data.isSaved);
+      
+      const savedPosts = JSON.parse(localStorage.getItem('savedPosts') || '{}');
+      if (response.data.isSaved) {
+        savedPosts[post.id] = true;
+      } else {
+        delete savedPosts[post.id];
+      }
+      localStorage.setItem('savedPosts', JSON.stringify(savedPosts));
       
       onInteract?.();
     } catch (err) {
@@ -304,6 +328,25 @@ const FeedCard = ({ post, onInteract }) => {
             onShare={handleShare}
           />
         </div>
+
+        <button
+          onClick={isInteractive ? handleSave : undefined}
+          disabled={!isInteractive}
+          className="flex items-center gap-2 font-code text-[10px] uppercase tracking-wider transition-colors disabled:opacity-20 disabled:cursor-not-allowed"
+          style={{ color: isSaved ? '#F59E0B' : '#64748B' }}
+        >
+          <svg
+            width="16"
+            height="16"
+            viewBox="0 0 24 24"
+            fill={isSaved ? '#F59E0B' : 'none'}
+            stroke="currentColor"
+            strokeWidth="2"
+          >
+            <path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z" />
+          </svg>
+          {isSaved ? "Saved" : "Save"}
+        </button>
       </div>
     </div>
   );

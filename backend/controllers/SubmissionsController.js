@@ -373,6 +373,55 @@ export const updateSubmission = async (req, res) => {
   }
 }
 
+export const importSubmission = async (req, res) => {
+  try {
+    const userId = req.user?.userId;
+    const submissionId = Number(req.params.id);
+
+    if (!userId || !submissionId) {
+      return res.status(400).json({ error: 'Submission id is required' });
+    }
+
+    // Get original submission
+    const original = await pool.request()
+      .input('submission_id', sql.INT, submissionId)
+      .query(`
+        SELECT title, content, artifact_id, template_type
+        FROM Analysis_Submissions
+        WHERE submission_id = @submission_id
+      `);
+
+    if (!original.recordset[0]) {
+      return res.status(404).json({ error: 'Original submission not found' });
+    }
+
+    const { title, content, artifact_id, template_type } = original.recordset[0];
+
+    // Create new submission for current user
+    const result = await pool.request()
+      .input('author_id', sql.INT, userId)
+      .input('artifact_id', sql.INT, artifact_id || null)
+      .input('title', sql.NVARCHAR(255), `Imported: ${title}`)
+      .input('content', sql.NVARCHAR(sql.MAX), content)
+      .input('status', sql.NVARCHAR(20), 'Draft')
+      .input('version', sql.INT, 1)
+      .input('template_type', sql.NVARCHAR(50), template_type)
+      .query(`
+        INSERT INTO Analysis_Submissions(author_id, artifact_id, title, content, status, version, template_type)
+        OUTPUT INSERTED.submission_id
+        VALUES (@author_id, @artifact_id, @title, @content, @status, @version, @template_type)
+      `);
+
+    res.status(201).json({
+      message: "Submission imported successfully",
+      submission_id: result.recordset[0].submission_id
+    });
+  } catch (err) {
+    console.log("Failed to import submission:", err);
+    res.status(500).json({ error: 'Internal Server Error' });
+  }
+}
+
 export const deleteSubmission = async (req, res) => {
   try {
     const userId = req.user?.userId;
@@ -401,6 +450,63 @@ export const deleteSubmission = async (req, res) => {
     res.json({ message: 'Submission archived', submission: result.recordset[0] });
   } catch (err) {
     console.log("Failed to delete submission:", err);
+    res.status(500).json({ error: 'Internal Server Error' });
+  }
+}
+
+export const getUserSavedSubmissions = async (req, res) => {
+  try {
+    const userId = req.user?.userId;
+    if (!userId) {
+      return res.status(401).json({ error: 'Unauthorized' });
+    }
+
+    const result = await pool.request()
+      .input('user_id', sql.INT, userId)
+      .query(`
+        SELECT
+          s.submission_id,
+          s.author_id,
+          s.artifact_id,
+          s.title,
+          s.content,
+          s.status,
+          s.version,
+          s.template_type,
+          s.submitted_at,
+          s.updated_at,
+          u.username,
+          u.role,
+          a.file_name,
+          a.sha256_hash,
+          a.malware_family,
+          a.malware_category,
+          e.execution_id,
+          e.sandbox_status,
+          e.finished_at AS sandbox_finished_at,
+          ISNULL(lc.like_count, 0) AS like_count,
+          ISNULL(cc.comment_count, 0) AS comment_count,
+          ISNULL(sc.share_count, 0) AS share_count
+        FROM Analysis_Submissions s
+        INNER JOIN Post_Saves ps ON ps.submission_id = s.submission_id
+        INNER JOIN Users u ON u.user_id = s.author_id
+        LEFT JOIN Malware_Artifacts a ON a.artifact_id = s.artifact_id
+        LEFT JOIN (
+          SELECT se.submission_id, se.execution_id, se.status AS sandbox_status, se.finished_at,
+                 ROW_NUMBER() OVER(PARTITION BY se.submission_id ORDER BY se.queued_at DESC) AS rn
+          FROM Sandbox_Executions se
+        ) e ON e.submission_id = s.submission_id AND e.rn = 1
+        LEFT JOIN (SELECT submission_id, COUNT(*) AS like_count FROM Post_Likes GROUP BY submission_id) lc ON lc.submission_id = s.submission_id
+        LEFT JOIN (SELECT submission_id, COUNT(*) AS comment_count FROM Post_Comments GROUP BY submission_id) cc ON cc.submission_id = s.submission_id
+        LEFT JOIN (SELECT submission_id, COUNT(*) AS share_count FROM Post_Shares GROUP BY submission_id) sc ON sc.submission_id = s.submission_id
+        WHERE ps.user_id = @user_id
+        ORDER BY ps.created_at DESC
+      `);
+
+    res.json(result.recordset);
+  }
+  catch (err) {
+    console.log("Failed to get user saved submissions: ", err);
     res.status(500).json({ error: 'Internal Server Error' });
   }
 }
