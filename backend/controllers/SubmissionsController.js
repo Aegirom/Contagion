@@ -314,7 +314,7 @@ export const getSubmissionByIdPublic = async (req, res) => {
           ORDER BY e.queued_at DESC
         ) latest
         WHERE s.submission_id = @submission_id
-          ${isAuthenticated ? 'AND (s.author_id = @user_id OR s.status IN (\'Published\', \'Pending\'))' : 'AND s.status IN (\'Published\', \'Pending\')'}
+          ${isAuthenticated ? 'AND (s.author_id = @user_id OR s.status = \'Published\')' : 'AND s.status = \'Published\''}
       `;
 
     const result = await pool.request()

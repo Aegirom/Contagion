@@ -564,7 +564,7 @@ const Post = () => {
                 </div>
               </div>
 
-              {!isPending && (
+              {(isAuthor || !isPending) && (
                 <PeerReviewSection
                   reviews={reviews}
                   aggregate={aggregate}
