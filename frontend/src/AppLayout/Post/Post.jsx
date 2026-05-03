@@ -2,7 +2,7 @@ import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import PeerReviewSection from './Components/PeerReviewSection';
 import { SeverityBadge, StatusBadge } from '../Dashboard/Components/HooksAndBadges';
-import { evaluateSandboxFile, getSubmissionById, getPostComments, addPostComment, deletePostComment, getPostLikes, getUserPostLike, togglePostLike, getPostShares, togglePostShare, getPostSaves, togglePostSave, getSubmissionReviews, getUserReview, getAggregateScores, submitPeerReview } from '../../services/api';
+import { evaluateSandboxFile, getSubmissionById, getPostComments, addPostComment, deletePostComment, getPostLikes, getUserPostLike, togglePostLike, getPostShares, togglePostShare, getPostSaves, togglePostSave, getSubmissionReviews, getUserReview, getAggregateScores, submitPeerReview, updateSubmission } from '../../services/api';
 import { AuthContext } from '../../context/AuthContext';
 
 const formatBytes = (bytes) => {
@@ -45,6 +45,7 @@ const Post = () => {
   const [post, setPost] = useState(null);
   const [loading, setLoading] = useState(true);
   const [running, setRunning] = useState(false);
+  const [publishing, setPublishing] = useState(false);
   const [actionError, setActionError] = useState('');
   
   const [likes, setLikes] = useState(0);
@@ -175,9 +176,8 @@ const Post = () => {
   };
 
   const handleLike = async () => {
-    if (!isAuthenticated) {
-      return showLoginPrompt();
-    }
+    if (!isAuthenticated) return showLoginPrompt();
+    if (isPending) return;
     try {
       const response = await togglePostLike(postId);
       setIsLiked(response.data.isLiked);
@@ -200,9 +200,8 @@ const Post = () => {
   };
 
   const handleShare = async () => {
-    if (!isAuthenticated) {
-      return showLoginPrompt();
-    }
+    if (!isAuthenticated) return showLoginPrompt();
+    if (isPending) return;
     try {
       const response = await togglePostShare(postId);
       setIsShared(response.data.isShared);
@@ -217,9 +216,8 @@ const Post = () => {
   };
 
   const handleSave = async () => {
-    if (!isAuthenticated) {
-      return showLoginPrompt();
-    }
+    if (!isAuthenticated) return showLoginPrompt();
+    if (isPending) return;
     try {
       const response = await togglePostSave(postId);
       setIsSaved(response.data.isSaved);
@@ -234,9 +232,8 @@ const Post = () => {
 
   const handleAddComment = async (e) => {
     e.preventDefault();
-    if (!isAuthenticated) {
-      return showLoginPrompt();
-    }
+    if (!isAuthenticated) return showLoginPrompt();
+    if (isPending) return;
     if (!newComment.trim()) return;
     
     try {
@@ -277,7 +274,26 @@ const Post = () => {
     }
   };
 
+  const handlePublishToggle = async () => {
+    setPublishing(true);
+    setActionError('');
+    try {
+      if (post?.status === 'Published') {
+        await updateSubmission(postId, { status: 'Draft' });
+      } else {
+        await updateSubmission(postId, { status: 'Published' });
+      }
+      await loadPost();
+    } catch (err) {
+      setActionError(err.response?.data?.error || 'Failed to update submission status');
+    } finally {
+      setPublishing(false);
+    }
+  };
+
   const isAuthor = user?.user_id === post?.author_id || user?.id === post?.author_id;
+  const isPending = post?.status === 'Pending';
+  const isPublished = post?.status === 'Published';
 
   if (loading) {
     return (
@@ -324,6 +340,22 @@ const Post = () => {
           </div>
         )}
 
+        {isPending && (
+          <div className="mb-6 rounded-lg border px-4 py-3 flex items-center gap-3" style={{ background: 'rgba(245,158,11,0.06)', border: '1px solid rgba(245,158,11,0.2)', color: '#F59E0B' }}>
+            <svg className="w-4 h-4 flex-shrink-0 animate-pulse" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 9v2m0 4h.01M12 3l9.5 17H2.5L12 3z" /></svg>
+            <span className="text-xs">This analysis is pending review. Run sandbox or click Publish to make it public.</span>
+            {isAuthor && (
+              <button
+                onClick={handlePublishToggle}
+                disabled={publishing}
+                className="ml-auto font-code text-[10px] uppercase tracking-wider px-3 py-1 rounded bg-[#22C55E] text-[#0A0B10] disabled:opacity-50"
+              >
+                {publishing ? 'Publishing...' : 'Publish Now'}
+              </button>
+            )}
+          </div>
+        )}
+
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           <div className="lg:col-span-2 space-y-6">
             <div
@@ -345,7 +377,8 @@ const Post = () => {
                   <div className="flex items-center gap-4 mt-3">
                     <button
                       onClick={handleLike}
-                      className="flex items-center gap-2 font-code text-xs transition-all hover:scale-105"
+                      disabled={isPending}
+                      className="flex items-center gap-2 font-code text-xs transition-all hover:scale-105 disabled:opacity-30 disabled:cursor-not-allowed disabled:hover:scale-100"
                       style={{ color: isLiked ? '#EF4444' : '#475569' }}
                     >
                       <svg
@@ -363,7 +396,8 @@ const Post = () => {
                     </button>
                     <button
                       onClick={() => setShowCommentForm(!showCommentForm)}
-                      className="flex items-center gap-2 font-code text-xs transition-all hover:scale-105"
+                      disabled={isPending}
+                      className="flex items-center gap-2 font-code text-xs transition-all hover:scale-105 disabled:opacity-30 disabled:cursor-not-allowed disabled:hover:scale-100"
                       style={{ color: '#475569' }}
                     >
                       <svg
@@ -380,7 +414,8 @@ const Post = () => {
                     </button>
                     <button
                       onClick={handleShare}
-                      className="flex items-center gap-2 font-code text-xs transition-all hover:scale-105"
+                      disabled={isPending}
+                      className="flex items-center gap-2 font-code text-xs transition-all hover:scale-105 disabled:opacity-30 disabled:cursor-not-allowed disabled:hover:scale-100"
                       style={{ color: isShared ? '#22C55E' : '#475569' }}
                     >
                       <svg
@@ -397,7 +432,8 @@ const Post = () => {
                     </button>
                     <button
                       onClick={handleSave}
-                      className="flex items-center gap-2 font-code text-xs transition-all hover:scale-105"
+                      disabled={isPending}
+                      className="flex items-center gap-2 font-code text-xs transition-all hover:scale-105 disabled:opacity-30 disabled:cursor-not-allowed disabled:hover:scale-100"
                       style={{ color: isSaved ? '#F59E0B' : '#475569' }}
                     >
                       <svg
@@ -416,6 +452,11 @@ const Post = () => {
                 </div>
                 <div className="flex flex-col items-end gap-2">
                   <SeverityBadge level={threat} />
+                  {isPending && (
+                    <span className="px-2 py-0.5 rounded font-code text-[9px] tracking-widest border border-yellow-500/20 bg-yellow-500/10 text-yellow-400">
+                      PENDING
+                    </span>
+                  )}
                   <StatusBadge status={post.sandbox_status || post.status} />
                 </div>
               </div>
@@ -438,7 +479,7 @@ const Post = () => {
                   </h3>
                   
                   {/* Comment Form */}
-                  {showCommentForm && (
+                  {showCommentForm && !isPending && (
                     <form onSubmit={handleAddComment} className="mb-6">
                       <div className="relative">
                         <textarea
@@ -470,7 +511,12 @@ const Post = () => {
                   )}
 
                   {/* Comments List */}
-                  <div className="space-y-4">
+                  {isPending ? (
+                    <p className="text-center font-code text-xs py-4" style={{ color: '#475569' }}>
+                      Comments will be available once this analysis is published.
+                    </p>
+                  ) : (
+                    <div className="space-y-4">
                     {comments.map((comment) => (
                       <div
                         key={comment.comment_id}
@@ -513,32 +559,54 @@ const Post = () => {
                         No comments yet. Be the first to share your insights.
                       </p>
                     )}
-                  </div>
+                    </div>
+                  )}
                 </div>
               </div>
 
-              <PeerReviewSection
-                reviews={reviews}
-                aggregate={aggregate}
-                hasReviewed={hasReviewed}
-                userReview={userReview}
-                isAuthor={isAuthor}
-                isAuthenticated={isAuthenticated}
-                onSubmit={handleReviewSubmit}
-                submitting={reviewSubmitting}
-                success={reviewSuccess}
-                error={reviewError}
-              />
-
-              {post.sha256_hash && (
-                <button
-                  onClick={handleRunSandbox}
-                  disabled={running}
-                  className="mt-6 rounded-lg bg-[#22C55E] px-5 py-3 font-display text-xs font-bold uppercase tracking-[0.2em] text-[#0A0B10] disabled:opacity-50"
-                >
-                  {running ? 'Running Sandbox...' : 'Run Sandbox'}
-                </button>
+              {!isPending && (
+                <PeerReviewSection
+                  reviews={reviews}
+                  aggregate={aggregate}
+                  hasReviewed={hasReviewed}
+                  userReview={userReview}
+                  isAuthor={isAuthor}
+                  isAuthenticated={isAuthenticated}
+                  onSubmit={handleReviewSubmit}
+                  submitting={reviewSubmitting}
+                  success={reviewSuccess}
+                  error={reviewError}
+                />
               )}
+
+              <div className="mt-6 flex items-center gap-3">
+                {post.sha256_hash && (
+                  <button
+                    onClick={handleRunSandbox}
+                    disabled={running}
+                    className="rounded-lg bg-[#22C55E] px-5 py-3 font-display text-xs font-bold uppercase tracking-[0.2em] text-[#0A0B10] disabled:opacity-50"
+                  >
+                    {running ? 'Running Sandbox...' : 'Run Sandbox'}
+                  </button>
+                )}
+                {isAuthor && (
+                  <button
+                    onClick={handlePublishToggle}
+                    disabled={publishing}
+                    className={`rounded-lg px-5 py-3 font-display text-xs font-bold uppercase tracking-[0.2em] disabled:opacity-50 transition-all ${
+                      post.status === 'Published'
+                        ? 'bg-[#1E2233] text-[#64748B] hover:bg-[#252B3D]'
+                        : 'bg-[#22C55E] text-[#0A0B10] hover:bg-[#4ADE80]'
+                    }`}
+                  >
+                    {publishing
+                      ? 'Updating...'
+                      : post.status === 'Published'
+                      ? 'Unpublish'
+                      : 'Publish'}
+                  </button>
+                )}
+              </div>
             </div>
 
             <div

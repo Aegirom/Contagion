@@ -141,7 +141,11 @@ export const deleteComment = async (req, res) => {
     if (check.recordset[0].user_id !== userId) {
       return res.status(403).json({ error: "Not authorized to delete this comment" });
     }
-    
+
+    await pool.request()
+      .input("commentId", sql.Int, Number(commentId))
+      .query("UPDATE Notifications SET related_comment_id = NULL WHERE related_comment_id = @commentId");
+
     await pool.request()
       .input("commentId", sql.Int, Number(commentId))
       .query("DELETE FROM Post_Comments WHERE comment_id = @commentId");
