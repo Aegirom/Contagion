@@ -148,29 +148,7 @@ const createExecution = async ({ submissionId, artifactId, environment, osProfil
     .input('os_profile', sql.NVARCHAR(50), osProfile)
     .input('network_enabled', sql.BIT, networkEnabled)
     .input('timeout_seconds', sql.INT, timeoutSeconds)
-    .query(`
-      INSERT INTO Sandbox_Executions (
-        submission_id,
-        artifact_id,
-        environment,
-        os_profile,
-        status,
-        network_enabled,
-        timeout_seconds,
-        started_at
-      )
-      OUTPUT INSERTED.execution_id
-      VALUES (
-        @submission_id,
-        @artifact_id,
-        @environment,
-        @os_profile,
-        'Running',
-        @network_enabled,
-        @timeout_seconds,
-        GETDATE()
-      )
-    `);
+    .query('EXEC sp_CreateSandboxExecution @submission_id, @artifact_id, @environment, @os_profile, @network_enabled, @timeout_seconds');
 
   return result.recordset[0].execution_id;
 };
@@ -180,13 +158,7 @@ const updateExecution = async (executionId, status, errorMessage = null) => {
     .input('execution_id', sql.INT, executionId)
     .input('status', sql.NVARCHAR(20), status)
     .input('error_message', sql.NVARCHAR(sql.MAX), errorMessage)
-    .query(`
-      UPDATE Sandbox_Executions
-      SET status = @status,
-          finished_at = GETDATE(),
-          error_message = @error_message
-      WHERE execution_id = @execution_id
-    `);
+    .query('EXEC sp_CompleteSandboxExecution @execution_id, @status, @error_message');
 };
 
 const insertLog = async (executionId, logType, logData) => {
