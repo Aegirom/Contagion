@@ -1,12 +1,10 @@
 import { useEffect, useState } from "react";
 import PositionCard from "./Components/PositionCard.jsx";
-import Dropdown from "../SubmissionsPage/Components/Dropdown";
 import API from "../../services/api.js";
 
 function Leaderboard() {
   const [leaderboardData, setLeaderboardData] = useState([]);
   const [currentUser, setCurrentUser] = useState(null);
-  const [duration, setDuration] = useState("all");
 
   useEffect(() => {
     const getLeaderboard = async () => {
@@ -14,17 +12,17 @@ function Leaderboard() {
         const res = await API.get("/leaderboard");
         const mapped = Array.isArray(res.data)
           ? res.data.map((user, i) => ({
-            position: i + 1,
-            username: user.username,
-            userpfp:
-              user.avatar_url ||
-              `https://ui-avatars.com/api/?name=${encodeURIComponent(user.username)}&background=10b981&color=fff&size=256`,
-            role: user.role,
-            trophies: user.reputation_score ?? 0,
-            analyses: 0,
-            reviews: 0,
-            avgScore: 0,
-          }))
+              position: i + 1,
+              username: user.username,
+              userpfp:
+                user.avatar_url ||
+                `https://ui-avatars.com/api/?name=${encodeURIComponent(user.username)}&background=10b981&color=fff&size=256`,
+              role: user.role,
+              trophies: user.reputation_score ?? 0,
+              analyses: 0,
+              reviews: 0,
+              avgScore: 0,
+            }))
           : [];
         setLeaderboardData(mapped);
       } catch (err) {
@@ -65,18 +63,6 @@ function Leaderboard() {
           <h3 className="text-3xl font-black text-slate-100 tracking-tighter uppercase">
             Leaderboard
           </h3>
-        </div>
-        <div className="ml-6" style={{ minWidth: "140px" }}>
-          <Dropdown
-            name="duration"
-            value={duration}
-            onChange={(e) => setDuration(e.target.value)}
-            options={[
-              { value: "all", label: "All Time" },
-              { value: "month", label: "Monthly" },
-              { value: "week", label: "Weekly" },
-            ]}
-          />
         </div>
       </div>
 
