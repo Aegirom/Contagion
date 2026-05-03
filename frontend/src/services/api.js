@@ -257,4 +257,14 @@ export const getUserPostSave = (submissionId) =>
 export const togglePostSave = (submissionId) =>
   API.post(`/posts/${submissionId}/saves`);
 
+// Peer Review API functions
+export const getSubmissionReviews = (submissionId) =>
+  API.get(`/posts/${submissionId}/reviews`);
+export const getUserReview = (submissionId) =>
+  API.get(`/posts/${submissionId}/reviews/me`);
+export const getAggregateScores = (submissionId) =>
+  API.get(`/posts/${submissionId}/reviews/aggregate`);
+export const submitPeerReview = (submissionId, payload) =>
+  API.post(`/posts/${submissionId}/reviews`, payload);
+
 export default API;

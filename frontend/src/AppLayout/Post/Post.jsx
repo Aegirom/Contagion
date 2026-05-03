@@ -1,7 +1,8 @@
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
+import PeerReviewSection from './Components/PeerReviewSection';
 import { SeverityBadge, StatusBadge } from '../Dashboard/Components/HooksAndBadges';
-import { evaluateSandboxFile, getSubmissionById, getPostComments, addPostComment, deletePostComment, getPostLikes, getUserPostLike, togglePostLike, getPostShares, togglePostShare, getPostSaves, togglePostSave } from '../../services/api';
+import { evaluateSandboxFile, getSubmissionById, getPostComments, addPostComment, deletePostComment, getPostLikes, getUserPostLike, togglePostLike, getPostShares, togglePostShare, getPostSaves, togglePostSave, getSubmissionReviews, getUserReview, getAggregateScores, submitPeerReview } from '../../services/api';
 import { AuthContext } from '../../context/AuthContext';
 
 const formatBytes = (bytes) => {
@@ -55,10 +56,20 @@ const Post = () => {
   const [newComment, setNewComment] = useState('');
   const [showCommentForm, setShowCommentForm] = useState(false);
 
+  // Peer review state
+  const [reviews, setReviews] = useState([]);
+  const [aggregate, setAggregate] = useState(null);
+  const [userReview, setUserReview] = useState(null);
+  const [hasReviewed, setHasReviewed] = useState(false);
+  const [reviewSubmitting, setReviewSubmitting] = useState(false);
+  const [reviewError, setReviewError] = useState('');
+  const [reviewSuccess, setReviewSuccess] = useState(false);
+
   const isAuthenticated = !!user;
 
   const loadPost = useCallback(async () => {
     setActionError('');
+    setReviewError('');
     try {
       const postRes = await getSubmissionById(postId);
       setPost(postRes.data);
@@ -97,6 +108,25 @@ const Post = () => {
         const commentsRes = await getPostComments(postId);
         commentsData = commentsRes.data || [];
       } catch (e) { console.log('Comments not available'); }
+      
+      // Load peer review data
+      try {
+        const aggRes = await getAggregateScores(postId);
+        setAggregate(aggRes.data);
+      } catch (e) { console.log('Aggregate scores not available'); }
+
+      try {
+        const reviewsRes = await getSubmissionReviews(postId);
+        setReviews(reviewsRes.data?.reviews || []);
+      } catch (e) { console.log('Reviews not available'); }
+
+      if (isAuthenticated) {
+        try {
+          const userReviewRes = await getUserReview(postId);
+          setUserReview(userReviewRes.data?.review || null);
+          setHasReviewed(userReviewRes.data?.hasReviewed || false);
+        } catch (e) { console.log('User review check not available'); }
+      }
       
       setLikes(likesCount);
       setIsLiked(userLiked);
@@ -231,6 +261,23 @@ const Post = () => {
       console.error('Failed to delete comment:', err);
     }
   };
+
+  const handleReviewSubmit = async (reviewData) => {
+    setReviewSubmitting(true);
+    setReviewError('');
+    try {
+      await submitPeerReview(postId, reviewData);
+      setReviewSuccess(true);
+      await loadPost();
+      setTimeout(() => setReviewSuccess(false), 4000);
+    } catch (err) {
+      setReviewError(err.response?.data?.error || 'Failed to submit review');
+    } finally {
+      setReviewSubmitting(false);
+    }
+  };
+
+  const isAuthor = user?.user_id === post?.author_id || user?.id === post?.author_id;
 
   if (loading) {
     return (
@@ -469,6 +516,19 @@ const Post = () => {
                   </div>
                 </div>
               </div>
+
+              <PeerReviewSection
+                reviews={reviews}
+                aggregate={aggregate}
+                hasReviewed={hasReviewed}
+                userReview={userReview}
+                isAuthor={isAuthor}
+                isAuthenticated={isAuthenticated}
+                onSubmit={handleReviewSubmit}
+                submitting={reviewSubmitting}
+                success={reviewSuccess}
+                error={reviewError}
+              />
 
               {post.sha256_hash && (
                 <button

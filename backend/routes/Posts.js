@@ -12,6 +12,12 @@ import {
   getUserSave,
   toggleSave
 } from "../controllers/PostsController.js";
+import {
+  submitReview,
+  getSubmissionReviews,
+  getUserReview,
+  getAggregateScores
+} from "../controllers/PeerReviewsController.js";
 import { protect } from "./Auth.js";
 
 const router = express.Router();
@@ -34,5 +40,11 @@ router.post("/:submissionId/shares", protect, toggleShare);
 router.get("/:submissionId/saves", getSaves);
 router.get("/:submissionId/saves/me", protect, getUserSave);
 router.post("/:submissionId/saves", protect, toggleSave);
+
+// Peer Reviews
+router.get("/:submissionId/reviews", getSubmissionReviews);
+router.get("/:submissionId/reviews/me", protect, getUserReview);
+router.get("/:submissionId/reviews/aggregate", getAggregateScores);
+router.post("/:submissionId/reviews", protect, submitReview);
 
 export default router;
