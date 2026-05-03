@@ -30,6 +30,25 @@ END;
 GO
 
 -- ------------------------------------------------------------
+-- 0.1 Post_Saves table
+-- ------------------------------------------------------------
+IF NOT EXISTS (SELECT * FROM sys.objects WHERE object_id = OBJECT_ID(N'dbo.Post_Saves') AND type IN (N'U'))
+BEGIN
+    CREATE TABLE dbo.Post_Saves (
+        save_id INT IDENTITY(1,1) PRIMARY KEY,
+        submission_id INT NOT NULL,
+        user_id INT NOT NULL,
+        created_at DATETIME NOT NULL DEFAULT GETDATE(),
+        CONSTRAINT FK_PostSaves_Submission FOREIGN KEY (submission_id) REFERENCES dbo.Analysis_Submissions(submission_id) ON DELETE CASCADE,
+        CONSTRAINT FK_PostSaves_User FOREIGN KEY (user_id) REFERENCES dbo.Users(user_id) ON DELETE NO ACTION
+    );
+
+    CREATE INDEX IX_PostSaves_UserId ON dbo.Post_Saves(user_id);
+    CREATE INDEX IX_PostSaves_SubmissionId ON dbo.Post_Saves(submission_id);
+END;
+GO
+
+-- ------------------------------------------------------------
 -- 1. Create a submission atomically and return submission_id.
 -- ------------------------------------------------------------
 CREATE OR ALTER PROCEDURE dbo.sp_CreateAnalysisSubmission

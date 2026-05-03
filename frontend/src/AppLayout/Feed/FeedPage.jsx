@@ -8,7 +8,7 @@ const severityFromCategory = (category) => {
   return "INFO";
 };
 
-const toFeedPost = (submission, likedPosts) => ({
+const toFeedPost = (submission, likedPosts, savedPosts) => ({
   id: submission?.submission_id || submission?.id,
   user: submission?.username || "Analyst",
   role: submission?.role || "Analyst",
@@ -21,6 +21,7 @@ const toFeedPost = (submission, likedPosts) => ({
   date: submission?.submitted_at ? new Date(submission.submitted_at).toLocaleDateString() : "Unknown",
   score: submission?.like_count || 0,
   isLiked: likedPosts?.[submission?.submission_id || submission?.id] !== undefined,
+  isSaved: savedPosts?.[submission?.submission_id || submission?.id] !== undefined,
   comments: submission?.comment_count || 0,
   shares: submission?.share_count || 0,
   caption: submission?.content || "No summary provided.",
@@ -34,13 +35,17 @@ const FeedPage = () => {
   const [likedPosts, setLikedPosts] = useState(() =>
     JSON.parse(localStorage.getItem("likedPosts") || "{}")
   );
+  const [savedPosts, setSavedPosts] = useState(() =>
+    JSON.parse(localStorage.getItem("savedPosts") || "{}")
+  );
 
   useEffect(() => {
-    const handleLikedPostsChange = () => {
+    const handleStorageChange = () => {
       setLikedPosts(JSON.parse(localStorage.getItem("likedPosts") || "{}"));
+      setSavedPosts(JSON.parse(localStorage.getItem("savedPosts") || "{}"));
     };
-    window.addEventListener("storage", handleLikedPostsChange);
-    return () => window.removeEventListener("storage", handleLikedPostsChange);
+    window.addEventListener("storage", handleStorageChange);
+    return () => window.removeEventListener("storage", handleStorageChange);
   }, []);
 
   useEffect(() => {
@@ -62,11 +67,11 @@ const FeedPage = () => {
   }, []);
 
   const posts = useMemo(() => {
-    const rows = submissions.map(s => toFeedPost(s, likedPosts));
+    const rows = submissions.map(s => toFeedPost(s, likedPosts, savedPosts));
     if (sortBy === "top") return [...rows].sort((a, b) => b.score - a.score);
     if (sortBy === "hot") return [...rows].sort((a, b) => (b.comments + b.score) - (a.comments + a.score));
     return rows;
-  }, [submissions, sortBy]);
+  }, [submissions, sortBy, likedPosts, savedPosts]);
 
   const sortOptions = [
     {

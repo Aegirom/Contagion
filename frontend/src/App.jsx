@@ -24,6 +24,7 @@ import PrivateRoute from "./AppLayout/PrivateRoute";
 import Leaderboard from "./AppLayout/Leaderboard/Leaderboard";
 import Post from "./AppLayout/Post/Post";
 import Drafts from "./AppLayout/Drafts/Drafts";
+import SavedPostsPage from "./AppLayout/SavedPosts/SavedPostsPage";
 import MainLayout from "./AppLayout/MainLayout";
 
 function App() {
@@ -215,60 +216,15 @@ function App() {
           />
 
           <Route
-            path="/profile"
+            path="/saved"
             element={
               <PrivateRoute>
                 <MainLayout
-                  pageName="Profile"
+                  pageName="Saved"
                   sidebarOpen={sidebarOpen}
                   toggleSidebar={toggleSidebar}
                 >
-                  <ProfilePage />
-                </MainLayout>
-              </PrivateRoute>
-            }
-          />
-
-          <Route
-            path="/feed"
-            element={
-              <PrivateRoute>
-                <MainLayout
-                  pageName="Feed"
-                  sidebarOpen={sidebarOpen}
-                  toggleSidebar={toggleSidebar}
-                >
-                  <FeedPage />
-                </MainLayout>
-              </PrivateRoute>
-            }
-          />
-
-          <Route
-            path="/create-post"
-            element={
-              <PrivateRoute>
-                <MainLayout
-                  pageName="Create Analysis"
-                  sidebarOpen={sidebarOpen}
-                  toggleSidebar={toggleSidebar}
-                >
-                  <CreatePost />
-                </MainLayout>
-              </PrivateRoute>
-            }
-          />
-
-          <Route
-            path="/drafts"
-            element={
-              <PrivateRoute>
-                <MainLayout
-                  pageName="Drafts"
-                  sidebarOpen={sidebarOpen}
-                  toggleSidebar={toggleSidebar}
-                >
-                  <Drafts />
+                  <SavedPostsPage />
                 </MainLayout>
               </PrivateRoute>
             }

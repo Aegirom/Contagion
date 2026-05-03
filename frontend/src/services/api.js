@@ -204,11 +204,14 @@ export const authAPI = {
 // User Submissions API functions
 export const getAllSubmissions = () => API.get("/submissions/get");
 export const getUserSubmissions = () => API.get("/submissions/mine");
+export const getUserSavedSubmissions = () => API.get("/submissions/saved");
 export const getUserStats = () => API.get("/submissions/stats");
 export const getUserDrafts = () => API.get("/submissions/drafts");
 export const getSubmissionById = (id) => API.get(`/submissions/${id}`);
 export const createSubmission = (payload) =>
   API.post("/submissions/post", payload);
+export const importSubmission = (id) =>
+  API.post(`/submissions/${id}/import`);
 export const updateSubmission = (id, payload) =>
   API.patch(`/submissions/${id}`, payload);
 export const deleteSubmission = (id) => API.delete(`/submissions/${id}`);
