@@ -437,6 +437,7 @@ const PeerReviewForm = ({ onSubmit, onCancel, submitting }) => {
 
 const PeerReviewSection = ({ reviews, aggregate, hasReviewed, userReview, isAuthor, isAuthenticated, onSubmit, submitting, success, error }) => {
   const [sortBy, setSortBy] = useState("newest");
+  const [collapsed, setCollapsed] = useState(true);
 
   const sortedReviews = [...reviews].sort((a, b) => {
     if (sortBy === "highest") {
@@ -452,10 +453,13 @@ const PeerReviewSection = ({ reviews, aggregate, hasReviewed, userReview, isAuth
     return new Date(b.reviewed_at) - new Date(a.reviewed_at);
   });
 
+  const canReview = isAuthenticated && !isAuthor && !hasReviewed;
+  const hasReviews = reviews.length > 0;
+
   return (
     <div className="mt-8 pt-6 border-t border-[rgba(30,34,51,0.5)]">
       {/* Header */}
-      <div className="flex items-center justify-between mb-5 flex-wrap gap-3">
+      <div className="flex items-center justify-between mb-3 flex-wrap gap-3">
         <h3 className="font-display text-sm font-bold uppercase tracking-wider flex items-center gap-2" style={{ color: "#F1F5F9" }}>
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke={PURPLE} strokeWidth="2">
             <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" />
@@ -469,7 +473,7 @@ const PeerReviewSection = ({ reviews, aggregate, hasReviewed, userReview, isAuth
           </span>
         </h3>
 
-        {reviews.length > 1 && (
+        {!collapsed && reviews.length > 1 && (
           <div className="flex gap-1" style={{ background: "rgba(10,11,16,0.5)", borderRadius: "6px", padding: "2px" }}>
             {[
               { key: "newest", label: "Newest" },
@@ -490,21 +494,43 @@ const PeerReviewSection = ({ reviews, aggregate, hasReviewed, userReview, isAuth
             ))}
           </div>
         )}
+
+        <button
+          onClick={() => setCollapsed(!collapsed)}
+          className="flex items-center gap-2 px-3 py-1.5 rounded-lg font-code text-[10px] uppercase tracking-wider transition-all"
+          style={{
+            background: collapsed ? "rgba(139,92,246,0.1)" : "rgba(10,11,16,0.5)",
+            border: `1px solid ${collapsed ? "rgba(139,92,246,0.2)" : "rgba(30,34,51,0.5)"}`,
+            color: collapsed ? "#A78BFA" : "#64748B",
+          }}
+        >
+          {collapsed ? "Show reviews" : "Hide reviews"}
+          <svg
+            width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"
+            style={{ transition: "transform 0.2s ease", transform: collapsed ? "rotate(0deg)" : "rotate(180deg)" }}
+          >
+            <polyline points="6 9 12 15 18 9" />
+          </svg>
+        </button>
       </div>
 
       {/* Success/Error */}
-      {success && (
+      {success && !collapsed && (
         <div className="mb-4 rounded-lg p-3 flex items-center gap-3" style={{ background: "rgba(34,197,94,0.08)", border: "1px solid rgba(34,197,94,0.2)", color: ACCENT }}>
           <svg className="w-4 h-4 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7" /></svg>
           <span className="text-xs font-medium">Review submitted successfully. Thank you for contributing.</span>
         </div>
       )}
-      {error && (
+      {error && !collapsed && (
         <div className="mb-4 rounded-lg p-3 flex items-center gap-3" style={{ background: "rgba(239,68,68,0.08)", border: "1px solid rgba(239,68,68,0.2)", color: "#EF4444" }}>
           <svg className="w-4 h-4 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 9v2m0 4h.01" /></svg>
           <span className="text-xs font-medium">{error}</span>
         </div>
       )}
+
+      {/* Collapsible Content */}
+      {!collapsed && (
+        <>
 
       {/* Aggregate Radar Summary */}
       {aggregate?.averageScores && (
@@ -587,6 +613,8 @@ const PeerReviewSection = ({ reviews, aggregate, hasReviewed, userReview, isAuth
           </div>
         )}
       </div>
+        </>
+      )}
     </div>
   );
 };
