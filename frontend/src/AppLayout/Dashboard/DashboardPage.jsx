@@ -5,14 +5,13 @@ import {
   getUserStats,
   getDashboardActivity,
   getAnalystReputation,
-  getQuickActions,
 } from '../../services/api';
 import StatCard from './Components/StatCard';
 import ActivityFeed from './Components/ActivityFeed';
-import QuickActions from './Components/QuickActions';
 import SubmissionsTable from './Components/SubmissionsTable';
 import RankPanel from './Components/RankPanel';
 import PlusButton from './Components/Buttons';
+import VerifiedBadge from './Components/VerifiedBadge';
 
 const EMPTY_STATS = { total_submissions: 0, published_submissions: 0, pending_submissions: 0 };
 
@@ -47,7 +46,6 @@ const DashboardPage = () => {
   const [submissions, setSubmissions] = useState([]);
   const [activityItems, setActivity]  = useState([]);
   const [reputation, setReputation]   = useState(null);
-  const [quickActions, setActions]    = useState([]);
   const [loading, setLoading]         = useState(true);
   const [error, setError]             = useState(null);
 
@@ -63,14 +61,12 @@ const DashboardPage = () => {
       getUserSubmissions().then(r => r.data),
       getDashboardActivity().then(r => r.data).catch(() => ({ items: [] })),
       getAnalystReputation().then(r => r.data).catch(() => null),
-      getQuickActions().then(r => r.data).catch(() => []),
     ])
-      .then(([statsData, subsData, actData, repData, actionsData]) => {
+      .then(([statsData, subsData, actData, repData]) => {
         setStats(statsData);
         setSubmissions(Array.isArray(subsData) ? subsData : []);
         setActivity(actData?.items ?? []);
         setReputation(repData);
-        setActions(actionsData);
       })
       .catch(err => { console.error(err); setError(err); })
       .finally(() => setLoading(false));
@@ -107,7 +103,7 @@ const DashboardPage = () => {
       className="flex-1 overflow-auto relative"
       style={{ background: '#050508' }}
     >
-      {/* Ambient lighting — passive atmosphere */}
+      {/* Ambient lighting */}
       <div className="pointer-events-none absolute inset-0 overflow-hidden" style={{ zIndex: 0 }}>
         <div style={{
           position: 'absolute',
@@ -123,7 +119,6 @@ const DashboardPage = () => {
           background: 'radial-gradient(ellipse, rgba(109,40,217,0.04) 0%, transparent 65%)',
           borderRadius: '50%',
         }} />
-        {/* Subtle grid texture */}
         <div
           className="absolute inset-0"
           style={{
@@ -137,7 +132,7 @@ const DashboardPage = () => {
       {/* Page content */}
       <div className="relative px-7 py-8 max-w-[1440px] mx-auto space-y-6" style={{ zIndex: 1 }}>
 
-        {/* ── Page Header ─────────────────────────────────────── */}
+        {/* Page Header */}
         <div className="flex items-start justify-between gap-4">
           <div>
             <div className="flex items-center gap-2 mb-1">
@@ -155,7 +150,7 @@ const DashboardPage = () => {
               ) : (
                 <>
                   Welcome back,{' '}
-                  <span style={{ color: '#22C55E' }}>{user?.username ?? 'Analyst'}</span>
+                  <span style={{ color: '#22C55E' }}>{user?.username ?? 'Analyst'}</span><VerifiedBadge role={user?.role} size={14} />
                 </>
               )}
             </h1>
@@ -168,7 +163,7 @@ const DashboardPage = () => {
           </div>
         </div>
 
-        {/* ── Stat Cards ──────────────────────────────────────── */}
+        {/* Stat Cards */}
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
           <StatCard
             label="Total Analyses"
@@ -234,7 +229,7 @@ const DashboardPage = () => {
           />
         </div>
 
-        {/* ── Main Content Grid ────────────────────────────────── */}
+        {/* Main Content Grid */}
         <div className="grid grid-cols-1 xl:grid-cols-3 gap-5">
           {/* Submissions — 2 cols */}
           <div className="xl:col-span-2">
@@ -244,14 +239,13 @@ const DashboardPage = () => {
             }
           </div>
 
-          {/* Right column — activity + quick actions */}
-          <div className="flex flex-col gap-4">
+          {/* Activity Feed — fills remaining space */}
+          <div>
             <ActivityFeed items={feedItems} loading={loading} />
-            <QuickActions loading={loading} actions={quickActions} />
           </div>
         </div>
 
-        {/* ── Rank Panel ──────────────────────────────────────── */}
+        {/* Rank Panel */}
         <RankPanel loading={loading} reputation={reputation} />
 
       </div>

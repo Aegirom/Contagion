@@ -17,6 +17,7 @@ async function fetchAllSubmissions() {
         s.submitted_at,
         s.updated_at,
         u.username,
+        u.role,
         a.file_name,
         a.file_size,
         a.file_type,
@@ -40,6 +41,7 @@ async function fetchAllSubmissions() {
       LEFT JOIN (SELECT submission_id, COUNT(*) AS like_count FROM Post_Likes GROUP BY submission_id) lc ON lc.submission_id = s.submission_id
       LEFT JOIN (SELECT submission_id, COUNT(*) AS comment_count FROM Post_Comments GROUP BY submission_id) cc ON cc.submission_id = s.submission_id
       LEFT JOIN (SELECT submission_id, COUNT(*) AS share_count FROM Post_Shares GROUP BY submission_id) sc ON sc.submission_id = s.submission_id
+      WHERE s.status = 'Published'
       ORDER BY s.updated_at DESC
     `);
     return result.recordset;
@@ -241,6 +243,7 @@ export const getSubmissionByIdPublic = async (req, res) => {
           s.submitted_at,
           s.updated_at,
           u.username,
+          u.role,
           u.reputation_score,
           a.file_name,
           a.file_size,
@@ -400,15 +403,23 @@ export const deleteSubmission = async (req, res) => {
 export const postSubmission = async (req, res) => {
   try {
     const authorId = req.user.userId;
+    const userRole = req.user.role;
     const { artifact_id, title, content, status = 'Draft', version = 1, template_type = 'MALWARE_ANALYSIS' } = req.body;
 
     if (!authorId || !title || !content) {
       return res.status(400).json({ error: "Required fields missing" })
     }
 
-    const normalizedStatus = ['Draft', 'Pending', 'Published', 'Rejected', 'Archived'].includes(status)
-      ? status
-      : 'Draft';
+    let finalStatus;
+    if (userRole === 'Administrator' || userRole === 'Moderator') {
+      finalStatus = ['Draft', 'Pending', 'Published', 'Rejected', 'Archived'].includes(status)
+        ? status
+        : 'Draft';
+    } else {
+      finalStatus = ['Draft', 'Pending'].includes(status)
+        ? (status === 'Pending' ? 'Pending' : 'Draft')
+        : 'Pending';
+    }
 
     try {
       const result = await pool.request()
@@ -416,18 +427,27 @@ export const postSubmission = async (req, res) => {
         .input('artifact_id', sql.INT, artifact_id || null)
         .input('title', sql.NVARCHAR(255), title)
         .input('content', sql.NVARCHAR(sql.MAX), content)
-        .input('status', sql.NVARCHAR(20), normalizedStatus)
+        .input('status', sql.NVARCHAR(20), finalStatus)
         .input('version', sql.INT, Number(version) || 1)
         .input('template_type', sql.NVARCHAR(50), template_type)
         .query(`
           INSERT INTO Analysis_Submissions(author_id, artifact_id, title, content, status, version, template_type)
-          OUTPUT INSERTED.submission_id
+          OUTPUT INSERTED.submission_id, INSERTED.status
           VALUES (@author_id, @artifact_id, @title, @content, @status, @version, @template_type)
         `);
+
+      // XP gain: +10 for creating a submission, +25 if published immediately
+      const xpGain = finalStatus === 'Published' ? 25 : 10;
+      await pool.request()
+        .input('author_id', sql.INT, authorId)
+        .input('xp', sql.INT, xpGain)
+        .query('UPDATE Users SET reputation_score = reputation_score + @xp WHERE user_id = @author_id');
 
       res.status(201).json({
         message: "Submission Created",
         submission_id: result.recordset[0].submission_id,
+        status: result.recordset[0].status,
+        xp_gained: xpGain,
       });
     }
     catch (dbErr) {

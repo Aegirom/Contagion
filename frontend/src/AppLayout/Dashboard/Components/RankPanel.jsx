@@ -10,13 +10,18 @@ const RankPanel = ({ loading, reputation }) => {
   const xpLeft   = reputation?.xp_until_next_rank ?? 500;
   const progress = reputation?.progress_percent   ?? 0;
   const badges   = reputation?.badges             ?? [];
+  const rank     = reputation?.rank               ?? 1;
+  const rankLevel = reputation?.rank_level        ?? 0;
+
+  const rankTitles = ['Novice', 'Analyst', 'Specialist', 'Expert', 'Veteran', 'Master', 'Legend'];
+  const titleIndex = Math.min(rankLevel, rankTitles.length - 1);
+  const rankTitle = rankTitles[titleIndex];
 
   return (
     <div
       className="rounded-xl overflow-hidden"
       style={{ background: '#0A0B10', border: '1px solid #1E2233' }}
     >
-      {/* Subtle purple top accent */}
       <div style={{ height: '1px', background: 'linear-gradient(to right, #6D28D9, transparent)' }} />
 
       <div className="grid grid-cols-1 md:grid-cols-[auto_1fr_auto] gap-0 items-stretch">
@@ -98,10 +103,10 @@ const RankPanel = ({ loading, reputation }) => {
             }}
           >
             <span className="font-mono text-[9px] uppercase tracking-widest" style={{ color: '#4C1D95' }}>
-              Rank
+              {loading ? '—' : rankTitle}
             </span>
             <span className="font-display text-2xl font-bold" style={{ color: loading ? '#1E2233' : '#8B5CF6' }}>
-              {loading ? '—' : '#42'}
+              {loading ? '—' : `#${rank}`}
             </span>
           </div>
         </div>

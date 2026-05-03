@@ -48,11 +48,11 @@ export const protect = (req, res, next) => {
 
 const router = express.Router();
 
-export const generateTokens = (userId, email) => {
-  const accessToken = jwt.sign({ userId, email }, process.env.JWT_SECRET, {
+export const generateTokens = (userId, email, role) => {
+  const accessToken = jwt.sign({ userId, email, role }, process.env.JWT_SECRET, {
     expiresIn: process.env.JWT_ACCESS_EXPIRES_IN,
   });
-  const refreshToken = jwt.sign({ userId, email }, process.env.JWT_SECRET, {
+  const refreshToken = jwt.sign({ userId, email, role }, process.env.JWT_SECRET, {
     expiresIn: process.env.JWT_REFRESH_EXPIRES_IN,
   });
   return { accessToken, refreshToken };
@@ -138,6 +138,7 @@ router.post("/login", async (req, res) => {
     const { accessToken, refreshToken } = generateTokens(
       user.user_id,
       user.email,
+      user.role,
     );
 
     await pool
@@ -219,6 +220,7 @@ router.post("/refresh-token", async (req, res) => {
       const { accessToken, refreshToken: newRefreshToken } = generateTokens(
         decoded.userId,
         decoded.email,
+        decoded.role,
       );
 
       res.json({

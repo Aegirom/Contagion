@@ -258,6 +258,7 @@ const shapeExecutionRow = (row) => ({
 
 export const getSandboxSubmissions = async (req, res) => {
   try {
+    const sha1Column = await getSha1Column();
     const result = await pool.request()
       .input('user_id', sql.INT, req.user.userId)
       .query(`
@@ -267,7 +268,16 @@ export const getSandboxSubmissions = async (req, res) => {
           s.status,
           s.artifact_id,
           a.file_name,
-          a.sha256_hash
+          a.file_size,
+          a.file_type,
+          a.md5_hash,
+          a.${sha1Column} AS sha1_hash,
+          a.sha256_hash,
+          a.storage_path,
+          a.malware_family,
+          a.malware_category,
+          a.upload_time,
+          a.is_quarantined
         FROM Analysis_Submissions s
         LEFT JOIN Malware_Artifacts a ON a.artifact_id = s.artifact_id
         WHERE s.author_id = @user_id

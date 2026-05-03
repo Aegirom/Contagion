@@ -19,6 +19,7 @@ function Leaderboard() {
             userpfp:
               user.avatar_url ||
               `https://ui-avatars.com/api/?name=${encodeURIComponent(user.username)}&background=10b981&color=fff&size=256`,
+            role: user.role,
             trophies: user.reputation_score ?? 0,
             analyses: 0,
             reviews: 0,
@@ -41,6 +42,7 @@ function Leaderboard() {
           userpfp:
             user.avatar_url ||
             `https://ui-avatars.com/api/?name=${encodeURIComponent(user.username)}&background=10b981&color=fff&size=256`,
+          role: user.role,
           trophies: user.reputation_score ?? 0,
           analyses: 0,
           reviews: 0,

@@ -11,6 +11,7 @@ const severityFromCategory = (category) => {
 const toFeedPost = (submission, likedPosts) => ({
   id: submission?.submission_id || submission?.id,
   user: submission?.username || "Analyst",
+  role: submission?.role || "Analyst",
   location: "Contagion Network",
   hash: submission?.sha256_hash || submission?.title || "No artifact",
   family: submission?.malware_family || submission?.malware_category || submission?.template_type || "Analysis",

@@ -226,7 +226,6 @@ export const getArtifactDownloadUrl = (id) =>
 // Dashboard API functions
 export const getDashboardActivity = () => API.get("/dashboard/activity");
 export const getAnalystReputation = () => API.get("/dashboard/reputation");
-export const getQuickActions = () => API.get("/dashboard/quick-actions");
 
 // Sandbox API functions
 export const getSandboxSubmissions = () => API.get("/sandbox/submissions");

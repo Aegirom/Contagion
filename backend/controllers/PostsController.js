@@ -42,7 +42,8 @@ export const getComments = async (req, res) => {
           pc.content,
           pc.created_at,
           u.username,
-          u.user_id
+          u.user_id,
+          u.role
         FROM Post_Comments pc
         JOIN Users u ON pc.user_id = u.user_id
         WHERE pc.submission_id = @submissionId
@@ -96,14 +97,6 @@ export const addComment = async (req, res) => {
       return res.status(500).json({ error: "Failed to retrieve user information" });
     }
 
-    res.status(201).json({
-      comment_id: result.recordset[0].comment_id,
-      content: content.trim(),
-      created_at: result.recordset[0].created_at,
-      username: userResult.recordset[0].username,
-      user_id: userId
-    });
-
     if (postOwnerId && postOwnerId !== userId) {
       await createNotification({
         userId: postOwnerId,
@@ -114,6 +107,20 @@ export const addComment = async (req, res) => {
         relatedCommentId: result.recordset[0].comment_id,
       });
     }
+
+    // XP gain: +3 XP for adding a comment
+    await pool.request()
+      .input("userId", sql.Int, Number(userId))
+      .query("UPDATE Users SET reputation_score = reputation_score + 3 WHERE user_id = @userId");
+
+    res.status(201).json({
+      comment_id: result.recordset[0].comment_id,
+      content: content.trim(),
+      created_at: result.recordset[0].created_at,
+      username: userResult.recordset[0].username,
+      user_id: userId,
+      xp_gained: 3,
+    });
   } catch (error) {
     console.error("Error adding comment:", error);
     res.status(500).json({ error: "Failed to add comment" });
@@ -258,9 +265,19 @@ export const toggleLike = async (req, res) => {
           actorUsername: likerResult.recordset[0].username,
           relatedSubmissionId: submissionId,
         });
+
+        // XP gain: +1 XP for post author receiving a like
+        await pool.request()
+          .input("postOwnerId", sql.Int, Number(postOwnerId))
+          .query("UPDATE Users SET reputation_score = reputation_score + 1 WHERE user_id = @postOwnerId");
       }
+
+      // XP gain: +1 XP for liking a post
+      await pool.request()
+        .input("userId", sql.Int, Number(userId))
+        .query("UPDATE Users SET reputation_score = reputation_score + 1 WHERE user_id = @userId");
       
-      res.json({ isLiked: true, like_count: countResult.recordset[0].like_count });
+      res.json({ isLiked: true, like_count: countResult.recordset[0].like_count, xp_gained: 1 });
     }
   } catch (error) {
     console.error("Error toggling like:", error);

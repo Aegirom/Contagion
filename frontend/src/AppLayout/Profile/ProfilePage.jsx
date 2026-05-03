@@ -8,6 +8,7 @@ import {
 import { Link, useNavigate } from "react-router-dom";
 import AvatarCropper from "./Components/AvatarCropper";
 import { getUserSubmissions, getUserStats } from "../../services/api";
+import VerifiedBadge from "../Dashboard/Components/VerifiedBadge";
 
 const ACCENT = "#22C55E";
 
@@ -178,50 +179,27 @@ const ProfilePage = () => {
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center min-h-[60vh]">
-        <div className="text-center">
-          <div className="inline-block animate-spin rounded-full h-10 w-10 border-3 border-toxic border-t-transparent mb-4"></div>
-          <p className="font-mono text-xs uppercase tracking-widest text-slate-500">Loading profile...</p>
+      <main className="flex-1 overflow-auto relative" style={{ background: "#050508" }}>
+        <div className="flex items-center justify-center min-h-[60vh]">
+          <div className="text-center">
+            <div className="inline-block animate-spin rounded-full h-10 w-10 border-3 border-toxic border-t-transparent mb-4"></div>
+            <p className="font-mono text-xs uppercase tracking-widest text-slate-500">Loading profile...</p>
+          </div>
         </div>
-      </div>
+      </main>
     );
   }
 
   return (
-    <div className="relative z-10 space-y-6">
+    <main className="flex-1 overflow-auto relative" style={{ background: "#050508" }}>
       {/* Ambient lighting */}
       <div className="pointer-events-none absolute inset-0 overflow-hidden" style={{ zIndex: 0 }}>
-        <div
-          style={{
-            position: "absolute",
-            width: "900px",
-            height: "600px",
-            top: "-200px",
-            left: "-300px",
-            background: "radial-gradient(ellipse, rgba(34,197,94,0.055) 0%, transparent 65%)",
-            borderRadius: "50%",
-          }}
-        />
-        <div
-          style={{
-            position: "absolute",
-            width: "700px",
-            height: "700px",
-            bottom: "-250px",
-            right: "-150px",
-            background: "radial-gradient(ellipse, rgba(109,40,217,0.04) 0%, transparent 65%)",
-            borderRadius: "50%",
-          }}
-        />
-        <div
-          className="absolute inset-0"
-          style={{
-            backgroundImage:
-              "linear-gradient(rgba(34,197,94,0.018) 1px, transparent 1px), linear-gradient(90deg, rgba(34,197,94,0.018) 1px, transparent 1px)",
-            backgroundSize: "48px 48px",
-          }}
-        />
+        <div style={{ position: "absolute", width: "900px", height: "600px", top: "-200px", right: "-300px", background: "radial-gradient(ellipse, rgba(34,197,94,0.04) 0%, transparent 65%)", borderRadius: "50%" }} />
+        <div style={{ position: "absolute", width: "700px", height: "700px", bottom: "-250px", left: "-150px", background: "radial-gradient(ellipse, rgba(109,40,217,0.035) 0%, transparent 65%)", borderRadius: "50%" }} />
+        <div className="absolute inset-0" style={{ backgroundImage: "linear-gradient(rgba(34,197,94,0.012) 1px, transparent 1px), linear-gradient(90deg, rgba(34,197,94,0.012) 1px, transparent 1px)", backgroundSize: "48px 48px" }} />
       </div>
+
+      <div className="relative px-7 py-8 max-w-[1440px] mx-auto space-y-6" style={{ zIndex: 1 }}>
 
       {/* Status Messages */}
       {success && (
@@ -256,15 +234,15 @@ const ProfilePage = () => {
 
       {/* Profile Header */}
       <div className="rounded-xl overflow-hidden" style={{
-        background: "rgba(12,13,20,0.6)",
-        border: "1px solid rgba(30,34,51,0.8)",
+        background: "#0A0B10",
+        border: "1px solid #1E2233",
       }}>
         {/* Banner */}
-        <div className="relative h-32 md:h-40 overflow-hidden">
+        <div className="relative h-28 md:h-36 overflow-hidden">
           <div
             className="absolute inset-0"
             style={{
-              background: "linear-gradient(135deg, rgba(34,197,94,0.12) 0%, rgba(109,40,217,0.08) 50%, rgba(12,13,20,0.4) 100%)",
+              background: "linear-gradient(135deg, rgba(34,197,94,0.15) 0%, rgba(109,40,217,0.1) 50%, rgba(10,11,16,0.6) 100%)",
             }}
           />
           <div
@@ -274,13 +252,13 @@ const ProfilePage = () => {
               backgroundSize: "32px 32px",
             }}
           />
-          <div className="absolute bottom-0 left-0 right-0 h-20" style={{
-            background: "linear-gradient(to top, rgba(12,13,20,0.6), transparent)",
+          <div className="absolute bottom-0 left-0 right-0 h-16" style={{
+            background: "linear-gradient(to top, #0A0B10, transparent)",
           }} />
         </div>
 
         {/* Profile Info */}
-        <div className="relative px-6 pb-6 -mt-16">
+        <div className="relative px-6 pb-6 -mt-14">
           <div className="flex flex-col md:flex-row gap-6">
             {/* Avatar */}
             <div
@@ -288,12 +266,12 @@ const ProfilePage = () => {
               onMouseEnter={() => setHoveredAvatar(true)}
               onMouseLeave={() => setHoveredAvatar(false)}
             >
-              <div className={`w-32 h-32 rounded-xl overflow-hidden ring-4 transition-all duration-300 ${hoveredAvatar ? "ring-toxic/40 scale-105" : "ring-[#1e2233]"}`} style={{ background: "#0c0d10" }}>
+              <div className={`w-32 h-32 rounded-full overflow-hidden ring-4 transition-all duration-300 ${hoveredAvatar ? "ring-toxic/40 scale-105" : "ring-[#1e2233]"}`} style={{ background: "#0c0d10" }}>
                 <img src={avatarSrc} alt="Profile" className="w-full h-full object-cover" />
               </div>
               <button
                 onClick={() => setShowCropper(true)}
-                className="absolute bottom-1 right-1 w-8 h-8 rounded-lg flex items-center justify-center transition-all hover:scale-110"
+                className="absolute bottom-1 right-1 w-8 h-8 rounded-full flex items-center justify-center transition-all hover:scale-110"
                 style={{
                   background: ACCENT,
                   color: "#0c0d10",
@@ -309,9 +287,12 @@ const ProfilePage = () => {
 
             {/* Name & Role */}
             <div className="flex-1 pt-2">
-              <h1 className="font-display text-2xl font-black text-slate-100 tracking-tight">
-                {user?.username || "Unknown Agent"}
-              </h1>
+              <div className="flex items-center gap-1.5 flex-nowrap whitespace-nowrap">
+                <h1 className="font-display text-2xl font-black text-slate-100 tracking-tight">
+                  {user?.username || "Unknown Agent"}
+                </h1>
+                <VerifiedBadge role={user?.role} size={18} />
+              </div>
               <p className="font-mono text-xs text-slate-500 mt-1">{user?.email}</p>
 
               <div className="flex flex-wrap gap-2 mt-3">
@@ -355,7 +336,7 @@ const ProfilePage = () => {
                 className="flex items-center gap-2 px-3 py-2 rounded-lg font-code text-[10px] uppercase tracking-wider transition-all"
                 style={{
                   background: "rgba(10,11,16,0.5)",
-                  border: "1px solid rgba(30,34,51,0.8)",
+                  border: "1px solid #1E2233",
                   color: "#64748B",
                 }}
                 onMouseEnter={(e) => { e.currentTarget.style.borderColor = "rgba(34,197,94,0.3)"; e.currentTarget.style.color = ACCENT; }}
@@ -503,8 +484,8 @@ const ProfilePage = () => {
       <form onSubmit={handleSubmit} className="space-y-6">
         {/* Public Identity */}
         <div className="rounded-xl overflow-hidden" style={{
-          background: "rgba(12,13,20,0.6)",
-          border: "1px solid rgba(30,34,51,0.8)",
+          background: "#0A0B10",
+          border: "1px solid #1E2233",
         }}>
           <div style={{ height: "2px", background: "linear-gradient(to right, #22C55E, transparent 60%)" }} />
           <div className="p-6 space-y-5">
@@ -531,7 +512,7 @@ const ProfilePage = () => {
                   className="w-full px-4 py-3 rounded-lg font-body text-sm transition-all focus:outline-none focus:border-toxic focus:ring-1 focus:ring-toxic/20"
                   style={{
                     background: "rgba(10,11,16,0.6)",
-                    border: "1px solid rgba(30,34,51,0.8)",
+                    border: "1px solid #1E2233",
                     color: "#F1F5F9",
                   }}
                 />
@@ -550,7 +531,7 @@ const ProfilePage = () => {
                   className="w-full px-4 py-3 rounded-lg font-body text-sm transition-all resize-none focus:outline-none focus:border-toxic focus:ring-1 focus:ring-toxic/20"
                   style={{
                     background: "rgba(10,11,16,0.6)",
-                    border: "1px solid rgba(30,34,51,0.8)",
+                    border: "1px solid #1E2233",
                     color: "#F1F5F9",
                   }}
                 />
@@ -564,8 +545,8 @@ const ProfilePage = () => {
 
         {/* Specializations */}
         <div className="rounded-xl overflow-hidden" style={{
-          background: "rgba(12,13,20,0.6)",
-          border: "1px solid rgba(30,34,51,0.8)",
+          background: "#0A0B10",
+          border: "1px solid #1E2233",
         }}>
           <div style={{ height: "2px", background: "linear-gradient(to right, #3b82f6, transparent 60%)" }} />
           <div className="p-6 space-y-4">
@@ -626,7 +607,7 @@ const ProfilePage = () => {
                   className="flex-1 px-4 py-2.5 rounded-lg font-body text-sm transition-all focus:outline-none focus:border-toxic focus:ring-1 focus:ring-toxic/20"
                   style={{
                     background: "rgba(10,11,16,0.6)",
-                    border: "1px solid rgba(30,34,51,0.8)",
+                    border: "1px solid #1E2233",
                     color: "#F1F5F9",
                   }}
                 />
@@ -653,8 +634,8 @@ const ProfilePage = () => {
 
         {/* Action Bar */}
         <div className="rounded-xl p-5" style={{
-          background: "rgba(12,13,20,0.6)",
-          border: "1px solid rgba(30,34,51,0.8)",
+          background: "#0A0B10",
+          border: "1px solid #1E2233",
         }}>
           <div className="flex items-center justify-between">
             <p className="font-mono text-[10px] text-slate-600 hidden sm:block">
@@ -698,7 +679,8 @@ const ProfilePage = () => {
           onClose={() => setShowCropper(false)}
         />
       )}
-    </div>
+      </div>
+    </main>
   );
 };
 

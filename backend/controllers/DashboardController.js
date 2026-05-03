@@ -119,12 +119,24 @@ export const getAnalystReputation = async (req, res) => {
       return res.status(404).json({ error: 'User not found' });
     }
 
-    // Get rank among all users (simplified - just based on reputation)
-    // Calculate XP needed for next rank (placeholder logic)
+    // Get actual rank among all active users
+    const rankResult = await pool.request()
+      .input('user_id', sql.INT, userId)
+      .query(`
+        SELECT COUNT(*) + 1 AS rank
+        FROM Users
+        WHERE reputation_score > (SELECT reputation_score FROM Users WHERE user_id = @user_id)
+          AND is_active = 1
+      `);
+
     const currentScore = userStats.reputation_score || 0;
-    const nextRankScore = currentScore + 500; // Simple linear scaling
+    const rank = rankResult.recordset[0]?.rank || 1;
+
+    // Calculate XP needed for next rank (500 XP per rank level)
+    const rankLevel = Math.floor(currentScore / 500);
+    const nextRankScore = (rankLevel + 1) * 500;
     const xpUntilNextRank = Math.max(0, nextRankScore - currentScore);
-    const progressPercent = Math.min(100, Math.round((currentScore / nextRankScore) * 100));
+    const progressPercent = Math.min(100, Math.round(((currentScore % 500) / 500) * 100));
 
     // Get user's specializations as badges
     const specsResult = await pool.request()
@@ -148,32 +160,14 @@ export const getAnalystReputation = async (req, res) => {
       total_submissions: userStats.total_submissions || 0,
       published_submissions: userStats.published_submissions || 0,
       expertise_level: userStats.expertise_level || 'Beginner',
-      rank: 42, // Simplified - in production would use the actual rank
+      rank,
+      rank_level: rankLevel,
       xp_until_next_rank: xpUntilNextRank,
       progress_percent: progressPercent,
       badges: badges.slice(0, 5)
     });
   } catch (error) {
     console.error('Get analyst reputation error:', error);
-    res.status(500).json({ error: 'Server error' });
-  }
-};
-
-// Get user's quick actions menu
-export const getQuickActions = async (req, res) => {
-  try {
-    const userId = req.user?.userId;
-
-    // Return available actions based on user status
-    res.json([
-      { label: 'Submit Analysis', action: 'submit', icon: 'upload', enabled: true },
-      { label: 'Drafts', action: 'drafts', icon: 'document', enabled: true },
-      { label: 'Submissions', action: 'submissions', icon: 'list', enabled: true },
-      { label: 'Sandbox', action: 'sandbox', icon: 'terminal', enabled: true },
-      { label: 'View Leaderboard', action: 'leaderboard', icon: 'star', enabled: true },
-    ]);
-  } catch (error) {
-    console.error('Get quick actions error:', error);
     res.status(500).json({ error: 'Server error' });
   }
 };

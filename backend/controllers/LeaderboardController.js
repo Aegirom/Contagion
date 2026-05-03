@@ -5,6 +5,7 @@ async function retrieveLeaderboard() {
   const result = await pool.query`
     SELECT TOP 10
       u.username,
+      u.role,
       u.reputation_score,
       p.avatar_url
     FROM Users u
@@ -22,6 +23,7 @@ async function retrieveUserPosition(userId) {
   const result = await pool.query`
     SELECT
       u.username,
+      u.role,
       u.reputation_score,
       p.avatar_url,
       (

@@ -1,5 +1,6 @@
-import { useState } from "react";
+import { useState, useContext } from "react";
 import { Link, useLocation } from "react-router-dom";
+import { AuthContext } from "../../../context/AuthContext";
 import logo from "../../../assets/logo.png";
 
 const SidebarItem = ({ item, active, isOpen }) => (
@@ -78,6 +79,9 @@ const SectionLabel = ({ label, isOpen }) => {
 
 const Sidebar = ({ isOpen, toggleSidebar }) => {
   const location = useLocation();
+  const { user } = useContext(AuthContext);
+  const isAdmin = user?.role === "Administrator";
+  const isModerator = user?.role === "Moderator" || isAdmin;
 
   const sections = [
     {
@@ -220,6 +224,30 @@ const Sidebar = ({ isOpen, toggleSidebar }) => {
       ],
     },
   ];
+
+  if (isModerator) {
+    sections.push({
+      label: "Moderation",
+      items: [
+        {
+          to: isAdmin ? "/admin" : "/moderation",
+          label: isAdmin ? "Admin Nexus" : "Moderation",
+          icon: (
+            <svg
+              width="16"
+              height="16"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="1.5"
+            >
+              <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
+            </svg>
+          ),
+        },
+      ],
+    });
+  }
 
   return (
     <aside

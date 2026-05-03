@@ -113,10 +113,16 @@ export const submitReview = async (req, res) => {
       .input("authorId", sql.Int, submission.author_id)
       .query("UPDATE Users SET reputation_score = reputation_score + 2 WHERE user_id = @authorId");
 
+    // XP gain: +5 XP for submitting a peer review
+    await pool.request()
+      .input("reviewerId", sql.Int, Number(reviewerId))
+      .query("UPDATE Users SET reputation_score = reputation_score + 5 WHERE user_id = @reviewerId");
+
     res.status(201).json({
       review_id: review.review_id,
       reviewed_at: review.reviewed_at,
       message: "Review submitted successfully",
+      xp_gained: 5,
     });
   } catch (error) {
     console.error("[PeerReview] Error submitting review:", error.message);
@@ -146,6 +152,7 @@ export const getSubmissionReviews = async (req, res) => {
           pr.reviewed_at,
           u.user_id AS reviewer_id,
           u.username AS reviewer_username,
+          u.role AS reviewer_role,
           u.expertise_level AS reviewer_expertise
         FROM Peer_Reviews pr
         JOIN Users u ON pr.reviewer_id = u.user_id

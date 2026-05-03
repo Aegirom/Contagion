@@ -29,6 +29,66 @@ const CountTile = ({ label, value, accent = "text-slate-100" }) => (
   </div>
 );
 
+const BehaviorRow = ({ label, items, maxShow = 5 }) => {
+  if (!items || items.length === 0) return null;
+  return (
+    <div className="rounded border border-phantom bg-obsidian/60 p-3">
+      <p className="font-code text-[10px] uppercase tracking-[0.18em] text-slate-500 mb-2">
+        {label}
+      </p>
+      <div className="max-h-28 overflow-y-auto space-y-1">
+        {items.slice(0, maxShow).map((item, i) => (
+          <p key={i} className="font-code text-[11px] text-slate-300 truncate">
+            {typeof item === "string" ? item : JSON.stringify(item)}
+          </p>
+        ))}
+        {items.length > maxShow && (
+          <p className="font-code text-[10px] text-slate-600">
+            +{items.length - maxShow} more
+          </p>
+        )}
+      </div>
+    </div>
+  );
+};
+
+const DetectionList = ({ stats }) => {
+  if (!stats) return null;
+  const engines = Object.entries(stats)
+    .filter(([key]) => !["malicious", "suspicious", "harmless", "undetected", "timeout", "confirmed-timeout", "failure", "type-unsupported"].includes(key))
+    .map(([engine, verdict]) => ({ engine, verdict }));
+
+  if (engines.length === 0) return null;
+
+  return (
+    <div className="rounded border border-phantom bg-obsidian/60 p-3">
+      <p className="font-code text-[10px] uppercase tracking-[0.18em] text-slate-500 mb-2">
+        Engine Verdicts
+      </p>
+      <div className="max-h-32 overflow-y-auto grid grid-cols-1 sm:grid-cols-2 gap-x-4 gap-y-1">
+        {engines.map(({ engine, verdict }) => (
+          <div key={engine} className="flex items-center justify-between py-0.5">
+            <span className="font-code text-[11px] text-slate-400 truncate">
+              {engine}
+            </span>
+            <span
+              className={`ml-2 flex-shrink-0 font-code text-[10px] uppercase ${
+                verdict === "malicious"
+                  ? "text-red-400"
+                  : verdict === "suspicious"
+                  ? "text-amber-400"
+                  : "text-slate-500"
+              }`}
+            >
+              {verdict}
+            </span>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+};
+
 function SandboxPage() {
   const [searchParams] = useSearchParams();
   const [submissions, setSubmissions] = useState([]);
@@ -267,6 +327,105 @@ function SandboxPage() {
         </form>
 
         <section className="min-w-0 space-y-6">
+          {selectedSubmission?.file_name && (
+            <div className="glass-panel rounded-lg p-5 shadow-card">
+              <h2 className="mb-4 font-display text-sm font-bold uppercase tracking-[0.22em] text-slate-200">
+                Artifact Metadata
+              </h2>
+              <div className="rounded border border-phantom bg-void p-4">
+                <p className="text-sm font-semibold text-slate-100">
+                  {selectedSubmission.file_name}
+                </p>
+                <div className="mt-4 grid grid-cols-1 gap-4 sm:grid-cols-2">
+                  <div>
+                    <p className="font-code text-[10px] uppercase tracking-[0.18em] text-slate-500">
+                      SHA-256
+                    </p>
+                    <p className="mt-1 break-all font-code text-[11px] text-slate-300">
+                      {selectedSubmission.sha256_hash || "—"}
+                    </p>
+                  </div>
+                  <div>
+                    <p className="font-code text-[10px] uppercase tracking-[0.18em] text-slate-500">
+                      MD5
+                    </p>
+                    <p className="mt-1 break-all font-code text-[11px] text-slate-300">
+                      {selectedSubmission.md5_hash || "—"}
+                    </p>
+                  </div>
+                  <div>
+                    <p className="font-code text-[10px] uppercase tracking-[0.18em] text-slate-500">
+                      SHA-1
+                    </p>
+                    <p className="mt-1 break-all font-code text-[11px] text-slate-300">
+                      {selectedSubmission.sha1_hash || "—"}
+                    </p>
+                  </div>
+                  <div>
+                    <p className="font-code text-[10px] uppercase tracking-[0.18em] text-slate-500">
+                      Size
+                    </p>
+                    <p className="mt-1 font-code text-[11px] text-slate-300">
+                      {selectedSubmission.file_size
+                        ? `${Number(selectedSubmission.file_size).toLocaleString()} bytes`
+                        : "—"}
+                    </p>
+                  </div>
+                  <div>
+                    <p className="font-code text-[10px] uppercase tracking-[0.18em] text-slate-500">
+                      Type
+                    </p>
+                    <p className="mt-1 text-sm text-slate-300">
+                      {selectedSubmission.file_type || "—"}
+                    </p>
+                  </div>
+                  <div>
+                    <p className="font-code text-[10px] uppercase tracking-[0.18em] text-slate-500">
+                      Storage Path
+                    </p>
+                    <p className="mt-1 break-all font-code text-[11px] text-slate-300">
+                      {selectedSubmission.storage_path || "—"}
+                    </p>
+                  </div>
+                  <div>
+                    <p className="font-code text-[10px] uppercase tracking-[0.18em] text-slate-500">
+                      Malware Family
+                    </p>
+                    <p className="mt-1 text-sm text-slate-300">
+                      {selectedSubmission.malware_family || "—"}
+                    </p>
+                  </div>
+                  <div>
+                    <p className="font-code text-[10px] uppercase tracking-[0.18em] text-slate-500">
+                      Category
+                    </p>
+                    <p className="mt-1 text-sm text-slate-300">
+                      {selectedSubmission.malware_category || "—"}
+                    </p>
+                  </div>
+                  <div>
+                    <p className="font-code text-[10px] uppercase tracking-[0.18em] text-slate-500">
+                      Uploaded
+                    </p>
+                    <p className="mt-1 font-code text-[11px] text-slate-300">
+                      {selectedSubmission.upload_time
+                        ? toDateTime(selectedSubmission.upload_time)
+                        : "—"}
+                    </p>
+                  </div>
+                  <div>
+                    <p className="font-code text-[10px] uppercase tracking-[0.18em] text-slate-500">
+                      Quarantined
+                    </p>
+                    <p className="mt-1 text-sm text-slate-300">
+                      {selectedSubmission.is_quarantined ? "Yes" : "No"}
+                    </p>
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
+
           <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">
             <CountTile
               label="Malicious"
@@ -357,9 +516,67 @@ function SandboxPage() {
                       accent="text-slate-200"
                     />
                   </div>
-                  <pre className="mt-4 max-h-64 overflow-auto rounded border border-phantom bg-obsidian p-3 font-code text-[11px] text-slate-400">
-                    {JSON.stringify(latestResult.verdict, null, 2)}
-                  </pre>
+                  <div className="mt-4 space-y-3 max-h-[320px] overflow-y-auto pr-1">
+                    <BehaviorRow
+                      label="Contacted Domains"
+                      items={latestResult.behavior?.contacted_domains}
+                    />
+                    <BehaviorRow
+                      label="Processes Created"
+                      items={latestResult.behavior?.processes_created}
+                    />
+                    <BehaviorRow
+                      label="Files Opened"
+                      items={latestResult.behavior?.files_opened}
+                    />
+                    <BehaviorRow
+                      label="Files Written"
+                      items={latestResult.behavior?.files_written}
+                    />
+                    <BehaviorRow
+                      label="Files Deleted"
+                      items={latestResult.behavior?.files_deleted}
+                    />
+                    <BehaviorRow
+                      label="Registry Keys Set"
+                      items={latestResult.behavior?.registry_keys_set}
+                    />
+                    <BehaviorRow
+                      label="HTTP Conversations"
+                      items={latestResult.behavior?.http_conversations}
+                    />
+                    <BehaviorRow
+                      label="Command Executions"
+                      items={latestResult.behavior?.command_executions}
+                    />
+                    <BehaviorRow
+                      label="Processes Terminated"
+                      items={latestResult.behavior?.processes_terminated}
+                    />
+                    <BehaviorRow
+                      label="IP Traffic"
+                      items={latestResult.behavior?.ip_traffic}
+                    />
+                    <BehaviorRow
+                      label="DNS Lookups"
+                      items={latestResult.behavior?.dns_lookups}
+                    />
+                    <BehaviorRow
+                      label="Tags"
+                      items={latestResult.behavior?.tags}
+                    />
+                    <DetectionList stats={latestResult.verdict?.stats} />
+                    {latestResult.verdict?.suggestedThreatLabel && (
+                      <div className="rounded border border-red-500/30 bg-red-500/10 p-3">
+                        <p className="font-code text-[10px] uppercase tracking-[0.18em] text-red-400 mb-1">
+                          Threat Label
+                        </p>
+                        <p className="font-code text-[11px] text-red-300">
+                          {latestResult.verdict.suggestedThreatLabel}
+                        </p>
+                      </div>
+                    )}
+                  </div>
                 </div>
               </div>
             ) : (

@@ -1,4 +1,5 @@
 import { useState } from "react";
+import VerifiedBadge from "../../Dashboard/Components/VerifiedBadge";
 
 const ACCENT = "#22C55E";
 const PURPLE = "#8b5cf6";
@@ -275,7 +276,7 @@ const ReviewCard = ({ review }) => {
           <div className="flex items-center gap-2 flex-wrap">
             <span className="font-body text-sm font-semibold" style={{ color: "#F1F5F9" }}>
               {review.reviewer_username}
-            </span>
+            </span><VerifiedBadge role={review.reviewer_role} size={14} />
             {review.reviewer_expertise && (
               <span className="font-code text-[8px] px-1.5 py-0.5 rounded" style={{
                 background: "rgba(139,92,246,0.08)",

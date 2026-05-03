@@ -8,6 +8,7 @@ import {
 } from "../../services/api";
 import { AuthContext } from "../../context/AuthContext";
 import { useArtifactStore } from "../../stores/artifactStore";
+import { useToast } from "../../context/ToastContext";
 import ArtifactUploader from "./ArtifactUploader";
 
 const CreatePost = () => {
@@ -15,6 +16,7 @@ const CreatePost = () => {
   const [searchParams] = useSearchParams();
   const draftId = searchParams.get("draftId");
   const { user } = useContext(AuthContext);
+  const { addToast } = useToast();
   const {
     selectedFile,
     uploadedArtifact,
@@ -97,6 +99,10 @@ const CreatePost = () => {
         response.data.submission_id ||
         response.data.submission?.submission_id ||
         draftId;
+
+      if (response.data.xp_gained) {
+        addToast(`+${response.data.xp_gained} XP for submitting analysis`, "xp");
+      }
 
       if (
         runSandbox &&

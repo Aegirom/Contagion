@@ -2,8 +2,10 @@ import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import PeerReviewSection from './Components/PeerReviewSection';
 import { SeverityBadge, StatusBadge } from '../Dashboard/Components/HooksAndBadges';
+import VerifiedBadge from '../Dashboard/Components/VerifiedBadge';
 import { evaluateSandboxFile, getSubmissionById, getPostComments, addPostComment, deletePostComment, getPostLikes, getUserPostLike, togglePostLike, getPostShares, togglePostShare, getPostSaves, togglePostSave, getSubmissionReviews, getUserReview, getAggregateScores, submitPeerReview, updateSubmission } from '../../services/api';
 import { AuthContext } from '../../context/AuthContext';
+import { useToast } from '../../context/ToastContext';
 
 const formatBytes = (bytes) => {
   if (!bytes) return '0 B';
@@ -42,6 +44,7 @@ const Post = () => {
   const { postId } = useParams();
   const navigate = useNavigate();
   const { user } = React.useContext(AuthContext);
+  const { addToast } = useToast();
   const [post, setPost] = useState(null);
   const [loading, setLoading] = useState(true);
   const [running, setRunning] = useState(false);
@@ -184,6 +187,10 @@ const Post = () => {
       setIsLiked(response.data.isLiked);
       setLikes(response.data.like_count);
       
+      if (response.data.isLiked && response.data.xp_gained) {
+        addToast(`+${response.data.xp_gained} XP for engaging`, "xp");
+      }
+      
       const likedPosts = JSON.parse(localStorage.getItem('likedPosts') || '{}');
       if (response.data.isLiked) {
         likedPosts[postId] = response.data.like_count;
@@ -242,6 +249,9 @@ const Post = () => {
       setComments((prev) => [...prev, response.data]);
       setNewComment('');
       setShowCommentForm(false);
+      if (response.data.xp_gained) {
+        addToast(`+${response.data.xp_gained} XP for commenting`, "xp");
+      }
     } catch (err) {
       if (err.response?.status === 401) {
         navigate('/login', { state: { from: `/post/${postId}` } });
@@ -264,8 +274,11 @@ const Post = () => {
     setReviewSubmitting(true);
     setReviewError('');
     try {
-      await submitPeerReview(postId, reviewData);
+      const response = await submitPeerReview(postId, reviewData);
       setReviewSuccess(true);
+      if (response.data.xp_gained) {
+        addToast(`+${response.data.xp_gained} XP for peer review`, "xp");
+      }
       await loadPost();
       setTimeout(() => setReviewSuccess(false), 4000);
     } catch (err) {
@@ -417,7 +430,7 @@ const Post = () => {
                     {post.title}
                   </h2>
                   <p className="font-code text-xs mt-2" style={{ color: '#475569' }}>
-                    SUBMITTED BY <span style={{ color: '#22C55E' }}>{post.username}</span> • {new Date(post.submitted_at).toLocaleString()}
+                    SUBMITTED BY <span style={{ color: '#22C55E' }}>{post.username}</span><VerifiedBadge role={post.role} size={12} /> • {new Date(post.submitted_at).toLocaleString()}
                   </p>
                   <div className="flex items-center gap-4 mt-3">
                     <button
@@ -585,7 +598,7 @@ const Post = () => {
                           </div>
                           <span className="font-body text-sm font-semibold" style={{ color: '#F1F5F9' }}>
                             {comment.username}
-                          </span>
+                          </span><VerifiedBadge role={comment.role} size={14} />
                           <span className="font-code text-[10px]" style={{ color: '#475569' }}>
                             • {new Date(comment.created_at).toLocaleString()}
                           </span>
@@ -681,26 +694,29 @@ const Post = () => {
                 animationDelay: '100ms',
               }}
             >
-              <div className="px-6 py-4 border-b border-[rgba(30,34,51,0.5)] bg-white/5">
+              <div className="px-6 py-4 border-b border-[rgba(30,34,51,0.5)] bg-white/5 flex items-center justify-between">
                 <h3 className="font-display text-sm font-bold uppercase tracking-wider" style={{ color: '#F1F5F9' }}>
                   Behavioral Indicators
                 </h3>
+                <span className="font-code text-[10px] text-slate-500">
+                  {logs.length} entries
+                </span>
               </div>
-              <div className="divide-y divide-[rgba(30,34,51,0.3)]">
+              <div className="divide-y divide-[rgba(30,34,51,0.3)] max-h-[280px] overflow-y-auto">
                 {logs.map((log) => (
-                  <div key={log.log_id} className="px-6 py-4 flex items-center justify-between gap-4 hover:bg-white/5 transition-colors">
-                    <div>
-                      <span className="font-code text-[10px] text-[#22C55E] uppercase tracking-widest block mb-1">{log.log_type}</span>
-                      <p className="font-body text-sm" style={{ color: '#F1F5F9' }}>{summarizeLog(log)}</p>
+                  <div key={log.log_id} className="px-6 py-3 flex items-center justify-between gap-4 hover:bg-white/5 transition-colors">
+                    <div className="min-w-0 flex-1">
+                      <span className="font-code text-[10px] text-[#22C55E] uppercase tracking-widest block mb-0.5">{log.log_type}</span>
+                      <p className="font-body text-xs truncate" style={{ color: '#94A3B8' }}>{summarizeLog(log)}</p>
                     </div>
-                    <span className="px-2 py-0.5 rounded font-code text-[9px] tracking-widest border border-red-500/20 bg-red-500/10 text-red-400">
+                    <span className="flex-shrink-0 px-2 py-0.5 rounded font-code text-[8px] tracking-widest border border-red-500/20 bg-red-500/10 text-red-400">
                       CAPTURED
                     </span>
                   </div>
                 ))}
 
                 {logs.length === 0 && (
-                  <div className="px-6 py-12 text-center font-code text-xs uppercase tracking-widest text-slate-600">
+                  <div className="px-6 py-10 text-center font-code text-xs uppercase tracking-widest text-slate-600">
                     No behavioral logs captured yet.
                   </div>
                 )}

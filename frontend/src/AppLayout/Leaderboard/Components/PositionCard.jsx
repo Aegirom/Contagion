@@ -1,9 +1,11 @@
 import React from "react";
+import VerifiedBadge from "../../Dashboard/Components/VerifiedBadge";
 
 function PositionCard({
   position = 1,
   username,
   userpfp,
+  role,
   trophies = 0,
   analyses = 0,
   reviews = 0,
@@ -54,7 +56,7 @@ function PositionCard({
 
         <div className="text-sm font-mono uppercase tracking-wider text-slate-200">
           {username}
-        </div>
+        </div><VerifiedBadge role={role} size={14} />
       </div>
 
       {/* Right Stats */}

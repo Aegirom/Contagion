@@ -2,6 +2,7 @@ import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { SeverityBadge } from "../../Dashboard/Components/HooksAndBadges";
 import { togglePostLike, togglePostShare } from "../../../services/api";
+import VerifiedBadge from "../../Dashboard/Components/VerifiedBadge";
 
 const ShareMenu = ({ isOpen, onClose, postId, onShare }) => {
   if (!isOpen) return null;
@@ -183,7 +184,7 @@ const FeedCard = ({ post, onInteract }) => {
               className="font-code text-[10px]"
               style={{ color: "#475569" }}
             >
-              Posted by <span style={{ color: "#94A3B8" }}>{post.user}</span>
+              Posted by <span style={{ color: "#94A3B8" }}>{post.user}</span><VerifiedBadge role={post.role} size={12} />
             </span>
             <span
               className="font-code text-[10px]"

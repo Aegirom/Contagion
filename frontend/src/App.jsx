@@ -12,11 +12,14 @@ import CreatePost from "./AppLayout/CreatePost/CreatePost";
 import SubmissionsPage from "./AppLayout/SubmissionsPage/SubmissionsPage";
 import AiEvaluationPage from "./AppLayout/AiEvaluation/AiEvaluationPage";
 import AdminDashboardPage from "./AppLayout/Dashboard/AdminDashboardPage";
+import ModerationDashboardPage from "./AppLayout/Dashboard/ModerationDashboardPage";
 import ProfilePage from "./AppLayout/Profile/ProfilePage";
 import SandboxPage from "./AppLayout/Sandbox/SandboxPage";
 import { AuthProvider } from "./context/AuthContext";
 import { NotificationProvider } from "./context/NotificationContext";
+import { ToastProvider } from "./context/ToastContext";
 import AdminRoute from "./AppLayout/AdminRoute";
+import ModeratorRoute from "./AppLayout/ModeratorRoute";
 import PrivateRoute from "./AppLayout/PrivateRoute";
 import Leaderboard from "./AppLayout/Leaderboard/Leaderboard";
 import Post from "./AppLayout/Post/Post";
@@ -32,7 +35,8 @@ function App() {
     <BrowserRouter>
       <AuthProvider>
         <NotificationProvider>
-          <Routes>
+          <ToastProvider>
+            <Routes>
           {/* Auth routes */}
           <Route path="/login" element={<LoginPage />} />
           <Route path="/register" element={<RegisterPage />} />
@@ -143,6 +147,23 @@ function App() {
                   <AdminRoute>
                     <AdminDashboardPage />
                   </AdminRoute>
+                </MainLayout>
+              </PrivateRoute>
+            }
+          />
+
+          <Route
+            path="/moderation"
+            element={
+              <PrivateRoute>
+                <MainLayout
+                  pageName="Moderation"
+                  sidebarOpen={sidebarOpen}
+                  toggleSidebar={toggleSidebar}
+                >
+                  <ModeratorRoute>
+                    <ModerationDashboardPage />
+                  </ModeratorRoute>
                 </MainLayout>
               </PrivateRoute>
             }
@@ -271,6 +292,7 @@ function App() {
           {/* Default redirect */}
           <Route path="/" element={<Navigate to="/login" replace />} />
           </Routes>
+          </ToastProvider>
         </NotificationProvider>
       </AuthProvider>
     </BrowserRouter>
