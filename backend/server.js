@@ -49,7 +49,7 @@ app.use(
 
 const limiter = rateLimit({
   windowMs: 15 * 60 * 1000,
-  max: 100,
+  max: 300,
   skip: (req) => {
     if (req.path.startsWith("/auth")) return true;
     if (req.path.startsWith("/notifications")) return true;

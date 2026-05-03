@@ -311,6 +311,7 @@ export const getSubmissionById = getSubmissionByIdPublic;
 export const updateSubmission = async (req, res) => {
   try {
     const userId = req.user?.userId;
+    const userRole = req.user?.role;
     const submissionId = Number(req.params.id);
     const {
       title,
@@ -333,6 +334,23 @@ export const updateSubmission = async (req, res) => {
       return res.status(400).json({ error: 'Invalid submission status' });
     }
 
+    const isAdminOrMod = ['Administrator', 'Moderator'].includes(userRole);
+    const authorFilter = isAdminOrMod ? '' : 'AND author_id = @user_id';
+
+    const query = `
+      UPDATE Analysis_Submissions
+      SET title = COALESCE(@title, title),
+          content = COALESCE(@content, content),
+          status = COALESCE(@status, status),
+          artifact_id = COALESCE(@artifact_id, artifact_id),
+          version = COALESCE(@version, version),
+          template_type = COALESCE(@template_type, template_type),
+          updated_at = GETDATE()
+      OUTPUT INSERTED.submission_id, INSERTED.status
+      WHERE submission_id = @submission_id
+        ${authorFilter}
+    `;
+
     const result = await pool.request()
       .input('submission_id', sql.INT, submissionId)
       .input('user_id', sql.INT, userId)
@@ -342,20 +360,7 @@ export const updateSubmission = async (req, res) => {
       .input('artifact_id', sql.INT, artifact_id ?? null)
       .input('version', sql.INT, version ?? null)
       .input('template_type', sql.NVARCHAR(50), template_type ?? null)
-      .query(`
-        UPDATE Analysis_Submissions
-        SET title = COALESCE(@title, title),
-            content = COALESCE(@content, content),
-            status = COALESCE(@status, status),
-            artifact_id = COALESCE(@artifact_id, artifact_id),
-            version = COALESCE(@version, version),
-            template_type = COALESCE(@template_type, template_type),
-            updated_at = GETDATE()
-        OUTPUT INSERTED.submission_id, INSERTED.status
-        WHERE submission_id = @submission_id
-          AND author_id = @user_id
-          AND status <> 'Archived'
-      `);
+      .query(query);
 
     if (!result.recordset[0]) {
       return res.status(404).json({ error: 'Submission not found' });
