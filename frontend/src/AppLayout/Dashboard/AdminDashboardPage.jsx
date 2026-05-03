@@ -134,7 +134,7 @@ function UsersPanel() {
   const handleAction = async (userId, action, payload) => {
     setActionLoading(userId);
     try {
-      if (action === "role") await adminAPI.updateUserRole(userId, payload.role);
+      if (action === "role") await adminAPI.updateUserRole(userId, { role: payload.role });
       if (action === "suspend") await adminAPI.suspendUser(userId);
       if (action === "unsuspend") await adminAPI.unsuspendUser(userId);
       if (action === "delete") await adminAPI.deleteUser(userId);
