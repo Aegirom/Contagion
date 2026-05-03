@@ -607,9 +607,9 @@ const ProfilePage = () => {
                         No specializations registered yet.
                       </p>
                     ) : (
-                      profile.specializations.map((spec, index) => (
+                      profile.specializations.map((spec) => (
                         <div
-                          key={index}
+                          key={spec}
                           className="group flex items-center gap-2 px-3 py-1.5 rounded-lg transition-colors"
                             style={{
                               background: "rgba(30,34,51,0.5)",
@@ -647,7 +647,7 @@ const ProfilePage = () => {
                       type="text"
                       value={specInput}
                       onChange={(e) => setSpecInput(e.target.value)}
-                      onKeyPress={(e) =>
+                      onKeyDown={(e) =>
                         e.key === "Enter" && handleAddSpecialization(e)
                       }
                       placeholder="Add a specialization (e.g., Malware Analysis, Cryptography)"

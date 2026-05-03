@@ -66,6 +66,22 @@ router.post("/register", async (req, res) => {
       return res.status(400).json({ error: "All fields are required" });
     }
 
+    if (password.length < 8) {
+      return res.status(400).json({ error: "Password must be at least 8 characters long" });
+    }
+
+    if (!/[A-Z]/.test(password)) {
+      return res.status(400).json({ error: "Password must contain at least one uppercase letter" });
+    }
+
+    if (!/[a-z]/.test(password)) {
+      return res.status(400).json({ error: "Password must contain at least one lowercase letter" });
+    }
+
+    if (!/[0-9]/.test(password)) {
+      return res.status(400).json({ error: "Password must contain at least one number" });
+    }
+
     const existingUser = await findUserByEmail(email);
     if (existingUser) {
       return res.status(409).json({ error: "User already exists" });
@@ -190,7 +206,12 @@ router.post("/refresh-token", async (req, res) => {
 
     jwt.verify(refreshToken, process.env.JWT_SECRET, (err, decoded) => {
       if (err) {
-        return res.status(403).json({ error: "Invalid refresh token" });
+        const status = err.name === "TokenExpiredError" ? 401 : 403;
+        const message =
+          err.name === "TokenExpiredError"
+            ? "Refresh token has expired"
+            : "Invalid refresh token";
+        return res.status(status).json({ error: message });
       }
 
       const { accessToken, refreshToken: newRefreshToken } = generateTokens(
@@ -311,7 +332,22 @@ router.get("/me", protect, async (req, res) => {
       profile: profile,
     });
   } catch (error) {
-    console.error("Get current user error:", error);
+    console.error("Get current user error:", error.message);
+    // Fallback: return user info from JWT token when DB is unavailable
+    if (req.user && req.user.userId) {
+      console.log("Returning fallback user info from JWT token");
+      return res.json({
+        user_id: req.user.userId,
+        username: req.user.email?.split("@")[0] || "user",
+        email: req.user.email,
+        role: "Analyst",
+        expertise_level: null,
+        reputation_score: 0,
+        is_active: true,
+        created_at: null,
+        profile: {},
+      });
+    }
     res.status(500).json({ error: "Server error" });
   }
 });

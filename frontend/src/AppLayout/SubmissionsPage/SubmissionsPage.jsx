@@ -151,7 +151,7 @@ function SubmissionsPage() {
   const filteredSubmissions = transformedSubmissions.filter((item) => {
     const matchesQuery =
       item.name.toLowerCase().includes(filters.query.toLowerCase()) ||
-      item.description.toLowerCase().includes(filters.query.toLowerCase());
+      (item.description || "").toLowerCase().includes(filters.query.toLowerCase());
 
     const matchesStatus =
       filters.status === "all" || item.status === filters.status;

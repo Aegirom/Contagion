@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { SeverityBadge } from "../../Dashboard/Components/HooksAndBadges";
 import { togglePostLike, togglePostShare } from "../../../services/api";
@@ -76,6 +76,11 @@ const FeedCard = ({ post, onInteract }) => {
   const [isLiked, setIsLiked] = useState(post.isLiked || false);
   const [likeCount, setLikeCount] = useState(post.score || 0);
   const [showShareMenu, setShowShareMenu] = useState(false);
+
+  useEffect(() => {
+    setIsLiked(post.isLiked || false);
+    setLikeCount(post.score || 0);
+  }, [post.isLiked, post.score]);
 
   const handleCardClick = (e) => {
     if (e.target.closest('button')) return;

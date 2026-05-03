@@ -17,24 +17,57 @@ const parseConnectionString = (str) => {
   return config;
 };
 
-const connConfig = parseConnectionString(connString);
+let pool = null;
+let connecting = true;
+let connectPromise = null;
 
-const sqlConfig = {
-  server: connConfig['Server'].replace('tcp:', '').replace(',1433', ''),
-  port: parseInt(connConfig['Server'].match(/,(\d+)/)?.[1] || '1433'),
-  database: connConfig['Database'],
-  user: connConfig['User ID'],
-  password: connConfig['Password'],
+const initPool = async () => {
+  if (!connString) {
+    console.error('AZURE_SQL_CONNECTION_STRING environment variable is not set');
+    connecting = false;
+    return null;
+  }
 
-  encrypt: true,
-  trustServerCertificate: false,
-  connectionTimeout: 30000
+  const connConfig = parseConnectionString(connString);
+
+  if (!connConfig['Server'] || !connConfig['Database'] || !connConfig['User ID'] || !connConfig['Password']) {
+    console.error('Invalid connection string. Missing required fields.');
+    connecting = false;
+    return null;
+  }
+
+  const sqlConfig = {
+    server: connConfig['Server'].replace('tcp:', '').replace(',1433', ''),
+    port: parseInt(connConfig['Server'].match(/,(\d+)/)?.[1] || '1433'),
+    database: connConfig['Database'],
+    user: connConfig['User ID'],
+    password: connConfig['Password'],
+    encrypt: true,
+    trustServerCertificate: false,
+    connectionTimeout: 5000,
+    requestTimeout: 15000,
+  };
+
+  try {
+    pool = await sql.connect(sqlConfig);
+    console.log('Connected to Azure SQL Database successfully!');
+  } catch (error) {
+    console.error('Failed to connect to Azure SQL Database:', error.message);
+    console.log('Server is running but database queries will fail until connection is restored.');
+  } finally {
+    connecting = false;
+  }
+
+  return pool;
 };
 
+connectPromise = initPool();
 
-const pool = await sql.connect(sqlConfig);
+// Allow the server to start while connecting in the background
+setTimeout(() => {
+  if (connecting) {
+    console.log('Database connection is taking longer than expected...');
+  }
+}, 6000);
 
-
-console.log('Connected to Azure SQL Database successfully!');
-
-export default pool;
+export { pool as default, connectPromise, initPool };

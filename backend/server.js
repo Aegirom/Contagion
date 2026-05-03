@@ -21,7 +21,7 @@ const app = express();
 // CORS with explicit options - must not use * with credentials
 app.use(
   cors({
-    origin: "http://localhost:5173",
+    origin: process.env.CORS_ORIGIN || "http://localhost:5173",
     credentials: true,
     methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH"],
     allowedHeaders: ["Content-Type", "Authorization"],
@@ -40,9 +40,21 @@ app.use(
 const limiter = rateLimit({
   windowMs: 15 * 60 * 1000,
   max: 100,
+  skip: (req) => {
+    if (req.path.startsWith("/auth")) return true;
+    if (req.path.startsWith("/notifications")) return true;
+    return false;
+  },
 });
 
 app.use(limiter);
+
+const authLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  max: 50,
+});
+
+app.use("/auth", authLimiter);
 
 //attach route files
 app.use("/submissions", submissionsRoutes);
@@ -54,6 +66,8 @@ app.use("/artifacts", artifactRoutes);
 app.use("/posts", postsRoutes);
 app.use("/notifications", notificationRoutes);
 
-app.listen(3000, () => {
-  console.log("Server running on port 3000");
+const PORT = process.env.PORT || 3000;
+
+app.listen(PORT, () => {
+  console.log(`Server running on port ${PORT}`);
 });

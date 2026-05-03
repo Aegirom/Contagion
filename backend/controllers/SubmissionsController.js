@@ -519,7 +519,7 @@ export const deleteSubmission = async (req, res) => {
 
 export const postSubmission = async (req, res) => {
   try {
-    const authorId = req.user?.userId || req.body.author_id;
+    const authorId = req.user.userId;
     const { artifact_id, title, content, status = 'Draft', version = 1, template_type = 'MALWARE_ANALYSIS' } = req.body;
 
     if (!authorId || !title || !content) {

@@ -29,7 +29,17 @@ const FeedPage = () => {
   const [submissions, setSubmissions] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
-  const likedPosts = JSON.parse(localStorage.getItem('likedPosts') || '{}');
+  const [likedPosts, setLikedPosts] = useState(() =>
+    JSON.parse(localStorage.getItem("likedPosts") || "{}")
+  );
+
+  useEffect(() => {
+    const handleLikedPostsChange = () => {
+      setLikedPosts(JSON.parse(localStorage.getItem("likedPosts") || "{}"));
+    };
+    window.addEventListener("storage", handleLikedPostsChange);
+    return () => window.removeEventListener("storage", handleLikedPostsChange);
+  }, []);
 
   useEffect(() => {
     const loadFeed = async () => {

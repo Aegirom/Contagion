@@ -1,5 +1,5 @@
 /* eslint-disable react-refresh/only-export-components */
-import { createContext, useState, useEffect } from "react";
+import { createContext, useState, useEffect, useCallback } from "react";
 import {
   login as apiLogin,
   register as apiRegister,
@@ -19,6 +19,26 @@ const normalizeUser = (userData) => {
   };
 };
 
+const getStoredTokens = () => {
+  const localTokens = localStorage.getItem("authTokens");
+  if (localTokens) {
+    try {
+      return { tokens: JSON.parse(localTokens), storage: "local" };
+    } catch {
+      return { tokens: null, storage: null };
+    }
+  }
+  const sessionTokens = sessionStorage.getItem("authTokens");
+  if (sessionTokens) {
+    try {
+      return { tokens: JSON.parse(sessionTokens), storage: "session" };
+    } catch {
+      return { tokens: null, storage: null };
+    }
+  }
+  return { tokens: null, storage: null };
+};
+
 export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -27,43 +47,58 @@ export const AuthProvider = ({ children }) => {
     refreshToken: null,
   });
 
+  const updateUserFromStorage = useCallback(() => {
+    const { storage } = getStoredTokens();
+    if (storage === "local") {
+      const userStr = localStorage.getItem("user");
+      if (userStr) {
+        try {
+          setUser(normalizeUser(JSON.parse(userStr)));
+        } catch {
+          // ignore
+        }
+      }
+    } else if (storage === "session") {
+      const userStr = sessionStorage.getItem("user");
+      if (userStr) {
+        try {
+          setUser(normalizeUser(JSON.parse(userStr)));
+        } catch {
+          // ignore
+        }
+      }
+    }
+  }, []);
+
   // Load user and tokens from storage on mount
   useEffect(() => {
     const initAuth = async () => {
       try {
-        const localTokens = localStorage.getItem("authTokens");
-        const sessionTokens = sessionStorage.getItem("authTokens");
+        const { tokens: authTokens, storage } = getStoredTokens();
 
-        // localStorage takes priority (remember me was active)
-        if (localTokens) {
-          const authTokens = JSON.parse(localTokens);
-          API.defaults.headers["Authorization"] =
-            `Bearer ${authTokens.accessToken}`;
-
+        if (authTokens && authTokens.accessToken) {
           const response = await API.get("/auth/me");
           const userData = normalizeUser(response.data);
 
           setUser(userData);
           setTokens(authTokens);
-          localStorage.setItem("user", JSON.stringify(userData));
-        } else if (sessionTokens) {
-          const authTokens = JSON.parse(sessionTokens);
-          API.defaults.headers["Authorization"] =
-            `Bearer ${authTokens.accessToken}`;
 
-          const response = await API.get("/auth/me");
-          const userData = normalizeUser(response.data);
-
-          setUser(userData);
-          setTokens(authTokens);
-          sessionStorage.setItem("user", JSON.stringify(userData));
+          if (storage === "local") {
+            localStorage.setItem("user", JSON.stringify(userData));
+          } else if (storage === "session") {
+            sessionStorage.setItem("user", JSON.stringify(userData));
+          }
         }
       } catch (error) {
         console.error("Error initializing auth:", error);
-        localStorage.removeItem("authTokens");
-        localStorage.removeItem("user");
-        sessionStorage.removeItem("authTokens");
-        sessionStorage.removeItem("user");
+        // Only clear storage if it's a genuine auth failure, not network issues
+        if (error.response?.status === 401 || error.response?.status === 403) {
+          localStorage.removeItem("authTokens");
+          localStorage.removeItem("user");
+          sessionStorage.removeItem("authTokens");
+          sessionStorage.removeItem("user");
+        }
+        // For network errors or other issues, keep tokens and let retry handle it
       } finally {
         setLoading(false);
       }
@@ -71,6 +106,19 @@ export const AuthProvider = ({ children }) => {
 
     initAuth();
   }, []);
+
+  // Listen for token refresh events from API interceptor
+  useEffect(() => {
+    const handleTokensRefreshed = (event) => {
+      const newTokens = event.detail;
+      setTokens(newTokens);
+      updateUserFromStorage();
+    };
+
+    window.addEventListener("auth:tokensRefreshed", handleTokensRefreshed);
+    return () =>
+      window.removeEventListener("auth:tokensRefreshed", handleTokensRefreshed);
+  }, [updateUserFromStorage]);
 
   const login = async (email, password, rememberMe) => {
     setLoading(true);
@@ -94,9 +142,6 @@ export const AuthProvider = ({ children }) => {
         sessionStorage.setItem("user", JSON.stringify(normalizedUser));
       }
 
-      API.defaults.headers["Authorization"] =
-        `Bearer ${authTokens.accessToken}`;
-
       return { success: true, user: normalizedUser, tokens: authTokens };
     } catch (error) {
       console.error("Login error:", error);
@@ -111,11 +156,8 @@ export const AuthProvider = ({ children }) => {
     setLoading(true);
     try {
       const response = await apiRegister(userData);
-      // New flow: user must verify email before login
-      // Response contains message and user info (but no tokens)
       const { user: newUser, message } = response;
 
-      // Return success - user needs to verify email
       return {
         success: true,
         message: message || "Verification email sent. Please check your inbox.",
@@ -152,7 +194,6 @@ export const AuthProvider = ({ children }) => {
     localStorage.removeItem("user");
     sessionStorage.removeItem("authTokens");
     sessionStorage.removeItem("user");
-    delete API.defaults.headers["Authorization"];
     console.log("Logged out");
     window.location.href = "/login";
   };
@@ -160,7 +201,7 @@ export const AuthProvider = ({ children }) => {
   const updateUser = (userData) => {
     const normalizedUser = normalizeUser(userData);
     setUser(normalizedUser);
-    
+
     // Update whichever storage is being used
     if (localStorage.getItem("authTokens")) {
       localStorage.setItem("user", JSON.stringify(normalizedUser));
@@ -178,7 +219,6 @@ export const AuthProvider = ({ children }) => {
     logout,
     forgotPassword,
     updateUser,
-    // Check if user is authenticated
     isAuthenticated: !!user && !!tokens.accessToken,
   };
 

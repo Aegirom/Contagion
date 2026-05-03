@@ -89,6 +89,13 @@ export const addComment = async (req, res) => {
     const postOwnerId = await getPostOwnerId(submissionId);
     console.log(`[Comment] Post owner=${postOwnerId}, commenter=${userId}, same=${postOwnerId === userId}`);
     
+    if (!result.recordset || !result.recordset[0]) {
+      return res.status(500).json({ error: "Failed to create comment" });
+    }
+    if (!userResult.recordset || !userResult.recordset[0]) {
+      return res.status(500).json({ error: "Failed to retrieve user information" });
+    }
+
     res.status(201).json({
       comment_id: result.recordset[0].comment_id,
       content: content.trim(),

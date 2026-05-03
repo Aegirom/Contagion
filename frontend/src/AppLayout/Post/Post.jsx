@@ -211,7 +211,7 @@ const Post = () => {
     
     try {
       const response = await addPostComment(postId, newComment.trim());
-      setComments([...comments, response.data]);
+      setComments((prev) => [...prev, response.data]);
       setNewComment('');
       setShowCommentForm(false);
     } catch (err) {
@@ -226,7 +226,7 @@ const Post = () => {
   const handleDeleteComment = async (commentId) => {
     try {
       await deletePostComment(commentId);
-      setComments(comments.filter(c => c.comment_id !== commentId));
+      setComments((prev) => prev.filter((c) => c.comment_id !== commentId));
     } catch (err) {
       console.error('Failed to delete comment:', err);
     }

@@ -7,6 +7,7 @@ const SALT_ROUNDS = 12;
 
 // naya user create kro with password hashing
 export const createUser = async (userData) => {
+  if (!pool) throw new Error('Database not connected');
   const { username, email, password } = userData;
   const hashedPassword = await bcrypt.hash(password, SALT_ROUNDS);
   await pool.request()
@@ -14,7 +15,7 @@ export const createUser = async (userData) => {
     .input('email', sql.NVARCHAR, email)
     .input('password_hash', sql.NVARCHAR, hashedPassword)
     .input('role', sql.NVARCHAR, 'Analyst')
-    .input('is_active', sql.BIT, 0) // Users start as inactive until email verification
+    .input('is_active', sql.BIT, 0)
     .query('INSERT INTO Users (username, email, password_hash, role, is_active) VALUES (@username, @email, @password_hash, @role, @is_active)');
 
   const result = await pool.request()
@@ -25,6 +26,7 @@ export const createUser = async (userData) => {
 };
 
 export const findUserByEmail = async (email) => {
+  if (!pool) throw new Error('Database not connected');
   const result = await pool.request()
     .input('email', sql.NVARCHAR, email)
     .query('SELECT TOP 1 * FROM Users WHERE email = @email');
@@ -32,6 +34,7 @@ export const findUserByEmail = async (email) => {
 };
 
 export const findUserById = async (userId) => {
+  if (!pool) throw new Error('Database not connected');
   const result = await pool.request()
     .input('user_id', sql.INT, userId)
     .query('SELECT user_id, username, email, role, expertise_level, reputation_score FROM Users WHERE user_id = @user_id');
@@ -44,6 +47,7 @@ export const verifyPassword = async (plainPassword, hashedPassword) => {
 
 // Update user password (for password reset)
 export const updatePassword = async (userId, newPassword) => {
+  if (!pool) throw new Error('Database not connected');
   const hashedPassword = await bcrypt.hash(newPassword, SALT_ROUNDS);
   await pool.request()
     .input('user_id', sql.INT, userId)
@@ -54,6 +58,7 @@ export const updatePassword = async (userId, newPassword) => {
 
 // Verify user email (set is_active to true)
 export const verifyUserEmail = async (userId) => {
+  if (!pool) throw new Error('Database not connected');
   await pool.request()
     .input('user_id', sql.INT, userId)
     .query('UPDATE Users SET is_active = 1 WHERE user_id = @user_id');
@@ -62,6 +67,7 @@ export const verifyUserEmail = async (userId) => {
 
 // Check if user is active
 export const isUserActive = async (userId) => {
+  if (!pool) throw new Error('Database not connected');
   const result = await pool.request()
     .input('user_id', sql.INT, userId)
     .query('SELECT TOP 1 is_active FROM Users WHERE user_id = @user_id');

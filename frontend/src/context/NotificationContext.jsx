@@ -3,11 +3,16 @@ import API from "../services/api";
 
 export const NotificationContext = createContext();
 
+const hasTokens = () => {
+  return !!(localStorage.getItem("authTokens") || sessionStorage.getItem("authTokens"));
+};
+
 export const NotificationProvider = ({ children }) => {
   const [notifications, setNotifications] = useState([]);
   const [unreadCount, setUnreadCount] = useState(0);
 
   const fetchNotifications = useCallback(async () => {
+    if (!hasTokens()) return;
     try {
       const res = await API.get("/notifications");
       setNotifications(res.data.notifications || []);
