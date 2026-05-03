@@ -34,11 +34,104 @@
 ![Jira](https://img.shields.io/badge/Jira-0052CC?style=for-the-badge&logo=jira&logoColor=white)
 ![DBeaver](https://img.shields.io/badge/DBeaver-372923?style=for-the-badge)
 
-</div>
+  </div>
+
+## What is Contagion
+
+Contagion is a collaborative malware analysis platform where security analysts can submit, review, and discuss malware analyses. The platform combines automated sandbox analysis with peer review to create a knowledge-sharing ecosystem for cybersecurity professionals.
+
+## Key Features
+
+**Analysis Submissions**
+Create structured malware analysis reports with support for different template types. Track versions, save drafts, and publish when ready.
+
+**Sandbox Execution**
+Integrate with VirusTotal to automatically analyze malware samples. Behavioral logs capture API calls, file system changes, registry modifications, and network activity.
+
+**Peer Review System**
+Structured peer reviews with scoring across four dimensions: technical analysis, methodology, documentation, and insights. Build reputation through quality contributions.
+
+**Gamification**
+Reputation scores, expertise levels, and leaderboards encourage active participation. Earn XP for submissions, reviews, comments, and likes.
+
+**Social Features**
+Like, share, and save analyses. Comment on submissions with threaded discussions. Follow user profiles with specializations.
+
+**Role-Based Access**
+Administrators, moderators, and analysts have different permissions. Admin panel provides user management, content moderation, and platform statistics.
+
+## Architecture
+
+```
+Frontend (React + Vite)  --->  Backend API (Node.js + Express)
+                                    |
+                                    v
+                          Azure SQL Database
+                                    |
+                                    +--> VirusTotal API
+                                    +--> Cloudflare R2 Storage
+```
+
+## Technology Stack
+
+**Frontend**
+- React with Vite for fast development
+- TailwindCSS for styling
+- Zustand for state management
+- React Router for navigation
+
+**Backend**
+- Node.js with Express framework
+- Azure SQL Database with mssql driver
+- JWT authentication with bcrypt password hashing
+- Multer for file uploads
+- Axios for external API calls
+
+**Infrastructure**
+- Cloudflare R2 for artifact storage
+- VirusTotal API for malware analysis
+- Docker support for containerized deployment
+- GitHub Actions for CI/CD
+
+## Database Schema
+
+The platform uses 15 tables with proper foreign key constraints and indexes. Key tables include:
+
+- **Users** - Authentication and reputation tracking
+- **Analysis_Submissions** - Core analysis content with versioning
+- **Malware_Artifacts** - Uploaded samples with hash-based deduplication
+- **Sandbox_Executions** - Tracks analysis runs with behavioral logs
+- **Peer_Reviews** - Structured 4-dimension scoring system
+- **Post_Comments, Post_Likes, Post_Shares** - Social engagement
+
+Stored procedures for critical operations:
+- `sp_CreateSandboxExecution` - Creates sandbox execution records
+- `sp_CompleteSandboxExecution` - Marks executions as completed/failed
+
+Full schema and query documentation: [Schema.sql](/home/doubleroote/Schema.sql)
+
+## Quick Start
+
+```bash
+# Clone the repository
+git clone https://github.com/Aegirom/Contagion.git
+cd Contagion
+
+# Install backend dependencies
+cd backend && npm install
+
+# Configure environment
+cp .env.example .env
+# Edit .env with your Azure SQL credentials and JWT secret
+
+# Start development server
+npm run dev
+```
 
 ## Database Documentation
 
-Database query notes, foreign key behavior, constraints, and optional stored procedures are documented in:
+Database query notes, foreign key behavior, constraints, and stored procedures are documented in:
 
 - [docs/DATABASE_README.md](docs/DATABASE_README.md)
 - [database/procedures.sql](database/procedures.sql)
+- [Schema.sql](/home/doubleroote/Schema.sql) - Complete schema with all queries documented
