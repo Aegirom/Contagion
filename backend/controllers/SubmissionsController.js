@@ -24,6 +24,8 @@ async function fetchAllSubmissions() {
         a.sha256_hash,
         a.malware_family,
         a.malware_category,
+        ai.ai_score_percentage,
+        ai.threat_level AS ai_threat_level,
         e.execution_id,
         e.sandbox_status,
         e.finished_at AS sandbox_finished_at,
@@ -33,6 +35,11 @@ async function fetchAllSubmissions() {
       FROM Analysis_Submissions s
       INNER JOIN Users u ON u.user_id = s.author_id
       LEFT JOIN Malware_Artifacts a ON a.artifact_id = s.artifact_id
+      LEFT JOIN (
+        SELECT evaluation_id, submission_id, ai_score_percentage, threat_level,
+               ROW_NUMBER() OVER(PARTITION BY submission_id ORDER BY evaluation_date DESC) AS rn
+        FROM AI_Evaluations
+      ) ai ON ai.submission_id = s.submission_id AND ai.rn = 1
       LEFT JOIN (
         SELECT se.submission_id, se.execution_id, se.status AS sandbox_status, se.finished_at,
                ROW_NUMBER() OVER(PARTITION BY se.submission_id ORDER BY se.queued_at DESC) AS rn
@@ -75,11 +82,18 @@ async function fetchUserSubmissions(userId) {
           a.sha256_hash,
           a.malware_family,
           a.malware_category,
+          ai.ai_score_percentage,
+          ai.threat_level AS ai_threat_level,
           e.execution_id,
           e.sandbox_status,
           e.finished_at AS sandbox_finished_at
         FROM Analysis_Submissions s
         LEFT JOIN Malware_Artifacts a ON a.artifact_id = s.artifact_id
+        LEFT JOIN (
+          SELECT evaluation_id, submission_id, ai_score_percentage, threat_level,
+                 ROW_NUMBER() OVER(PARTITION BY submission_id ORDER BY evaluation_date DESC) AS rn
+          FROM AI_Evaluations
+        ) ai ON ai.submission_id = s.submission_id AND ai.rn = 1
         LEFT JOIN (
           SELECT se.submission_id, se.execution_id, se.status AS sandbox_status, se.finished_at,
                  ROW_NUMBER() OVER(PARTITION BY se.submission_id ORDER BY se.queued_at DESC) AS rn
@@ -481,6 +495,8 @@ export const getUserSavedSubmissions = async (req, res) => {
           a.sha256_hash,
           a.malware_family,
           a.malware_category,
+          ai.ai_score_percentage,
+          ai.threat_level AS ai_threat_level,
           e.execution_id,
           e.sandbox_status,
           e.finished_at AS sandbox_finished_at,
@@ -491,6 +507,11 @@ export const getUserSavedSubmissions = async (req, res) => {
         INNER JOIN Post_Saves ps ON ps.submission_id = s.submission_id
         INNER JOIN Users u ON u.user_id = s.author_id
         LEFT JOIN Malware_Artifacts a ON a.artifact_id = s.artifact_id
+        LEFT JOIN (
+          SELECT evaluation_id, submission_id, ai_score_percentage, threat_level,
+                 ROW_NUMBER() OVER(PARTITION BY submission_id ORDER BY evaluation_date DESC) AS rn
+          FROM AI_Evaluations
+        ) ai ON ai.submission_id = s.submission_id AND ai.rn = 1
         LEFT JOIN (
           SELECT se.submission_id, se.execution_id, se.status AS sandbox_status, se.finished_at,
                  ROW_NUMBER() OVER(PARTITION BY se.submission_id ORDER BY se.queued_at DESC) AS rn

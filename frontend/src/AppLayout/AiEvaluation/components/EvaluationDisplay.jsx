@@ -31,8 +31,19 @@ function EvaluationDisplay({ evaluation }) {
 
       <div className="space-y-8">
         <section className="bg-obsidian border border-phantom p-6 rounded-sm">
-          <h4 className="text-slate-100 font-bold uppercase tracking-widest text-xs mb-6">Confidence Score</h4>
+          <h4 className="text-slate-100 font-bold uppercase tracking-widest text-xs mb-6">Neural Confidence Score</h4>
           <AiEvaluationScore percentage={evaluation.aiScorePercentage || "0%"} />
+          
+          <div className="mt-8 grid grid-cols-2 gap-4">
+            <div className="bg-void/50 p-3 border border-phantom rounded-sm">
+              <p className="text-[9px] text-slate-500 uppercase tracking-widest mb-1">Evasion Capability</p>
+              <p className="text-toxic font-mono text-lg font-black">{evaluation.evasionScore || "N/A"}</p>
+            </div>
+            <div className="bg-void/50 p-3 border border-phantom rounded-sm">
+              <p className="text-[9px] text-slate-500 uppercase tracking-widest mb-1">Potential Impact</p>
+              <p className="text-red-500 font-mono text-lg font-black">{evaluation.impactScore || "N/A"}</p>
+            </div>
+          </div>
         </section>
 
         <section className="bg-obsidian border border-phantom p-6 rounded-sm">

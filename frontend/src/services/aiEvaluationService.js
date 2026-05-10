@@ -1,50 +1,33 @@
 // aiEvaluationService.js
 
 // This service layer manages AI evaluation data
+import { getAiEvaluation, triggerAiEvaluation } from './api';
 
-import axios from 'axios';
-
-const API_URL = 'https://api.example.com/evaluations';
-
-// Fetch evaluations
-export const fetchEvaluations = async () => {
+/**
+ * Fetch evaluation for a specific submission.
+ */
+export const fetchEvaluations = async (submissionId) => {
     try {
-        const response = await axios.get(API_URL);
+        const response = await getAiEvaluation(submissionId);
         return response.data;
     } catch (error) {
-        console.error('Error fetching evaluations:', error);
+        console.error('Error fetching evaluation:', error);
         throw error;
     }
 };
 
-// Add a new evaluation
-export const addEvaluation = async (evaluationData) => {
+/**
+ * Trigger a new AI evaluation.
+ */
+export const addEvaluation = async (submissionId) => {
     try {
-        const response = await axios.post(API_URL, evaluationData);
+        const response = await triggerAiEvaluation(submissionId);
         return response.data;
     } catch (error) {
-        console.error('Error adding evaluation:', error);
+        console.error('Error triggering AI evaluation:', error);
         throw error;
     }
 };
 
-// Update an existing evaluation
-export const updateEvaluation = async (id, evaluationData) => {
-    try {
-        const response = await axios.put(`${API_URL}/${id}`, evaluationData);
-        return response.data;
-    } catch (error) {
-        console.error('Error updating evaluation:', error);
-        throw error;
-    }
-};
-
-// Delete an evaluation
-export const deleteEvaluation = async (id) => {
-    try {
-        await axios.delete(`${API_URL}/${id}`);
-    } catch (error) {
-        console.error('Error deleting evaluation:', error);
-        throw error;
-    }
-};
+// Update and Delete are not currently supported by the backend for AI evaluations
+// as they are automated results.

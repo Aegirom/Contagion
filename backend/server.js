@@ -10,6 +10,7 @@ import artifactRoutes from "./routes/Artifacts.js";
 import postsRoutes from "./routes/Posts.js";
 import notificationRoutes from "./routes/Notifications.js";
 import adminRoutes from "./routes/Admin.js";
+import aiEvaluationRoutes from "./routes/AiEvaluation.js";
 import path from "path";
 import { fileURLToPath } from "url";
 import { protect } from "./routes/Auth.js";
@@ -76,6 +77,7 @@ app.use("/artifacts", artifactRoutes);
 app.use("/posts", postsRoutes);
 app.use("/notifications", notificationRoutes);
 app.use("/admin", adminRoutes);
+app.use("/ai-evaluations", aiEvaluationRoutes);
 
 const PORT = process.env.PORT || 3000;
 

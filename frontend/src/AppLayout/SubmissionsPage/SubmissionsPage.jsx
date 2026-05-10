@@ -135,8 +135,8 @@ function SubmissionsPage() {
     description: sub.content?.substring(0, 100) || "",
     status: sub.status,
     family: sub.malware_category || "Other",
-    threatLevel: sub.malware_category || "Unknown",
-    aiScorePercentage: sub.sandbox_status === "Completed" ? "100%" : "0%",
+    threatLevel: sub.ai_threat_level || sub.malware_category || "Unknown",
+    aiScorePercentage: sub.ai_score_percentage || "0%",
     reviewCount: 0,
     date: sub.submitted_at
       ? new Date(sub.submitted_at).toLocaleDateString()

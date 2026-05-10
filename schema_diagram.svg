@@ -1,0 +1,69 @@
+<svg width="1000" height="900" xmlns="http://www.w3.org/2000/svg">
+  <rect width="100%" height="100%" fill="#0F1118" />
+  <rect x="50" y="50" width="250" height="30" fill="#141923" stroke="#22C55E" stroke-width="1" />
+  <text x="60" y="70" font-family="monospace" font-size="14" fill="#22C55E" font-weight="bold">Users</text>
+  <rect x="50" y="80" width="250" height="150" fill="none" stroke="#1E2233" stroke-width="1" />
+  <text x="60" y="100" font-family="monospace" font-size="12" fill="#F1F5F9">user_id (PK)</text>
+  <text x="60" y="120" font-family="monospace" font-size="12" fill="#F1F5F9">username (U)</text>
+  <text x="60" y="140" font-family="monospace" font-size="12" fill="#F1F5F9">email (U)</text>
+  <text x="60" y="160" font-family="monospace" font-size="12" fill="#F1F5F9">password_hash</text>
+  <text x="60" y="180" font-family="monospace" font-size="12" fill="#F1F5F9">role</text>
+  <text x="60" y="200" font-family="monospace" font-size="12" fill="#F1F5F9">reputation_score</text>
+  <text x="60" y="220" font-family="monospace" font-size="12" fill="#F1F5F9">created_at</text>
+  <rect x="350" y="50" width="250" height="30" fill="#141923" stroke="#22C55E" stroke-width="1" />
+  <text x="360" y="70" font-family="monospace" font-size="14" fill="#22C55E" font-weight="bold">Malware_Artifacts</text>
+  <rect x="350" y="80" width="250" height="130" fill="none" stroke="#1E2233" stroke-width="1" />
+  <text x="360" y="100" font-family="monospace" font-size="12" fill="#F1F5F9">artifact_id (PK)</text>
+  <text x="360" y="120" font-family="monospace" font-size="12" fill="#F1F5F9">file_name</text>
+  <text x="360" y="140" font-family="monospace" font-size="12" fill="#F1F5F9">sha256_hash (U)</text>
+  <text x="360" y="160" font-family="monospace" font-size="12" fill="#F1F5F9">storage_path</text>
+  <text x="360" y="180" font-family="monospace" font-size="12" fill="#F1F5F9">malware_category</text>
+  <text x="360" y="200" font-family="monospace" font-size="12" fill="#F1F5F9">upload_time</text>
+  <rect x="650" y="50" width="250" height="30" fill="#141923" stroke="#22C55E" stroke-width="1" />
+  <text x="660" y="70" font-family="monospace" font-size="14" fill="#22C55E" font-weight="bold">Analysis_Submissions</text>
+  <rect x="650" y="80" width="250" height="150" fill="none" stroke="#1E2233" stroke-width="1" />
+  <text x="660" y="100" font-family="monospace" font-size="12" fill="#F1F5F9">submission_id (PK)</text>
+  <text x="660" y="120" font-family="monospace" font-size="12" fill="#F1F5F9">author_id (FK -> Users)</text>
+  <text x="660" y="140" font-family="monospace" font-size="12" fill="#F1F5F9">artifact_id (FK -> Artifacts)</text>
+  <text x="660" y="160" font-family="monospace" font-size="12" fill="#F1F5F9">title</text>
+  <text x="660" y="180" font-family="monospace" font-size="12" fill="#F1F5F9">content</text>
+  <text x="660" y="200" font-family="monospace" font-size="12" fill="#F1F5F9">status</text>
+  <text x="660" y="220" font-family="monospace" font-size="12" fill="#F1F5F9">version</text>
+  <rect x="50" y="350" width="250" height="30" fill="#141923" stroke="#22C55E" stroke-width="1" />
+  <text x="60" y="370" font-family="monospace" font-size="14" fill="#22C55E" font-weight="bold">Post_Saves</text>
+  <rect x="50" y="380" width="250" height="90" fill="none" stroke="#1E2233" stroke-width="1" />
+  <text x="60" y="400" font-family="monospace" font-size="12" fill="#F1F5F9">save_id (PK)</text>
+  <text x="60" y="420" font-family="monospace" font-size="12" fill="#F1F5F9">submission_id (FK)</text>
+  <text x="60" y="440" font-family="monospace" font-size="12" fill="#F1F5F9">user_id (FK)</text>
+  <text x="60" y="460" font-family="monospace" font-size="12" fill="#F1F5F9">created_at</text>
+  <rect x="350" y="350" width="250" height="30" fill="#141923" stroke="#22C55E" stroke-width="1" />
+  <text x="360" y="370" font-family="monospace" font-size="14" fill="#22C55E" font-weight="bold">Sandbox_Executions</text>
+  <rect x="350" y="380" width="250" height="130" fill="none" stroke="#1E2233" stroke-width="1" />
+  <text x="360" y="400" font-family="monospace" font-size="12" fill="#F1F5F9">execution_id (PK)</text>
+  <text x="360" y="420" font-family="monospace" font-size="12" fill="#F1F5F9">submission_id (FK)</text>
+  <text x="360" y="440" font-family="monospace" font-size="12" fill="#F1F5F9">status</text>
+  <text x="360" y="460" font-family="monospace" font-size="12" fill="#F1F5F9">environment</text>
+  <text x="360" y="480" font-family="monospace" font-size="12" fill="#F1F5F9">os_profile</text>
+  <text x="360" y="500" font-family="monospace" font-size="12" fill="#F1F5F9">started_at</text>
+  <rect x="650" y="350" width="250" height="30" fill="#141923" stroke="#22C55E" stroke-width="1" />
+  <text x="660" y="370" font-family="monospace" font-size="14" fill="#22C55E" font-weight="bold">Post_Comments</text>
+  <rect x="650" y="380" width="250" height="110" fill="none" stroke="#1E2233" stroke-width="1" />
+  <text x="660" y="400" font-family="monospace" font-size="12" fill="#F1F5F9">comment_id (PK)</text>
+  <text x="660" y="420" font-family="monospace" font-size="12" fill="#F1F5F9">submission_id (FK)</text>
+  <text x="660" y="440" font-family="monospace" font-size="12" fill="#F1F5F9">user_id (FK)</text>
+  <text x="660" y="460" font-family="monospace" font-size="12" fill="#F1F5F9">content</text>
+  <text x="660" y="480" font-family="monospace" font-size="12" fill="#F1F5F9">created_at</text>
+  <rect x="350" y="650" width="250" height="30" fill="#141923" stroke="#22C55E" stroke-width="1" />
+  <text x="360" y="670" font-family="monospace" font-size="14" fill="#22C55E" font-weight="bold">Behavioral_Logs</text>
+  <rect x="350" y="680" width="250" height="110" fill="none" stroke="#1E2233" stroke-width="1" />
+  <text x="360" y="700" font-family="monospace" font-size="12" fill="#F1F5F9">log_id (PK)</text>
+  <text x="360" y="720" font-family="monospace" font-size="12" fill="#F1F5F9">execution_id (FK)</text>
+  <text x="360" y="740" font-family="monospace" font-size="12" fill="#F1F5F9">log_type</text>
+  <text x="360" y="760" font-family="monospace" font-size="12" fill="#F1F5F9">log_data</text>
+  <text x="360" y="780" font-family="monospace" font-size="12" fill="#F1F5F9">captured_at</text>
+  <path d="M 300 100 L 650 100" stroke="#22C55E" stroke-dasharray="5,5" fill="none" opacity="0.3" />
+  <path d="M 175 350 L 175 250" stroke="#22C55E" stroke-dasharray="5,5" fill="none" opacity="0.3" />
+  <path d="M 475 380 L 650 380" stroke="#22C55E" stroke-dasharray="5,5" fill="none" opacity="0.3" />
+  <text x="50" y="850" font-family="monospace" font-size="16" fill="#22C55E" font-weight="bold">BCNF NORMALIZED SCHEMA</text>
+  <text x="50" y="870" font-family="monospace" font-size="10" fill="#64748B">Redundancies removed from Sandbox_Executions.</text>
+</svg>
