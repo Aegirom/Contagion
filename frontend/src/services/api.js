@@ -270,4 +270,10 @@ export const getAggregateScores = (submissionId) =>
 export const submitPeerReview = (submissionId, payload) =>
   API.post(`/posts/${submissionId}/reviews`, payload);
 
+// AI Evaluation API functions
+export const getAiEvaluation = (submissionId) =>
+  API.get(`/ai-evaluations/${submissionId}`);
+export const triggerAiEvaluation = (submissionId) =>
+  API.post(`/ai-evaluations/${submissionId}/evaluate`);
+
 export default API;
