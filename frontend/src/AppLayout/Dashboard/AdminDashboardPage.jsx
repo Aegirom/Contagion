@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from "react";
-import { adminAPI } from "../../services/adminService";
+import { adminAPI, moderationAPI } from "../../services/adminService";
 import { StatusBadge } from "../Dashboard/Components/HooksAndBadges";
 import { useCounter } from "../Dashboard/Components/HooksAndBadges";
 
@@ -511,6 +511,143 @@ function PostsPanel() {
   );
 }
 
+function PendingSubmissionsPanel() {
+  const [submissions, setSubmissions] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+  const [actionLoading, setActionLoading] = useState(null);
+  const [confirmReject, setConfirmReject] = useState(null);
+  const [reason, setReason] = useState("");
+
+  const load = useCallback(async () => {
+    try {
+      setLoading(true);
+      setError(null);
+      const res = await moderationAPI.getPendingSubmissions();
+      setSubmissions(res.data);
+    } catch (err) {
+      setError(err.response?.data?.error || err.message);
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  useEffect(() => { load(); }, [load]);
+
+  const handleApprove = async (submissionId) => {
+    setActionLoading(submissionId);
+    try {
+      await moderationAPI.moderateSubmission(submissionId, "approve");
+      await load();
+    } catch (err) {
+      console.error("[Admin] Approve failed:", err.response?.data || err.message);
+    } finally {
+      setActionLoading(null);
+    }
+  };
+
+  const handleReject = async () => {
+    if (!confirmReject) return;
+    setActionLoading(confirmReject);
+    try {
+      await moderationAPI.moderateSubmission(confirmReject, "reject", reason);
+      setConfirmReject(null);
+      setReason("");
+      await load();
+    } catch (err) {
+      console.error("[Admin] Reject failed:", err.response?.data || err.message);
+    } finally {
+      setActionLoading(null);
+    }
+  };
+
+  if (loading) {
+    return (
+      <div className="rounded-xl overflow-hidden" style={{ background: "#0A0B10", border: "1px solid #1E2233" }}>
+        <div className="flex items-center gap-2 px-4 py-3" style={{ borderBottom: "1px solid #1E2233" }}>
+          <div className="w-1.5 h-1.5 rounded-full" style={{ background: AMBER, boxShadow: "0 0 6px rgba(245,158,11,0.7)" }} />
+          <span className="font-display text-[10px] font-bold tracking-widest uppercase text-white">Pending Review</span>
+        </div>
+        {Array(3).fill(null).map((_, i) => (
+          <div key={i} className="flex items-center justify-between px-4 py-3" style={{ borderBottom: "1px solid #141720" }}>
+            <div className="space-y-1.5 flex-1"><div className="h-3 rounded" style={{ background: "#141720", width: "50%" }} /><div className="h-2 rounded" style={{ background: "#0F1118", width: "30%" }} /></div>
+            <div className="flex gap-1.5"><div className="h-6 w-14 rounded" style={{ background: "#141720" }} /><div className="h-6 w-14 rounded" style={{ background: "#141720" }} /></div>
+          </div>
+        ))}
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="rounded-xl p-8 text-center" style={{ background: "#0A0B10", border: "1px solid #1E2233" }}>
+        <p className="font-mono text-xs mb-3" style={{ color: RED }}>{error}</p>
+        <button onClick={load} className="font-mono text-[10px] uppercase tracking-widest px-4 py-2 rounded-lg" style={{ background: "rgba(34,197,94,0.07)", color: GREEN, border: "1px solid rgba(34,197,94,0.15)" }}>Retry</button>
+      </div>
+    );
+  }
+
+  return (
+    <div className="rounded-xl overflow-hidden" style={{ background: "#0A0B10", border: "1px solid #1E2233" }}>
+      <div className="flex items-center justify-between px-4 py-3" style={{ borderBottom: "1px solid #1E2233" }}>
+        <div className="flex items-center gap-2">
+          <div className="w-1.5 h-1.5 rounded-full" style={{ background: AMBER, boxShadow: "0 0 6px rgba(245,158,11,0.7)" }} />
+          <span className="font-display text-[10px] font-bold tracking-widest uppercase text-white">Pending Review</span>
+        </div>
+        <span className="font-mono text-[10px] tabular-nums px-2 py-0.5 rounded" style={{ background: "rgba(245,158,11,0.06)", border: "1px solid rgba(245,158,11,0.12)", color: AMBER }}>{submissions.length}</span>
+      </div>
+      {submissions.length === 0 ? (
+        <div className="px-4 py-12 text-center"><p className="font-mono text-xs" style={{ color: "#334155" }}>No pending submissions</p></div>
+      ) : (
+        <div>
+          {submissions.map((s, i) => (
+            <div key={s.submission_id} className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 px-4 py-3" style={{ borderBottom: i < submissions.length - 1 ? "1px solid #141720" : "none" }}>
+              <div className="min-w-0 flex-1">
+                <span className="font-mono text-xs truncate block" style={{ color: GREEN }}>{s.title}</span>
+                <div className="flex gap-3 mt-0.5">
+                  <span className="font-body text-xs" style={{ color: "#475569" }}>by {s.username}</span>
+                  <span className="font-mono text-[10px]" style={{ color: "#334155" }}>{s.template_type}</span>
+                  <span className="font-mono text-[10px]" style={{ color: "#334155" }}>{new Date(s.submitted_at).toLocaleDateString()}</span>
+                </div>
+              </div>
+              <div className="flex gap-1.5 flex-shrink-0">
+                <button onClick={() => handleApprove(s.submission_id)} disabled={actionLoading === s.submission_id}
+                  className="font-mono text-[10px] uppercase tracking-wider px-3 py-1.5 rounded transition-all"
+                  style={{ background: "rgba(34,197,94,0.07)", color: GREEN, border: "1px solid rgba(34,197,94,0.15)", opacity: actionLoading === s.submission_id ? 0.4 : 1, cursor: actionLoading === s.submission_id ? "not-allowed" : "pointer" }}>
+                  Approve
+                </button>
+                <button onClick={() => setConfirmReject(s.submission_id)} disabled={actionLoading === s.submission_id}
+                  className="font-mono text-[10px] uppercase tracking-wider px-3 py-1.5 rounded transition-all"
+                  style={{ background: "rgba(239,68,68,0.07)", color: RED, border: "1px solid rgba(239,68,68,0.15)", opacity: actionLoading === s.submission_id ? 0.4 : 1, cursor: actionLoading === s.submission_id ? "not-allowed" : "pointer" }}>
+                  Reject
+                </button>
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
+
+      {confirmReject && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center" style={{ background: "rgba(0,0,0,0.7)" }}>
+          <div className="rounded-xl p-6 max-w-md w-full mx-4" style={{ background: "#0A0B10", border: `1px solid ${RED}33` }}>
+            <div className="flex items-center gap-2 mb-3">
+              <div className="w-1.5 h-1.5 rounded-full" style={{ background: RED, boxShadow: `0 0 8px ${RED}` }} />
+              <h3 className="font-display text-sm font-bold text-white">Reject Submission</h3>
+            </div>
+            <p className="font-body text-xs mb-3" style={{ color: "#94A3B8" }}>Provide a reason for rejection:</p>
+            <input type="text" placeholder="Reason (optional)" value={reason} onChange={(e) => setReason(e.target.value)}
+              className="w-full px-3 py-2 rounded-lg text-sm border mb-4" style={{ background: "#0A0B10", borderColor: "#1E2233", color: "#F1F5F9" }} />
+            <div className="flex gap-2 justify-end">
+              <button onClick={() => { setConfirmReject(null); setReason(""); }} className="font-mono text-[10px] uppercase tracking-widest px-4 py-2 rounded-lg" style={{ background: "rgba(59,130,246,0.07)", color: CYAN, border: "1px solid rgba(59,130,246,0.15)" }}>Cancel</button>
+              <button onClick={handleReject} className="font-mono text-[10px] uppercase tracking-widest px-4 py-2 rounded-lg" style={{ background: "rgba(239,68,68,0.15)", color: RED, border: "1px solid rgba(239,68,68,0.25)" }}>Confirm Reject</button>
+            </div>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
 function SystemPanel() {
   const [stats, setStats] = useState(null);
   const [activity, setActivity] = useState([]);
@@ -649,6 +786,7 @@ export default function AdminDashboardPage() {
   const tabs = [
     { id: "users", label: "Users" },
     { id: "posts", label: "Posts" },
+    { id: "moderation", label: "Moderation" },
     { id: "system", label: "System" },
   ];
 
@@ -693,6 +831,7 @@ export default function AdminDashboardPage() {
 
         {tab === "users" && <UsersPanel />}
         {tab === "posts" && <PostsPanel />}
+        {tab === "moderation" && <PendingSubmissionsPanel />}
         {tab === "system" && <SystemPanel />}
       </div>
     </main>
