@@ -82,6 +82,7 @@ const Post = () => {
   const [isSaved, setIsSaved] = useState(false);
   const [shareCount, setShareCount] = useState(0);
   const [animKey, setAnimKey] = useState(0);
+  const [isSaving, setIsSaving] = useState(false);
   const [comments, setComments] = useState([]);
   const [newComment, setNewComment] = useState("");
 
@@ -266,15 +267,23 @@ const Post = () => {
   const handleSave = async () => {
     if (!isAuthenticated) return showLoginPrompt();
     if (isNonInteractive) return;
+    setIsSaving(true);
+    const prevIsSaved = isSaved;
+    const newIsSaved = !isSaved;
+    setIsSaved(newIsSaved);
+
     try {
       const response = await togglePostSave(postId);
       setIsSaved(response.data.isSaved);
     } catch (err) {
+      setIsSaved(prevIsSaved);
       if (err.response?.status === 401) {
         navigate("/login", { state: { from: `/post/${postId}` } });
       } else {
         console.error("Failed to toggle save:", err);
       }
+    } finally {
+      setIsSaving(false);
     }
   };
 
@@ -616,21 +625,45 @@ const Post = () => {
                     </button>
                     <button
                       onClick={handleSave}
-                      disabled={isNonInteractive}
+                      disabled={isNonInteractive || isSaving}
                       className="flex items-center gap-2 font-code text-xs transition-all hover:scale-105 disabled:opacity-30 disabled:cursor-not-allowed disabled:hover:scale-100"
                       style={{ color: isSaved ? "#F59E0B" : "#4B5563" }}
                     >
-                      <svg
-                        width="16"
-                        height="16"
-                        viewBox="0 0 24 24"
-                        fill={isSaved ? "#F59E0B" : "none"}
-                        stroke="currentColor"
-                        strokeWidth="2"
-                      >
-                        <path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z" />
-                      </svg>
-                      <span>{isSaved ? "Saved" : "Save"}</span>
+                      {isSaving ? (
+                        <svg
+                          className="animate-spin h-4 w-4"
+                          viewBox="0 0 24 24"
+                        >
+                          <circle
+                            className="opacity-25"
+                            cx="12"
+                            cy="12"
+                            r="10"
+                            stroke="currentColor"
+                            strokeWidth="4"
+                            fill="none"
+                          />
+                          <path
+                            className="opacity-75"
+                            fill="currentColor"
+                            d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"
+                          />
+                        </svg>
+                      ) : (
+                        <svg
+                          width="16"
+                          height="16"
+                          viewBox="0 0 24 24"
+                          fill={isSaved ? "#F59E0B" : "none"}
+                          stroke="currentColor"
+                          strokeWidth="2"
+                        >
+                          <path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z" />
+                        </svg>
+                      )}
+                      <span>
+                        {isSaving ? "Saving..." : isSaved ? "Saved" : "Save"}
+                      </span>
                     </button>
                   </div>
                 </div>

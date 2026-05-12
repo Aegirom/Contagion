@@ -165,6 +165,7 @@ const FeedCard = ({ post, onInteract }) => {
   const [likeCount, setLikeCount] = useState(post.score || 0);
   const [showShareMenu, setShowShareMenu] = useState(false);
   const [animKey, setAnimKey] = useState(0);
+  const [isSaving, setIsSaving] = useState(false);
 
   useEffect(() => {
     setIsLiked(post.isLiked || false);
@@ -217,23 +218,43 @@ const FeedCard = ({ post, onInteract }) => {
 
   const handleSave = async (e) => {
     e.stopPropagation();
+    setIsSaving(true);
+    const prevIsSaved = isSaved;
+    const newIsSaved = !isSaved;
+    setIsSaved(newIsSaved);
+    const savedPosts = JSON.parse(localStorage.getItem("savedPosts") || "{}");
+    if (newIsSaved) {
+      savedPosts[post.id] = true;
+    } else {
+      delete savedPosts[post.id];
+    }
+    localStorage.setItem("savedPosts", JSON.stringify(savedPosts));
+
     try {
       const response = await togglePostSave(post.id);
       setIsSaved(response.data.isSaved);
 
-      const savedPosts = JSON.parse(localStorage.getItem("savedPosts") || "{}");
-      if (response.data.isSaved) {
-        savedPosts[post.id] = true;
-      } else {
-        delete savedPosts[post.id];
+      if (!response.data.isSaved) {
+        const sp = JSON.parse(localStorage.getItem("savedPosts") || "{}");
+        delete sp[post.id];
+        localStorage.setItem("savedPosts", JSON.stringify(sp));
       }
-      localStorage.setItem("savedPosts", JSON.stringify(savedPosts));
 
       onInteract?.();
     } catch (err) {
+      setIsSaved(prevIsSaved);
+      const sp = JSON.parse(localStorage.getItem("savedPosts") || "{}");
+      if (prevIsSaved) {
+        sp[post.id] = true;
+      } else {
+        delete sp[post.id];
+      }
+      localStorage.setItem("savedPosts", JSON.stringify(sp));
       if (err.response?.status === 401) {
         navigate("/login", { state: { from: `/feed` } });
       }
+    } finally {
+      setIsSaving(false);
     }
   };
 
@@ -453,21 +474,40 @@ const FeedCard = ({ post, onInteract }) => {
 
         <button
           onClick={isInteractive ? handleSave : undefined}
-          disabled={!isInteractive}
+          disabled={!isInteractive || isSaving}
           className="flex items-center gap-2 font-code text-[10px] uppercase tracking-wider transition-colors disabled:opacity-20 disabled:cursor-not-allowed"
           style={{ color: isSaved ? "#F59E0B" : "#374151" }}
         >
-          <svg
-            width="16"
-            height="16"
-            viewBox="0 0 24 24"
-            fill={isSaved ? "#F59E0B" : "none"}
-            stroke="currentColor"
-            strokeWidth="2"
-          >
-            <path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z" />
-          </svg>
-          {isSaved ? "Saved" : "Save"}
+          {isSaving ? (
+            <svg className="animate-spin h-4 w-4" viewBox="0 0 24 24">
+              <circle
+                className="opacity-25"
+                cx="12"
+                cy="12"
+                r="10"
+                stroke="currentColor"
+                strokeWidth="4"
+                fill="none"
+              />
+              <path
+                className="opacity-75"
+                fill="currentColor"
+                d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"
+              />
+            </svg>
+          ) : (
+            <svg
+              width="16"
+              height="16"
+              viewBox="0 0 24 24"
+              fill={isSaved ? "#F59E0B" : "none"}
+              stroke="currentColor"
+              strokeWidth="2"
+            >
+              <path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z" />
+            </svg>
+          )}
+          {isSaving ? "Saving..." : isSaved ? "Saved" : "Save"}
         </button>
       </div>
     </div>
