@@ -9,6 +9,7 @@ import { Link, useNavigate } from "react-router-dom";
 import AvatarCropper from "./Components/AvatarCropper";
 import { getUserSubmissions, getUserStats } from "../../services/api";
 import VerifiedBadge from "../Dashboard/Components/VerifiedBadge";
+import ProfileSkeleton from "./Components/ProfileSkeleton";
 
 const ACCENT = "#22C55E";
 
@@ -193,21 +194,7 @@ const ProfilePage = () => {
         : "rgba(74,222,128,0.25)";
 
   if (loading) {
-    return (
-      <main
-        className="flex-1 overflow-auto relative"
-        style={{ background: "#FFFFFF" }}
-      >
-        <div className="flex items-center justify-center min-h-[60vh]">
-          <div className="text-center">
-            <div className="inline-block animate-spin rounded-full h-10 w-10 border-3 border-toxic border-t-transparent mb-4"></div>
-             <p className="font-mono text-xs uppercase tracking-widest text-gray-600">
-               Loading profile...
-             </p>
-          </div>
-        </div>
-      </main>
-    );
+    return <ProfileSkeleton />;
   }
 
   return (
@@ -217,8 +204,13 @@ const ProfilePage = () => {
         <div className="flex items-start justify-between gap-4">
           <div>
             <div className="flex items-center gap-2 mb-1">
-              <div className="w-1.5 h-1.5 rounded-full bg-toxic" style={{ boxShadow: '0 0 8px rgba(34,197,94,0.8)' }} />
-              <span className="font-mono text-[10px] uppercase tracking-widest text-toxic">Profile</span>
+              <div
+                className="w-1.5 h-1.5 rounded-full bg-toxic"
+                style={{ boxShadow: "0 0 8px rgba(34,197,94,0.8)" }}
+              />
+              <span className="font-mono text-[10px] uppercase tracking-widest text-toxic">
+                Profile
+              </span>
             </div>
             <h1 className="font-display text-2xl font-bold tracking-tight text-gray-900">
               Profile Settings
@@ -248,19 +240,41 @@ const ProfilePage = () => {
         {success && (
           <div className="rounded-lg flex items-center gap-3 p-4 bg-toxic/10 border border-toxic/20 text-toxic">
             <div className="w-8 h-8 rounded-full bg-toxic/20 flex items-center justify-center flex-shrink-0">
-              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="3" d="M5 13l4 4L19 7" />
+              <svg
+                className="w-5 h-5"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth="3"
+                  d="M5 13l4 4L19 7"
+                />
               </svg>
             </div>
-            <p className="font-medium text-sm">Profile synchronized successfully.</p>
+            <p className="font-medium text-sm">
+              Profile synchronized successfully.
+            </p>
           </div>
         )}
 
         {error && (
           <div className="rounded-lg flex items-center gap-3 p-4 bg-red-50 border border-red-200 text-red-500">
             <div className="w-8 h-8 rounded-full bg-red-500/20 flex items-center justify-center flex-shrink-0">
-              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 9v2m0 4h.01" />
+              <svg
+                className="w-5 h-5"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth="2"
+                  d="M12 9v2m0 4h.01"
+                />
               </svg>
             </div>
             <p className="font-medium text-sm">{error}</p>
@@ -282,10 +296,16 @@ const ProfilePage = () => {
                   onMouseLeave={() => setHoveredAvatar(false)}
                   onClick={() => fileInputRef.current?.click()}
                 >
-                  <img src={avatarSrc} alt="Avatar" className="w-full h-full object-cover" />
+                  <img
+                    src={avatarSrc}
+                    alt="Avatar"
+                    className="w-full h-full object-cover"
+                  />
                   {hoveredAvatar && (
                     <div className="absolute inset-0 bg-black/40 flex items-center justify-center">
-                      <span className="text-white text-[10px] font-bold uppercase tracking-wider">Change</span>
+                      <span className="text-white text-[10px] font-bold uppercase tracking-wider">
+                        Change
+                      </span>
                     </div>
                   )}
                   <input
@@ -299,8 +319,12 @@ const ProfilePage = () => {
                   />
                 </div>
                 <div>
-                  <p className="font-body text-sm font-semibold text-gray-900">{user?.username || 'Analyst'}</p>
-                  <p className="font-mono text-xs text-gray-500 mt-0.5">{user?.email || ''}</p>
+                  <p className="font-body text-sm font-semibold text-gray-900">
+                    {user?.username || "Analyst"}
+                  </p>
+                  <p className="font-mono text-xs text-gray-500 mt-0.5">
+                    {user?.email || ""}
+                  </p>
                   <VerifiedBadge role={user?.role} size={12} />
                 </div>
               </div>
@@ -309,16 +333,28 @@ const ProfilePage = () => {
             {/* Stats Cards */}
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-px bg-gray-200">
               <div className="bg-white p-5">
-                <p className="font-display text-2xl font-bold text-gray-900">{stats.total_submissions}</p>
-                <p className="font-body text-xs text-gray-500 mt-1">Total Analyses</p>
+                <p className="font-display text-2xl font-bold text-gray-900">
+                  {stats.total_submissions}
+                </p>
+                <p className="font-body text-xs text-gray-500 mt-1">
+                  Total Analyses
+                </p>
               </div>
               <div className="bg-white p-5">
-                <p className="font-display text-2xl font-bold text-gray-900">{stats.published_submissions}</p>
-                <p className="font-body text-xs text-gray-500 mt-1">Published</p>
+                <p className="font-display text-2xl font-bold text-gray-900">
+                  {stats.published_submissions}
+                </p>
+                <p className="font-body text-xs text-gray-500 mt-1">
+                  Published
+                </p>
               </div>
               <div className="bg-white p-5">
-                <p className="font-display text-2xl font-bold text-gray-900">{stats.pending_submissions}</p>
-                <p className="font-body text-xs text-gray-500 mt-1">Pending Reviews</p>
+                <p className="font-display text-2xl font-bold text-gray-900">
+                  {stats.pending_submissions}
+                </p>
+                <p className="font-body text-xs text-gray-500 mt-1">
+                  Pending Reviews
+                </p>
               </div>
             </div>
 
@@ -411,8 +447,18 @@ const ProfilePage = () => {
                   </>
                 ) : (
                   <>
-                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M5 13l4 4L19 7" />
+                    <svg
+                      className="w-4 h-4"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth="2.5"
+                        d="M5 13l4 4L19 7"
+                      />
                     </svg>
                     Save Changes
                   </>

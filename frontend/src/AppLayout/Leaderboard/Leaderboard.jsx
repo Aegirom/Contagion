@@ -1,10 +1,12 @@
 import { useEffect, useState } from "react";
 import PositionCard from "./Components/PositionCard.jsx";
+import PositionCardSkeleton from "./Components/PositionCardSkeleton.jsx";
 import API from "../../services/api.js";
 
 function Leaderboard() {
   const [leaderboardData, setLeaderboardData] = useState([]);
   const [currentUser, setCurrentUser] = useState(null);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     const getLeaderboard = async () => {
@@ -27,6 +29,8 @@ function Leaderboard() {
         setLeaderboardData(mapped);
       } catch (err) {
         console.error("Could not receive leaderboard data: ", err);
+      } finally {
+        setLoading(false);
       }
     };
 
@@ -67,13 +71,21 @@ function Leaderboard() {
       </div>
 
       <div className="flex flex-col gap-2">
-        {leaderboardData.length > 0 ? (
+        {loading ? (
+          <>
+            <PositionCardSkeleton />
+            <PositionCardSkeleton />
+            <PositionCardSkeleton />
+            <PositionCardSkeleton />
+            <PositionCardSkeleton />
+          </>
+        ) : leaderboardData.length > 0 ? (
           leaderboardData.map((user) => (
             <PositionCard key={user.position} {...user} />
           ))
         ) : (
           <p className="text-gray-600 font-mono text-sm uppercase text-center py-20">
-            Loading leaderboard...
+            No leaderboard data available.
           </p>
         )}
       </div>
