@@ -196,14 +196,14 @@ const ProfilePage = () => {
     return (
       <main
         className="flex-1 overflow-auto relative"
-        style={{ background: "#050508" }}
+        style={{ background: "#FFFFFF" }}
       >
         <div className="flex items-center justify-center min-h-[60vh]">
           <div className="text-center">
             <div className="inline-block animate-spin rounded-full h-10 w-10 border-3 border-toxic border-t-transparent mb-4"></div>
-            <p className="font-mono text-xs uppercase tracking-widest text-slate-500">
-              Loading profile...
-            </p>
+             <p className="font-mono text-xs uppercase tracking-widest text-gray-600">
+               Loading profile...
+             </p>
           </div>
         </div>
       </main>
@@ -211,813 +211,208 @@ const ProfilePage = () => {
   }
 
   return (
-    <main
-      className="flex-1 overflow-auto relative"
-      style={{ background: "#050508" }}
-    >
-      {/* Ambient lighting */}
-      <div
-        className="pointer-events-none absolute inset-0 overflow-hidden"
-        style={{ zIndex: 0 }}
-      >
-        <div
-          style={{
-            position: "absolute",
-            width: "900px",
-            height: "600px",
-            top: "-200px",
-            right: "-300px",
-            background:
-              "radial-gradient(ellipse, rgba(34,197,94,0.04) 0%, transparent 65%)",
-            borderRadius: "50%",
-          }}
-        />
-        <div
-          style={{
-            position: "absolute",
-            width: "700px",
-            height: "700px",
-            bottom: "-250px",
-            left: "-150px",
-            background:
-              "radial-gradient(ellipse, rgba(109,40,217,0.035) 0%, transparent 65%)",
-            borderRadius: "50%",
-          }}
-        />
-        <div
-          className="absolute inset-0"
-          style={{
-            backgroundImage:
-              "linear-gradient(rgba(34,197,94,0.012) 1px, transparent 1px), linear-gradient(90deg, rgba(34,197,94,0.012) 1px, transparent 1px)",
-            backgroundSize: "48px 48px",
-          }}
-        />
-      </div>
+    <main className="flex-1 overflow-auto relative bg-white">
+      <div className="px-7 py-8 max-w-[1440px] mx-auto space-y-6">
+        {/* Page Header */}
+        <div className="flex items-start justify-between gap-4">
+          <div>
+            <div className="flex items-center gap-2 mb-1">
+              <div className="w-1.5 h-1.5 rounded-full bg-toxic" style={{ boxShadow: '0 0 8px rgba(34,197,94,0.8)' }} />
+              <span className="font-mono text-[10px] uppercase tracking-widest text-toxic">Profile</span>
+            </div>
+            <h1 className="font-display text-2xl font-bold tracking-tight text-gray-900">
+              Profile Settings
+            </h1>
+            <p className="font-mono text-[10px] mt-1 text-gray-500">
+              Manage your account and profile information
+            </p>
+          </div>
+          <div className="flex items-center gap-2 mt-1">
+            <span
+              className="font-mono text-[10px] uppercase tracking-widest px-3 py-1.5 rounded-lg"
+              style={{
+                background: expertiseBg,
+                color: expertiseColor,
+                border: `1px solid ${expertiseBorder}`,
+              }}
+            >
+              {expertiseLevel}
+            </span>
+            <span className="font-code text-[10px] px-3 py-1.5 rounded-lg bg-toxic/10 text-toxic border border-toxic/20">
+              {reputationScore} XP
+            </span>
+          </div>
+        </div>
 
-      <div
-        className="relative px-7 py-8 max-w-[1440px] mx-auto space-y-6"
-        style={{ zIndex: 1 }}
-      >
         {/* Status Messages */}
         {success && (
-          <div
-            className="rounded-lg flex items-center gap-3 p-4"
-            style={{
-              background: "rgba(34,197,94,0.08)",
-              border: "1px solid rgba(34,197,94,0.2)",
-              color: "#22C55E",
-            }}
-          >
+          <div className="rounded-lg flex items-center gap-3 p-4 bg-toxic/10 border border-toxic/20 text-toxic">
             <div className="w-8 h-8 rounded-full bg-toxic/20 flex items-center justify-center flex-shrink-0">
-              <svg
-                className="w-5 h-5"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth="3"
-                  d="M5 13l4 4L19 7"
-                />
+              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="3" d="M5 13l4 4L19 7" />
               </svg>
             </div>
-            <p className="font-medium text-sm">
-              Profile synchronized successfully.
-            </p>
+            <p className="font-medium text-sm">Profile synchronized successfully.</p>
           </div>
         )}
 
         {error && (
-          <div
-            className="rounded-lg flex items-center gap-3 p-4"
-            style={{
-              background: "rgba(239,68,68,0.08)",
-              border: "1px solid rgba(239,68,68,0.2)",
-              color: "#EF4444",
-            }}
-          >
+          <div className="rounded-lg flex items-center gap-3 p-4 bg-red-50 border border-red-200 text-red-500">
             <div className="w-8 h-8 rounded-full bg-red-500/20 flex items-center justify-center flex-shrink-0">
-              <svg
-                className="w-5 h-5"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth="2"
-                  d="M12 9v2m0 4h.01"
-                />
+              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 9v2m0 4h.01" />
               </svg>
             </div>
             <p className="font-medium text-sm">{error}</p>
           </div>
         )}
 
-        {/* Profile Header */}
-        <div
-          className="rounded-xl overflow-hidden"
-          style={{
-            background: "#0A0B10",
-            border: "1px solid #1E2233",
-          }}
-        >
-          {/* Banner */}
-          <div className="relative h-28 md:h-36 overflow-hidden">
-            <div
-              className="absolute inset-0"
-              style={{
-                background:
-                  "linear-gradient(135deg, rgba(34,197,94,0.15) 0%, rgba(109,40,217,0.1) 50%, rgba(10,11,16,0.6) 100%)",
-              }}
-            />
-            <div
-              className="absolute inset-0"
-              style={{
-                backgroundImage:
-                  "linear-gradient(rgba(34,197,94,0.03) 1px, transparent 1px), linear-gradient(90deg, rgba(34,197,94,0.03) 1px, transparent 1px)",
-                backgroundSize: "32px 32px",
-              }}
-            />
-            <div
-              className="absolute bottom-0 left-0 right-0 h-16"
-              style={{
-                background: "linear-gradient(to top, #0A0B10, transparent)",
-              }}
-            />
-          </div>
-
-          {/* Profile Info */}
-          <div className="relative px-6 pb-6 -mt-14">
-            <div className="flex flex-col md:flex-row gap-6">
-              {/* Avatar */}
-              <div
-                className="relative flex-shrink-0"
-                onMouseEnter={() => setHoveredAvatar(true)}
-                onMouseLeave={() => setHoveredAvatar(false)}
-              >
+        {/* Profile Form */}
+        <form onSubmit={handleSubmit}>
+          <div className="rounded-xl border border-gray-200 bg-gray-50 overflow-hidden">
+            {/* Avatar Section */}
+            <div className="p-6 border-b border-gray-200">
+              <label className="font-code text-[10px] uppercase tracking-widest text-gray-500 block mb-4">
+                Profile Photo
+              </label>
+              <div className="flex items-center gap-6">
                 <div
-                  className={`w-32 h-32 rounded-full overflow-hidden ring-4 transition-all duration-300 ${hoveredAvatar ? "ring-toxic/40 scale-105" : "ring-[#1e2233]"}`}
-                  style={{ background: "#0c0d10" }}
+                  className="relative w-20 h-20 rounded-full overflow-hidden cursor-pointer border-2 border-gray-200"
+                  onMouseEnter={() => setHoveredAvatar(true)}
+                  onMouseLeave={() => setHoveredAvatar(false)}
+                  onClick={() => fileInputRef.current?.click()}
                 >
-                  <img
-                    src={avatarSrc}
-                    alt="Profile"
-                    className="w-full h-full object-cover"
-                  />
-                </div>
-                <button
-                  onClick={() => setShowCropper(true)}
-                  className="absolute bottom-1 right-1 w-8 h-8 rounded-full flex items-center justify-center transition-all hover:scale-110"
-                  style={{
-                    background: ACCENT,
-                    color: "#0c0d10",
-                    boxShadow: "0 2px 8px rgba(0,0,0,0.4)",
-                  }}
-                >
-                  <svg
-                    className="w-4 h-4"
-                    fill="none"
-                    stroke="currentColor"
-                    viewBox="0 0 24 24"
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth="2"
-                      d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z"
-                    />
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth="2"
-                      d="M15 13a3 3 0 11-6 0 3 3 0 016 0z"
-                    />
-                  </svg>
-                </button>
-              </div>
-
-              {/* Name & Role */}
-              <div className="flex-1 pt-2">
-                <div className="flex items-center gap-1.5 flex-nowrap whitespace-nowrap">
-                  <h1 className="font-display text-2xl font-black text-slate-100 tracking-tight">
-                    {user?.username || "Unknown Agent"}
-                  </h1>
-                  <VerifiedBadge role={user?.role} size={18} />
-                </div>
-                <p className="font-mono text-xs text-slate-500 mt-1">
-                  {user?.email}
-                </p>
-
-                <div className="flex flex-wrap gap-2 mt-3">
-                  <span
-                    className="px-2.5 py-1 text-[10px] font-bold uppercase tracking-wider rounded-md"
-                    style={{
-                      background: "rgba(34,197,94,0.1)",
-                      border: "1px solid rgba(34,197,94,0.2)",
-                      color: ACCENT,
-                    }}
-                  >
-                    {user?.role || "ANALYST"}
-                  </span>
-                  <span
-                    className="px-2.5 py-1 text-[10px] font-bold uppercase tracking-wider rounded-md"
-                    style={{
-                      background: expertiseBg,
-                      border: `1px solid ${expertiseBorder}`,
-                      color: expertiseColor,
-                    }}
-                  >
-                    {expertiseLevel}
-                  </span>
-                  <span
-                    className="px-2.5 py-1 text-[10px] font-bold uppercase tracking-wider rounded-md"
-                    style={{
-                      background: "rgba(109,40,217,0.1)",
-                      border: "1px solid rgba(109,40,217,0.2)",
-                      color: "#A78BFA",
-                    }}
-                  >
-                    Rep: {reputationScore}
-                  </span>
-                </div>
-              </div>
-
-              {/* Actions */}
-              <div className="flex gap-2 self-end md:self-start md:pt-2">
-                <button
-                  onClick={() => navigate(-1)}
-                  className="flex items-center gap-2 px-3 py-2 rounded-lg font-code text-[10px] uppercase tracking-wider transition-all"
-                  style={{
-                    background: "rgba(10,11,16,0.5)",
-                    border: "1px solid #1E2233",
-                    color: "#64748B",
-                  }}
-                  onMouseEnter={(e) => {
-                    e.currentTarget.style.borderColor = "rgba(34,197,94,0.3)";
-                    e.currentTarget.style.color = ACCENT;
-                  }}
-                  onMouseLeave={(e) => {
-                    e.currentTarget.style.borderColor = "rgba(30,34,51,0.8)";
-                    e.currentTarget.style.color = "#64748B";
-                  }}
-                >
-                  <svg
-                    className="w-3.5 h-3.5"
-                    fill="none"
-                    stroke="currentColor"
-                    viewBox="0 0 24 24"
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth="2"
-                      d="M15 19l-7-7 7-7"
-                    />
-                  </svg>
-                  Back
-                </button>
-                <button
-                  onClick={logout}
-                  className="flex items-center gap-2 px-3 py-2 rounded-lg font-code text-[10px] uppercase tracking-wider transition-all"
-                  style={{
-                    background: "rgba(239,68,68,0.05)",
-                    border: "1px solid rgba(239,68,68,0.2)",
-                    color: "#EF4444",
-                  }}
-                  onMouseEnter={(e) => {
-                    e.currentTarget.style.background = "rgba(239,68,68,0.1)";
-                  }}
-                  onMouseLeave={(e) => {
-                    e.currentTarget.style.background = "rgba(239,68,68,0.05)";
-                  }}
-                >
-                  <svg
-                    className="w-3.5 h-3.5"
-                    fill="none"
-                    stroke="currentColor"
-                    viewBox="0 0 24 24"
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth="2"
-                      d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"
-                    />
-                  </svg>
-                  Logout
-                </button>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        {/* Stats Row */}
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-          {/* Reputation */}
-          <div
-            className="rounded-xl overflow-hidden group"
-            style={{
-              background: "#0A0B10",
-              border: "1px solid #1E2233",
-              transition: "border-color 0.3s",
-            }}
-            onMouseEnter={(e) => {
-              e.currentTarget.style.borderColor = "rgba(34,197,94,0.25)";
-            }}
-            onMouseLeave={(e) => {
-              e.currentTarget.style.borderColor = "#1E2233";
-            }}
-          >
-            <div
-              style={{
-                height: "2px",
-                background: "linear-gradient(to right, #22C55E, transparent)",
-                opacity: 0.6,
-              }}
-            />
-            <div className="p-4">
-              <div className="flex items-center justify-between mb-3">
-                <div
-                  className="w-8 h-8 rounded-lg flex items-center justify-center"
-                  style={{
-                    background: "rgba(34,197,94,0.08)",
-                    border: "1px solid rgba(34,197,94,0.12)",
-                  }}
-                >
-                  <svg
-                    className="w-4 h-4"
-                    fill="none"
-                    stroke="#22C55E"
-                    viewBox="0 0 24 24"
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth="2"
-                      d="M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.519 4.674a1 1 0 00.95.69h4.915c.969 0 1.371 1.24.588 1.81l-3.976 2.888a1 1 0 00-.363 1.118l1.518 4.674c.3.922-.755 1.688-1.538 1.118l-3.976-2.888a1 1 0 00-1.176 0l-3.976 2.888c-.783.57-1.838-.197-1.538-1.118l1.518-4.674a1 1 0 00-.363-1.118l-3.976-2.888c-.784-.57-.38-1.81.588-1.81h4.914a1 1 0 00.951-.69l1.519-4.674z"
-                    />
-                  </svg>
-                </div>
-              </div>
-              <p className="font-display text-2xl font-bold text-slate-100">
-                {reputationScore}
-              </p>
-              <p className="font-body text-[10px] text-slate-500 uppercase tracking-wider mt-1">
-                Reputation
-              </p>
-            </div>
-          </div>
-
-          {/* Total Submissions */}
-          <div
-            className="rounded-xl overflow-hidden"
-            style={{
-              background: "#0A0B10",
-              border: "1px solid #1E2233",
-            }}
-            onMouseEnter={(e) => {
-              e.currentTarget.style.borderColor = "rgba(59,130,246,0.25)";
-            }}
-            onMouseLeave={(e) => {
-              e.currentTarget.style.borderColor = "#1E2233";
-            }}
-          >
-            <div
-              style={{
-                height: "2px",
-                background: "linear-gradient(to right, #3b82f6, transparent)",
-                opacity: 0.6,
-              }}
-            />
-            <div className="p-4">
-              <div className="flex items-center justify-between mb-3">
-                <div
-                  className="w-8 h-8 rounded-lg flex items-center justify-center"
-                  style={{
-                    background: "rgba(59,130,246,0.08)",
-                    border: "1px solid rgba(59,130,246,0.12)",
-                  }}
-                >
-                  <svg
-                    className="w-4 h-4"
-                    fill="none"
-                    stroke="#3b82f6"
-                    viewBox="0 0 24 24"
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth="2"
-                      d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
-                    />
-                  </svg>
-                </div>
-              </div>
-              <p className="font-display text-2xl font-bold text-slate-100">
-                {stats.total_submissions}
-              </p>
-              <p className="font-body text-[10px] text-slate-500 uppercase tracking-wider mt-1">
-                Submissions
-              </p>
-            </div>
-          </div>
-
-          {/* Published */}
-          <div
-            className="rounded-xl overflow-hidden"
-            style={{
-              background: "#0A0B10",
-              border: "1px solid #1E2233",
-            }}
-            onMouseEnter={(e) => {
-              e.currentTarget.style.borderColor = "rgba(139,92,246,0.25)";
-            }}
-            onMouseLeave={(e) => {
-              e.currentTarget.style.borderColor = "#1E2233";
-            }}
-          >
-            <div
-              style={{
-                height: "2px",
-                background: "linear-gradient(to right, #8b5cf6, transparent)",
-                opacity: 0.6,
-              }}
-            />
-            <div className="p-4">
-              <div className="flex items-center justify-between mb-3">
-                <div
-                  className="w-8 h-8 rounded-lg flex items-center justify-center"
-                  style={{
-                    background: "rgba(139,92,246,0.08)",
-                    border: "1px solid rgba(139,92,246,0.12)",
-                  }}
-                >
-                  <svg
-                    className="w-4 h-4"
-                    fill="none"
-                    stroke="#8b5cf6"
-                    viewBox="0 0 24 24"
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth="2"
-                      d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"
-                    />
-                  </svg>
-                </div>
-              </div>
-              <p className="font-display text-2xl font-bold text-slate-100">
-                {stats.published_submissions}
-              </p>
-              <p className="font-body text-[10px] text-slate-500 uppercase tracking-wider mt-1">
-                Published
-              </p>
-            </div>
-          </div>
-
-          {/* Member Since */}
-          <div
-            className="rounded-xl overflow-hidden"
-            style={{
-              background: "#0A0B10",
-              border: "1px solid #1E2233",
-            }}
-            onMouseEnter={(e) => {
-              e.currentTarget.style.borderColor = "rgba(245,158,11,0.25)";
-            }}
-            onMouseLeave={(e) => {
-              e.currentTarget.style.borderColor = "#1E2233";
-            }}
-          >
-            <div
-              style={{
-                height: "2px",
-                background: "linear-gradient(to right, #f59e0b, transparent)",
-                opacity: 0.6,
-              }}
-            />
-            <div className="p-4">
-              <div className="flex items-center justify-between mb-3">
-                <div
-                  className="w-8 h-8 rounded-lg flex items-center justify-center"
-                  style={{
-                    background: "rgba(245,158,11,0.08)",
-                    border: "1px solid rgba(245,158,11,0.12)",
-                  }}
-                >
-                  <svg
-                    className="w-4 h-4"
-                    fill="none"
-                    stroke="#f59e0b"
-                    viewBox="0 0 24 24"
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth="2"
-                      d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"
-                    />
-                  </svg>
-                </div>
-              </div>
-              <p className="font-display text-lg font-bold text-slate-100">
-                {user?.created_at
-                  ? new Date(user.created_at).toLocaleDateString(undefined, {
-                      month: "short",
-                      year: "numeric",
-                    })
-                  : "—"}
-              </p>
-              <p className="font-body text-[10px] text-slate-500 uppercase tracking-wider mt-1">
-                Member Since
-              </p>
-            </div>
-          </div>
-        </div>
-
-        {/* Form Sections */}
-        <form onSubmit={handleSubmit} className="space-y-6">
-          {/* Public Identity */}
-          <div
-            className="rounded-xl overflow-hidden"
-            style={{
-              background: "#0A0B10",
-              border: "1px solid #1E2233",
-            }}
-          >
-            <div
-              style={{
-                height: "2px",
-                background:
-                  "linear-gradient(to right, #22C55E, transparent 60%)",
-              }}
-            />
-            <div className="p-6 space-y-5">
-              <h3 className="font-display text-base font-bold text-slate-100 flex items-center gap-3 pb-3 border-b border-phantom">
-                <span
-                  className="w-7 h-7 rounded-lg flex items-center justify-center"
-                  style={{ background: "rgba(34,197,94,0.1)", color: ACCENT }}
-                >
-                  <svg
-                    className="w-4 h-4"
-                    fill="none"
-                    stroke="currentColor"
-                    viewBox="0 0 24 24"
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth="2"
-                      d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"
-                    />
-                  </svg>
-                </span>
-                Public Identity
-              </h3>
-
-              <div className="space-y-4">
-                <div>
-                  <label className="font-code text-[10px] uppercase tracking-widest block text-slate-500 mb-2">
-                    Full Name
-                  </label>
-                  <input
-                    type="text"
-                    name="full_name"
-                    value={profile.full_name}
-                    onChange={handleChange}
-                    placeholder="e.g., John Doe"
-                    className="w-full px-4 py-3 rounded-lg font-body text-sm transition-all focus:outline-none focus:border-toxic focus:ring-1 focus:ring-toxic/20"
-                    style={{
-                      background: "rgba(10,11,16,0.6)",
-                      border: "1px solid #1E2233",
-                      color: "#F1F5F9",
-                    }}
-                  />
-                </div>
-
-                <div>
-                  <label className="font-code text-[10px] uppercase tracking-widest block text-slate-500 mb-2">
-                    Agent Bio
-                  </label>
-                  <textarea
-                    name="bio"
-                    value={profile.bio}
-                    onChange={handleChange}
-                    placeholder="Describe your background and interests..."
-                    rows="4"
-                    className="w-full px-4 py-3 rounded-lg font-body text-sm transition-all resize-none focus:outline-none focus:border-toxic focus:ring-1 focus:ring-toxic/20"
-                    style={{
-                      background: "rgba(10,11,16,0.6)",
-                      border: "1px solid #1E2233",
-                      color: "#F1F5F9",
-                    }}
-                  />
-                  <p className="font-code text-[9px] text-slate-600 mt-1.5">
-                    {profile.bio.length}/500 characters
-                  </p>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          {/* Specializations */}
-          <div
-            className="rounded-xl overflow-hidden"
-            style={{
-              background: "#0A0B10",
-              border: "1px solid #1E2233",
-            }}
-          >
-            <div
-              style={{
-                height: "2px",
-                background:
-                  "linear-gradient(to right, #3b82f6, transparent 60%)",
-              }}
-            />
-            <div className="p-6 space-y-4">
-              <h3 className="font-display text-base font-bold text-slate-100 flex items-center gap-3 pb-3 border-b border-phantom">
-                <span
-                  className="w-7 h-7 rounded-lg flex items-center justify-center"
-                  style={{
-                    background: "rgba(59,130,246,0.1)",
-                    color: "#3b82f6",
-                  }}
-                >
-                  <svg
-                    className="w-4 h-4"
-                    fill="none"
-                    stroke="currentColor"
-                    viewBox="0 0 24 24"
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth="2"
-                      d="M19.428 15.428a2 2 0 00-1.022-.547l-2.387-.477a6 6 0 00-3.86.517l-.318.158a6 6 0 01-3.86.517L6.05 15.21a2 2 0 00-1.806.547M8 4h8l-1 1v5.172a2 2 0 00.586 1.414l5 5c1.26 1.26.367 3.414-1.415 3.414H4.828c-1.782 0-2.674-2.154-1.414-3.414l5-5A2 2 0 009 10.172V5L8 4z"
-                    />
-                  </svg>
-                </span>
-                Technical Specializations
-              </h3>
-
-              <div className="space-y-4">
-                {/* Tags */}
-                <div className="flex flex-wrap gap-2 min-h-[40px]">
-                  {profile.specializations.length === 0 ? (
-                    <div className="w-full py-3 rounded-lg border border-dashed border-phantom text-center">
-                      <p className="font-mono text-[10px] uppercase tracking-widest text-slate-600">
-                        No specializations registered yet
-                      </p>
+                  <img src={avatarSrc} alt="Avatar" className="w-full h-full object-cover" />
+                  {hoveredAvatar && (
+                    <div className="absolute inset-0 bg-black/40 flex items-center justify-center">
+                      <span className="text-white text-[10px] font-bold uppercase tracking-wider">Change</span>
                     </div>
-                  ) : (
-                    profile.specializations.map((spec) => (
-                      <div
-                        key={spec}
-                        className="group flex items-center gap-2 px-3 py-1.5 rounded-lg transition-all"
-                        style={{
-                          background: "rgba(30,34,51,0.4)",
-                          border: "1px solid rgba(30,34,51,0.6)",
-                          color: "#F1F5F9",
-                        }}
-                        onMouseEnter={(e) => {
-                          e.currentTarget.style.borderColor =
-                            "rgba(34,197,94,0.3)";
-                        }}
-                        onMouseLeave={(e) => {
-                          e.currentTarget.style.borderColor =
-                            "rgba(30,34,51,0.6)";
-                        }}
-                      >
-                        <span className="font-body text-sm">{spec}</span>
-                        <button
-                          type="button"
-                          onClick={() => handleRemoveSpecialization(spec)}
-                          className="opacity-40 group-hover:opacity-100 text-slate-400 hover:text-red-500 transition-all"
-                        >
-                          <svg
-                            className="w-3 h-3"
-                            fill="none"
-                            stroke="currentColor"
-                            viewBox="0 0 24 24"
-                          >
-                            <path
-                              strokeLinecap="round"
-                              strokeLinejoin="round"
-                              strokeWidth="2"
-                              d="M6 18L18 6M6 6l12 12"
-                            />
-                          </svg>
-                        </button>
-                      </div>
-                    ))
                   )}
+                  <input
+                    ref={fileInputRef}
+                    type="file"
+                    accept="image/*"
+                    className="hidden"
+                    onChange={(e) => {
+                      if (e.target.files?.[0]) setShowCropper(true);
+                    }}
+                  />
                 </div>
+                <div>
+                  <p className="font-body text-sm font-semibold text-gray-900">{user?.username || 'Analyst'}</p>
+                  <p className="font-mono text-xs text-gray-500 mt-0.5">{user?.email || ''}</p>
+                  <VerifiedBadge role={user?.role} size={12} />
+                </div>
+              </div>
+            </div>
 
-                {/* Add input */}
-                <div className="flex gap-3">
+            {/* Stats Cards */}
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-px bg-gray-200">
+              <div className="bg-white p-5">
+                <p className="font-display text-2xl font-bold text-gray-900">{stats.total_submissions}</p>
+                <p className="font-body text-xs text-gray-500 mt-1">Total Analyses</p>
+              </div>
+              <div className="bg-white p-5">
+                <p className="font-display text-2xl font-bold text-gray-900">{stats.published_submissions}</p>
+                <p className="font-body text-xs text-gray-500 mt-1">Published</p>
+              </div>
+              <div className="bg-white p-5">
+                <p className="font-display text-2xl font-bold text-gray-900">{stats.pending_submissions}</p>
+                <p className="font-body text-xs text-gray-500 mt-1">Pending Reviews</p>
+              </div>
+            </div>
+
+            {/* Form Fields */}
+            <div className="p-6 space-y-5">
+              {/* Full Name */}
+              <div>
+                <label className="font-code text-[10px] uppercase tracking-widest text-gray-500 block mb-1.5">
+                  Full Name
+                </label>
+                <input
+                  type="text"
+                  name="full_name"
+                  value={profile.full_name}
+                  onChange={handleChange}
+                  placeholder="Enter your full name"
+                  className="w-full px-3 py-2 rounded-lg text-sm border border-gray-200 bg-white text-gray-900 placeholder-gray-400 focus:outline-none focus:border-toxic focus:ring-1 focus:ring-toxic/20 font-body"
+                />
+              </div>
+
+              {/* Bio */}
+              <div>
+                <label className="font-code text-[10px] uppercase tracking-widest text-gray-500 block mb-1.5">
+                  Bio
+                </label>
+                <textarea
+                  name="bio"
+                  value={profile.bio}
+                  onChange={handleChange}
+                  placeholder="Tell us about yourself"
+                  rows={3}
+                  className="w-full px-3 py-2 rounded-lg text-sm border border-gray-200 bg-white text-gray-900 placeholder-gray-400 focus:outline-none focus:border-toxic focus:ring-1 focus:ring-toxic/20 font-body resize-none"
+                />
+              </div>
+
+              {/* Specializations */}
+              <div>
+                <label className="font-code text-[10px] uppercase tracking-widest text-gray-500 block mb-1.5">
+                  Specializations
+                </label>
+                <div className="flex flex-wrap gap-2 mb-2">
+                  {profile.specializations.map((spec) => (
+                    <span
+                      key={spec}
+                      className="inline-flex items-center gap-1 px-2.5 py-1 rounded text-[10px] font-bold uppercase tracking-wider bg-toxic/10 text-toxic border border-toxic/20"
+                    >
+                      {spec}
+                      <button
+                        type="button"
+                        onClick={() => handleRemoveSpecialization(spec)}
+                        className="hover:text-red-500 transition-colors"
+                      >
+                        ×
+                      </button>
+                    </span>
+                  ))}
+                </div>
+                <form onSubmit={handleAddSpecialization} className="flex gap-2">
                   <input
                     type="text"
                     value={specInput}
                     onChange={(e) => setSpecInput(e.target.value)}
-                    onKeyDown={(e) =>
-                      e.key === "Enter" && handleAddSpecialization(e)
-                    }
-                    placeholder="Malware Analysis, Reverse Engineering, Cryptography..."
-                    className="flex-1 px-4 py-2.5 rounded-lg font-body text-sm transition-all focus:outline-none focus:border-toxic focus:ring-1 focus:ring-toxic/20"
-                    style={{
-                      background: "rgba(10,11,16,0.6)",
-                      border: "1px solid #1E2233",
-                      color: "#F1F5F9",
-                    }}
+                    placeholder="Add specialization..."
+                    className="flex-1 px-3 py-2 rounded-lg text-sm border border-gray-200 bg-white text-gray-900 placeholder-gray-400 focus:outline-none focus:border-toxic focus:ring-1 focus:ring-toxic/20 font-body"
                   />
                   <button
-                    type="button"
-                    onClick={handleAddSpecialization}
-                    className="flex items-center gap-1.5 px-5 py-2.5 rounded-lg font-code text-[10px] uppercase tracking-wider transition-all hover:shadow-[0_0_16px_rgba(34,197,94,0.15)]"
-                    style={{
-                      background: ACCENT,
-                      color: "#0c0d10",
-                    }}
-                    onMouseEnter={(e) => {
-                      e.currentTarget.style.background = "#4ADE80";
-                    }}
-                    onMouseLeave={(e) => {
-                      e.currentTarget.style.background = ACCENT;
-                    }}
+                    type="submit"
+                    className="px-3 py-2 rounded-lg font-mono text-[10px] font-bold uppercase tracking-wider bg-toxic text-white hover:bg-toxic/90 transition-all"
                   >
-                    <svg
-                      className="w-3.5 h-3.5"
-                      fill="none"
-                      stroke="currentColor"
-                      viewBox="0 0 24 24"
-                    >
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        strokeWidth="2.5"
-                        d="M12 4v16m8-8H4"
-                      />
-                    </svg>
                     Add
                   </button>
-                </div>
+                </form>
               </div>
             </div>
-          </div>
 
-          {/* Action Bar */}
-          <div
-            className="rounded-xl p-5"
-            style={{
-              background: "#0A0B10",
-              border: "1px solid #1E2233",
-            }}
-          >
-            <div className="flex items-center justify-between">
-              <p className="font-mono text-[10px] text-slate-600 hidden sm:block">
+            {/* Footer */}
+            <div className="px-6 py-4 border-t border-gray-200 flex items-center justify-between">
+              <p className="font-mono text-[10px] text-gray-500">
                 Changes will be propagated across the network.
               </p>
-
               <button
                 type="submit"
                 disabled={saving}
-                className="flex items-center gap-2 px-6 py-2.5 rounded-lg font-mono text-[11px] uppercase tracking-widest transition-all hover:shadow-[0_0_20px_rgba(34,197,94,0.15)] disabled:opacity-50 disabled:cursor-not-allowed"
-                style={{
-                  background: ACCENT,
-                  color: "#0c0d10",
-                }}
-                onMouseEnter={(e) => {
-                  if (!saving) e.currentTarget.style.background = "#4ADE80";
-                }}
-                onMouseLeave={(e) => {
-                  if (!saving) e.currentTarget.style.background = ACCENT;
-                }}
+                className="flex items-center gap-2 px-6 py-2.5 rounded-lg font-mono text-[11px] uppercase tracking-widest transition-all disabled:opacity-50 disabled:cursor-not-allowed bg-toxic text-white hover:bg-toxic/90"
               >
                 {saving ? (
                   <>
-                    <div className="w-4 h-4 border-2 border-[#0c0d10] border-t-transparent rounded-full animate-spin"></div>
-                    Encrypting...
+                    <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                    Saving...
                   </>
                 ) : (
                   <>
-                    <svg
-                      className="w-4 h-4"
-                      fill="none"
-                      stroke="currentColor"
-                      viewBox="0 0 24 24"
-                    >
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        strokeWidth="2.5"
-                        d="M5 13l4 4L19 7"
-                      />
+                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M5 13l4 4L19 7" />
                     </svg>
                     Save Changes
                   </>
