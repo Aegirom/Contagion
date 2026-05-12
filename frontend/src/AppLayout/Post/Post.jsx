@@ -81,6 +81,7 @@ const Post = () => {
   const [isShared, setIsShared] = useState(false);
   const [isSaved, setIsSaved] = useState(false);
   const [shareCount, setShareCount] = useState(0);
+  const [animKey, setAnimKey] = useState(0);
   const [comments, setComments] = useState([]);
   const [newComment, setNewComment] = useState("");
 
@@ -181,7 +182,9 @@ const Post = () => {
       setComments(commentsData);
     } catch (err) {
       if (!post) {
-        setActionError(err.response?.data?.error || "Failed to load analysis report");
+        setActionError(
+          err.response?.data?.error || "Failed to load analysis report",
+        );
       }
     } finally {
       setLoading(false);
@@ -209,6 +212,14 @@ const Post = () => {
   const handleLike = async () => {
     if (!isAuthenticated) return showLoginPrompt();
     if (isNonInteractive) return;
+    const prevIsLiked = isLiked;
+    const prevLikes = likes;
+    const newIsLiked = !isLiked;
+    const newLikes = newIsLiked ? likes + 1 : likes - 1;
+    setIsLiked(newIsLiked);
+    setLikes(newLikes);
+    setAnimKey((k) => k + 1);
+
     try {
       const response = await togglePostLike(postId);
       setIsLiked(response.data.isLiked);
@@ -226,6 +237,8 @@ const Post = () => {
       }
       localStorage.setItem("likedPosts", JSON.stringify(likedPosts));
     } catch (err) {
+      setIsLiked(prevIsLiked);
+      setLikes(prevLikes);
       if (err.response?.status === 401) {
         navigate("/login", { state: { from: `/post/${postId}` } });
       } else {
@@ -317,7 +330,7 @@ const Post = () => {
         reviewer_expertise: user?.expertise_level,
       };
       setUserReview(newReview);
-      setReviews(prev => [...prev, newReview]);
+      setReviews((prev) => [...prev, newReview]);
       if (response.data.xp_gained) {
         addToast(`+${response.data.xp_gained} XP for peer review`, "xp");
       }
@@ -553,13 +566,14 @@ const Post = () => {
                       style={{ color: isLiked ? "#EF4444" : "#4B5563" }}
                     >
                       <svg
+                        key={animKey}
                         width="16"
                         height="16"
                         viewBox="0 0 24 24"
                         fill={isLiked ? "#EF4444" : "none"}
                         stroke="currentColor"
                         strokeWidth="2"
-                        className="transition-transform hover:rotate-12"
+                        className="animate-heart-pop"
                       >
                         <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z" />
                       </svg>
