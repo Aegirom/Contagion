@@ -341,7 +341,7 @@ const Post = () => {
   if (loading) {
     return (
       <main className="flex-1 overflow-auto relative z-10">
-        <div className="max-w-4xl mx-auto py-20 px-4 text-center font-code text-xs uppercase tracking-widest text-slate-500">
+        <div className="max-w-4xl mx-auto py-20 px-4 text-center font-code text-xs uppercase tracking-widest text-gray-600">
           Loading analysis report...
         </div>
       </main>
@@ -372,9 +372,9 @@ const Post = () => {
         <button
           onClick={() => navigate(-1)}
           className="flex items-center gap-2 mb-6 font-code text-xs transition-colors"
-          style={{ color: "#475569" }}
+          style={{ color: "#4B5563" }}
           onMouseEnter={(e) => (e.currentTarget.style.color = "#22C55E")}
-          onMouseLeave={(e) => (e.currentTarget.style.color = "#475569")}
+          onMouseLeave={(e) => (e.currentTarget.style.color = "#4B5563")}
         >
           <svg
             width="16"
@@ -425,7 +425,7 @@ const Post = () => {
               <button
                 onClick={handlePublishToggle}
                 disabled={publishing}
-                className="ml-auto font-code text-[10px] uppercase tracking-wider px-3 py-1 rounded bg-[#22C55E] text-[#0A0B10] disabled:opacity-50"
+                className="ml-auto font-code text-[10px] uppercase tracking-wider px-3 py-1 rounded bg-[#22C55E] text-[#F9FAFB] disabled:opacity-50"
               >
                 {publishing ? "Publishing..." : "Publish Now"}
               </button>
@@ -437,9 +437,9 @@ const Post = () => {
           <div
             className="mb-6 rounded-lg border px-4 py-3 flex items-center gap-3"
             style={{
-              background: "rgba(100,116,139,0.06)",
-              border: "1px solid rgba(100,116,139,0.2)",
-              color: "#64748B",
+              background: "rgba(107,114,128,0.06)",
+              border: "1px solid rgba(107,114,128,0.2)",
+              color: "#374151",
             }}
           >
             <svg
@@ -462,7 +462,7 @@ const Post = () => {
               <button
                 onClick={handleUnarchive}
                 disabled={archiving}
-                className="ml-auto font-code text-[10px] uppercase tracking-wider px-3 py-1 rounded bg-[#22C55E] text-[#0A0B10] disabled:opacity-50"
+                className="ml-auto font-code text-[10px] uppercase tracking-wider px-3 py-1 rounded bg-[#22C55E] text-[#F9FAFB] disabled:opacity-50"
               >
                 {archiving ? "Unarchiving..." : "Unarchive"}
               </button>
@@ -475,8 +475,8 @@ const Post = () => {
             <div
               className="rounded-xl p-6 border animate-fade-up"
               style={{
-                background: "rgba(12,13,20,0.8)",
-                border: "1px solid rgba(30,34,51,0.8)",
+                background: "rgba(255,255,255,0.8)",
+                border: "1px solid rgba(229,231,235,0.8)",
                 backdropFilter: "blur(16px)",
               }}
             >
@@ -484,13 +484,13 @@ const Post = () => {
                 <div>
                   <h2
                     className="font-display text-2xl font-bold"
-                    style={{ color: "#F1F5F9" }}
+                    style={{ color: "#111827" }}
                   >
                     {post.title}
                   </h2>
                   <p
                     className="font-code text-xs mt-2"
-                    style={{ color: "#475569" }}
+                    style={{ color: "#4B5563" }}
                   >
                     SUBMITTED BY{" "}
                     <span style={{ color: "#22C55E" }}>{post.username}</span>
@@ -502,7 +502,7 @@ const Post = () => {
                       onClick={handleLike}
                       disabled={isNonInteractive}
                       className="flex items-center gap-2 font-code text-xs transition-all hover:scale-105 disabled:opacity-30 disabled:cursor-not-allowed disabled:hover:scale-100"
-                      style={{ color: isLiked ? "#EF4444" : "#475569" }}
+                      style={{ color: isLiked ? "#EF4444" : "#4B5563" }}
                     >
                       <svg
                         width="16"
@@ -520,7 +520,7 @@ const Post = () => {
                     <button
                       disabled={isNonInteractive}
                       className="flex items-center gap-2 font-code text-xs transition-all hover:scale-105 disabled:opacity-30 disabled:cursor-not-allowed disabled:hover:scale-100"
-                      style={{ color: "#475569" }}
+                      style={{ color: "#4B5563" }}
                     >
                       <svg
                         width="16"
@@ -538,7 +538,7 @@ const Post = () => {
                       onClick={handleShare}
                       disabled={isNonInteractive}
                       className="flex items-center gap-2 font-code text-xs transition-all hover:scale-105 disabled:opacity-30 disabled:cursor-not-allowed disabled:hover:scale-100"
-                      style={{ color: isShared ? "#22C55E" : "#475569" }}
+                      style={{ color: isShared ? "#22C55E" : "#4B5563" }}
                     >
                       <svg
                         width="16"
@@ -556,7 +556,7 @@ const Post = () => {
                       onClick={handleSave}
                       disabled={isNonInteractive}
                       className="flex items-center gap-2 font-code text-xs transition-all hover:scale-105 disabled:opacity-30 disabled:cursor-not-allowed disabled:hover:scale-100"
-                      style={{ color: isSaved ? "#F59E0B" : "#475569" }}
+                      style={{ color: isSaved ? "#F59E0B" : "#4B5563" }}
                     >
                       <svg
                         width="16"
@@ -580,7 +580,7 @@ const Post = () => {
                     </span>
                   )}
                   {isArchived && (
-                    <span className="px-2 py-0.5 rounded font-code text-[9px] tracking-widest border border-slate-500/20 bg-slate-500/10 text-slate-400">
+                    <span className="px-2 py-0.5 rounded font-code text-[9px] tracking-widest border border-gray-300 bg-gray-100 text-gray-600">
                       ARCHIVED
                     </span>
                   )}
@@ -589,10 +589,10 @@ const Post = () => {
               </div>
 
               <div className="space-y-4">
-                <div className="p-4 rounded-lg bg-[#0A0B10] border border-white/5">
+                <div className="p-4 rounded-lg bg-[#F9FAFB] border border-gray-200">
                   <span
                     className="font-code text-[10px] uppercase tracking-widest block mb-2"
-                    style={{ color: "#475569" }}
+                    style={{ color: "#4B5563" }}
                   >
                     SHA-256 HASH
                   </span>
@@ -605,13 +605,13 @@ const Post = () => {
                 </div>
                 <p
                   className="font-body text-sm leading-relaxed whitespace-pre-wrap"
-                  style={{ color: "#94A3B8" }}
+                  style={{ color: "#374151" }}
                 >
                   {post.content}
                 </p>
 
                 {/* Comments Section */}
-                <div className="mt-8 pt-6 border-t border-[rgba(30,34,51,0.5)]">
+                <div className="mt-8 pt-6 border-t border-[rgba(229,231,235,0.5)]">
                   {/* Comment Form - Always Visible */}
                   {!isNonInteractive && (
                     <form onSubmit={handleAddComment} className="mb-6">
@@ -620,14 +620,14 @@ const Post = () => {
                           value={newComment}
                           onChange={(e) => setNewComment(e.target.value)}
                           placeholder="Write your insight..."
-                          className="w-full px-4 py-3 rounded-lg font-body text-sm bg-[#0A0B10] border border-[rgba(30,34,51,0.8)] text-[#F1F5F9] placeholder-slate-500 focus:outline-none focus:border-toxic focus:ring-1 focus:ring-toxic/20 resize-none"
+                          className="w-full px-4 py-3 rounded-lg font-body text-sm bg-[#F9FAFB] border border-[rgba(229,231,235,0.8)] text-[#111827] placeholder-gray-500 focus:outline-none focus:border-toxic focus:ring-1 focus:ring-toxic/20 resize-none"
                           rows="3"
                         />
                         <div className="flex justify-end gap-2 mt-2">
                           <button
                             type="submit"
                             disabled={!newComment.trim()}
-                            className="px-4 py-2 rounded-lg font-code text-xs uppercase tracking-wider transition-all bg-[#22C55E] text-[#0A0B10] disabled:opacity-50 hover:bg-[#4ADE80]"
+                            className="px-4 py-2 rounded-lg font-code text-xs uppercase tracking-wider transition-all bg-[#22C55E] text-[#F9FAFB] disabled:opacity-50 hover:bg-[#4ADE80]"
                           >
                             Post
                           </button>
@@ -638,7 +638,7 @@ const Post = () => {
 
                   <h3
                     className="font-display text-sm font-bold uppercase tracking-wider mb-4"
-                    style={{ color: "#F1F5F9" }}
+                    style={{ color: "#111827" }}
                   >
                     Comments ({comments.length})
                   </h3>
@@ -647,7 +647,7 @@ const Post = () => {
                   {isNonInteractive ? (
                     <p
                       className="text-center font-code text-xs py-4"
-                      style={{ color: "#475569" }}
+                      style={{ color: "#4B5563" }}
                     >
                       {isArchived
                         ? "This analysis is archived. Comments are disabled."
@@ -660,8 +660,8 @@ const Post = () => {
                           key={comment.comment_id}
                           className="p-4 rounded-lg"
                           style={{
-                            background: "rgba(10,11,16,0.6)",
-                            border: "1px solid rgba(30,34,51,0.6)",
+                            background: "rgba(249,250,251,0.6)",
+                            border: "1px solid rgba(229,231,235,0.6)",
                           }}
                         >
                           <div className="flex items-center gap-2 mb-2">
@@ -676,14 +676,14 @@ const Post = () => {
                             </div>
                             <span
                               className="font-body text-sm font-semibold"
-                              style={{ color: "#F1F5F9" }}
+                              style={{ color: "#111827" }}
                             >
                               {comment.username}
                             </span>
                             <VerifiedBadge role={comment.role} size={14} />
                             <span
                               className="font-code text-[10px]"
-                              style={{ color: "#475569" }}
+                              style={{ color: "#4B5563" }}
                             >
                               • {new Date(comment.created_at).toLocaleString()}
                             </span>
@@ -700,7 +700,7 @@ const Post = () => {
                           </div>
                           <p
                             className="font-body text-sm pl-8"
-                            style={{ color: "#94A3B8" }}
+                            style={{ color: "#374151" }}
                           >
                             {comment.content}
                           </p>
@@ -710,7 +710,7 @@ const Post = () => {
                       {comments.length === 0 && (
                         <p
                           className="text-center font-code text-xs"
-                          style={{ color: "#475569" }}
+                          style={{ color: "#4B5563" }}
                         >
                           No comments yet. Be the first to share your insights.
                         </p>
@@ -740,7 +740,7 @@ const Post = () => {
                   <button
                     onClick={handleRunSandbox}
                     disabled={running || isArchived}
-                    className="rounded-lg bg-[#22C55E] px-5 py-3 font-display text-xs font-bold uppercase tracking-[0.2em] text-[#0A0B10] disabled:opacity-50 disabled:cursor-not-allowed"
+                    className="rounded-lg bg-[#22C55E] px-5 py-3 font-display text-xs font-bold uppercase tracking-[0.2em] text-[#F9FAFB] disabled:opacity-50 disabled:cursor-not-allowed"
                   >
                     {running ? "Running Sandbox..." : "Run Sandbox"}
                   </button>
@@ -751,8 +751,8 @@ const Post = () => {
                     disabled={publishing}
                     className={`rounded-lg px-5 py-3 font-display text-xs font-bold uppercase tracking-[0.2em] disabled:opacity-50 transition-all ${
                       post.status === "Published"
-                        ? "bg-[#1E2233] text-[#64748B] hover:bg-[#252B3D]"
-                        : "bg-[#22C55E] text-[#0A0B10] hover:bg-[#4ADE80]"
+                        ? "bg-[#E5E7EB] text-[#374151] hover:bg-[#D1D5DB]"
+                        : "bg-[#22C55E] text-[#F9FAFB] hover:bg-[#4ADE80]"
                     }`}
                   >
                     {publishing
@@ -768,7 +768,7 @@ const Post = () => {
                     disabled={archiving}
                     className={`rounded-lg px-5 py-3 font-display text-xs font-bold uppercase tracking-[0.2em] disabled:opacity-50 disabled:cursor-not-allowed transition-all ${
                       isArchived
-                        ? "bg-[#22C55E] text-[#0A0B10] hover:bg-[#4ADE80]"
+                        ? "bg-[#22C55E] text-[#F9FAFB] hover:bg-[#4ADE80]"
                         : "bg-[#3F1216] text-[#EF4444] hover:bg-[#4A1519]"
                     }`}
                   >
@@ -787,28 +787,28 @@ const Post = () => {
             <div
               className="rounded-xl overflow-hidden border animate-fade-up"
               style={{
-                background: "rgba(12,13,20,0.8)",
-                border: "1px solid rgba(30,34,51,0.8)",
+                background: "rgba(255,255,255,0.8)",
+                border: "1px solid rgba(229,231,235,0.8)",
                 backdropFilter: "blur(16px)",
                 animationDelay: "100ms",
               }}
             >
-              <div className="px-6 py-4 border-b border-[rgba(30,34,51,0.5)] bg-white/5 flex items-center justify-between">
+              <div className="px-6 py-4 border-b border-[rgba(229,231,235,0.5)] bg-gray-50 flex items-center justify-between">
                 <h3
                   className="font-display text-sm font-bold uppercase tracking-wider"
-                  style={{ color: "#F1F5F9" }}
+                  style={{ color: "#111827" }}
                 >
                   Behavioral Indicators
                 </h3>
-                <span className="font-code text-[10px] text-slate-500">
+                <span className="font-code text-[10px] text-gray-600">
                   {logs.length} entries
                 </span>
               </div>
-              <div className="divide-y divide-[rgba(30,34,51,0.3)] max-h-[280px] overflow-y-auto">
+              <div className="divide-y divide-[rgba(229,231,235,0.3)] max-h-[280px] overflow-y-auto">
                 {logs.map((log) => (
                   <div
                     key={log.log_id}
-                    className="px-6 py-3 flex items-center justify-between gap-4 hover:bg-white/5 transition-colors"
+                    className="px-6 py-3 flex items-center justify-between gap-4 hover:bg-gray-100 transition-colors"
                   >
                     <div className="min-w-0 flex-1">
                       <span className="font-code text-[10px] text-[#22C55E] uppercase tracking-widest block mb-0.5">
@@ -816,7 +816,7 @@ const Post = () => {
                       </span>
                       <p
                         className="font-body text-xs truncate"
-                        style={{ color: "#94A3B8" }}
+                        style={{ color: "#374151" }}
                       >
                         {summarizeLog(log)}
                       </p>
@@ -828,7 +828,7 @@ const Post = () => {
                 ))}
 
                 {logs.length === 0 && (
-                  <div className="px-6 py-10 text-center font-code text-xs uppercase tracking-widest text-slate-600">
+                  <div className="px-6 py-10 text-center font-code text-xs uppercase tracking-widest text-gray-500">
                     No behavioral logs captured yet.
                   </div>
                 )}
@@ -840,15 +840,15 @@ const Post = () => {
             <div
               className="rounded-xl p-6 border animate-fade-up"
               style={{
-                background: "rgba(12,13,20,0.8)",
-                border: "1px solid rgba(30,34,51,0.8)",
+                background: "rgba(255,255,255,0.8)",
+                border: "1px solid rgba(229,231,235,0.8)",
                 backdropFilter: "blur(16px)",
                 animationDelay: "200ms",
               }}
             >
               <h3
                 className="font-display text-xs font-bold uppercase tracking-widest mb-6"
-                style={{ color: "#475569" }}
+                style={{ color: "#4B5563" }}
               >
                 Sandbox Score
               </h3>
@@ -862,7 +862,7 @@ const Post = () => {
                       stroke="currentColor"
                       strokeWidth="8"
                       fill="transparent"
-                      className="text-white/5"
+                      className="text-gray-200"
                     />
                     <circle
                       cx="64"
@@ -884,11 +884,11 @@ const Post = () => {
                   <div className="absolute flex flex-col items-center">
                     <span
                       className="font-display text-3xl font-bold"
-                      style={{ color: "#F1F5F9" }}
+                      style={{ color: "#111827" }}
                     >
                       {score}
                     </span>
-                    <span className="font-code text-[10px] text-[#475569]">
+                    <span className="font-code text-[10px] text-[#4B5563]">
                       / 100
                     </span>
                   </div>
@@ -905,15 +905,15 @@ const Post = () => {
             <div
               className="rounded-xl p-6 border animate-fade-up"
               style={{
-                background: "rgba(12,13,20,0.8)",
-                border: "1px solid rgba(30,34,51,0.8)",
+                background: "rgba(255,255,255,0.8)",
+                border: "1px solid rgba(229,231,235,0.8)",
                 backdropFilter: "blur(16px)",
                 animationDelay: "300ms",
               }}
             >
               <h3
                 className="font-display text-xs font-bold uppercase tracking-widest mb-4"
-                style={{ color: "#475569" }}
+                style={{ color: "#4B5563" }}
               >
                 Artifact Metadata
               </h3>
@@ -937,13 +937,13 @@ const Post = () => {
                   >
                     <span
                       className="font-code text-[10px]"
-                      style={{ color: "#475569" }}
+                      style={{ color: "#4B5563" }}
                     >
                       {item.label}
                     </span>
                     <span
                       className="font-code text-xs text-right break-all"
-                      style={{ color: "#F1F5F9" }}
+                      style={{ color: "#111827" }}
                     >
                       {item.value}
                     </span>

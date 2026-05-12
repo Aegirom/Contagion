@@ -121,7 +121,7 @@ const ScoreSlider = ({ category, value, onChange }) => {
           }}
         >
           {value}
-          <span className="text-[11px] font-normal text-slate-500 ml-0.5">/10</span>
+          <span className="text-[11px] font-normal text-gray-600 ml-0.5">/10</span>
         </div>
       </div>
 
@@ -132,7 +132,7 @@ const ScoreSlider = ({ category, value, onChange }) => {
         onChange(Math.max(1, Math.min(10, Math.round(raw))));
       }}>
         {/* Background track */}
-        <div className="absolute inset-y-4 left-0 right-0 rounded-full" style={{ background: "rgba(30,34,51,0.7)" }} />
+        <div className="absolute inset-y-4 left-0 right-0 rounded-full" style={{ background: "rgba(229,231,235,0.7)" }} />
 
         {/* Filled track */}
         <div
@@ -164,12 +164,12 @@ const ScoreSlider = ({ category, value, onChange }) => {
                     ? category.color
                     : isActive
                     ? `${category.color}CC`
-                    : "rgba(30,34,51,0.5)",
+                    : "rgba(229,231,235,0.5)",
                   border: isCurrent
                     ? `2px solid ${category.color}`
                     : isActive
                     ? "none"
-                    : "1px solid rgba(60,65,85,0.5)",
+                    : "1px solid rgba(156,163,175,0.5)",
                   boxShadow: isCurrent ? `0 0 12px ${category.color}50, 0 0 4px ${category.color}30` : "none",
                   zIndex: isCurrent ? 3 : isActive ? 2 : 1,
                   cursor: "pointer",
@@ -186,7 +186,7 @@ const ScoreSlider = ({ category, value, onChange }) => {
                 }}
                 onMouseLeave={(e) => {
                   if (!isActive) {
-                    e.currentTarget.style.background = "rgba(30,34,51,0.5)";
+                    e.currentTarget.style.background = "rgba(229,231,235,0.5)";
                     e.currentTarget.style.transform = "translateX(-50%) scale(1)";
                   }
                 }}
@@ -198,9 +198,9 @@ const ScoreSlider = ({ category, value, onChange }) => {
 
       {/* Score labels */}
       <div className="flex justify-between px-0.5">
-        <span className="font-code text-[8px] text-slate-600">1</span>
-        <span className="font-code text-[8px] text-slate-600">5</span>
-        <span className="font-code text-[8px] text-slate-600">10</span>
+        <span className="font-code text-[8px] text-gray-500">1</span>
+        <span className="font-code text-[8px] text-gray-500">5</span>
+        <span className="font-code text-[8px] text-gray-500">10</span>
       </div>
 
       {/* Guide text */}
@@ -209,7 +209,7 @@ const ScoreSlider = ({ category, value, onChange }) => {
         style={{
           background: `${category.color}06`,
           borderLeft: `2px solid ${category.color}40`,
-          color: "#94A3B8",
+          color: "#374151",
         }}
       >
         {category.guide[labelIdx]}
@@ -221,14 +221,14 @@ const ScoreSlider = ({ category, value, onChange }) => {
 const ReviewScoreBar = ({ label, value, color, max = 10 }) => (
   <div className="space-y-1">
     <div className="flex justify-between items-center">
-      <span className="font-code text-[9px] uppercase tracking-wider" style={{ color: "#64748B" }}>
+      <span className="font-code text-[9px] uppercase tracking-wider" style={{ color: "#374151" }}>
         {label}
       </span>
       <span className="font-display text-xs font-bold" style={{ color }}>
         {value}/{max}
       </span>
     </div>
-    <div className="h-1.5 rounded-full overflow-hidden" style={{ background: "rgba(30,34,51,0.6)" }}>
+    <div className="h-1.5 rounded-full overflow-hidden" style={{ background: "rgba(229,231,235,0.6)" }}>
       <div
         className="h-full rounded-full transition-all duration-500"
         style={{ width: `${(value / max) * 100}%`, background: color }}
@@ -260,12 +260,12 @@ const ReviewCard = ({ review }) => {
     <div
       className="rounded-lg overflow-hidden transition-all duration-300"
       style={{
-        background: "rgba(10,11,16,0.5)",
-        border: "1px solid rgba(30,34,51,0.6)",
+        background: "rgba(249,250,251,0.5)",
+        border: "1px solid rgba(229,231,235,0.6)",
       }}
     >
       {/* Header */}
-      <div className="px-4 py-3 flex items-center gap-3" style={{ borderBottom: "1px solid rgba(30,34,51,0.4)" }}>
+      <div className="px-4 py-3 flex items-center gap-3" style={{ borderBottom: "1px solid rgba(229,231,235,0.4)" }}>
         <div
           className="w-8 h-8 rounded-full flex items-center justify-center font-display text-xs font-bold flex-shrink-0"
           style={{ background: "rgba(139,92,246,0.15)", color: "#A78BFA" }}
@@ -274,7 +274,7 @@ const ReviewCard = ({ review }) => {
         </div>
         <div className="flex-1 min-w-0">
           <div className="flex items-center gap-2 flex-wrap">
-            <span className="font-body text-sm font-semibold" style={{ color: "#F1F5F9" }}>
+            <span className="font-body text-sm font-semibold" style={{ color: "#111827" }}>
               {review.reviewer_username}
             </span><VerifiedBadge role={review.reviewer_role} size={14} />
             {review.reviewer_expertise && (
@@ -288,7 +288,7 @@ const ReviewCard = ({ review }) => {
             )}
             <ReviewQualityBadge avgScore={avgScore} />
           </div>
-          <span className="font-code text-[9px] text-slate-500">
+          <span className="font-code text-[9px] text-gray-600">
             {new Date(review.reviewed_at).toLocaleDateString(undefined, { month: "short", day: "numeric", year: "numeric" })}
           </span>
         </div>
@@ -296,12 +296,12 @@ const ReviewCard = ({ review }) => {
           <span className="font-display text-lg font-black" style={{ color: "#A78BFA" }}>
             {avgScore.toFixed(1)}
           </span>
-          <span className="font-code text-[8px] text-slate-500 block">/10</span>
+          <span className="font-code text-[8px] text-gray-600 block">/10</span>
         </div>
       </div>
 
       {/* Score Bars */}
-      <div className="px-4 py-3 grid grid-cols-2 gap-x-4 gap-y-2" style={{ background: "rgba(0,0,0,0.15)" }}>
+      <div className="px-4 py-3 grid grid-cols-2 gap-x-4 gap-y-2" style={{ background: "rgba(0,0,0,0.03)" }}>
         <ReviewScoreBar label="Technical" value={review.technical_score} color={ACCENT} />
         <ReviewScoreBar label="Methodology" value={review.methodology_score} color="#3b82f6" />
         <ReviewScoreBar label="Documentation" value={review.documentation_score} color="#f59e0b" />
@@ -310,7 +310,7 @@ const ReviewCard = ({ review }) => {
 
       {/* Comments */}
       <div className="px-4 py-3">
-        <p className="font-body text-sm leading-relaxed" style={{ color: "#94A3B8" }}>
+        <p className="font-body text-sm leading-relaxed" style={{ color: "#374151" }}>
           {!isShort && !expanded
             ? review.comments.substring(0, 120) + "..."
             : review.comments}
@@ -356,11 +356,11 @@ const PeerReviewForm = ({ onSubmit, onCancel, submitting }) => {
 
   return (
     <form onSubmit={handleSubmit} className="rounded-lg overflow-hidden" style={{
-      background: "rgba(10,11,16,0.8)",
+      background: "rgba(249,250,251,0.8)",
       border: "1px solid rgba(139,92,246,0.2)",
     }}>
       {/* Header */}
-      <div className="px-5 py-4 flex items-center justify-between" style={{ borderBottom: "1px solid rgba(30,34,51,0.5)" }}>
+      <div className="px-5 py-4 flex items-center justify-between" style={{ borderBottom: "1px solid rgba(229,231,235,0.5)" }}>
         <div className="flex items-center gap-3">
           <div className="w-8 h-8 rounded-lg flex items-center justify-center" style={{ background: "rgba(139,92,246,0.1)", color: PURPLE }}>
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
@@ -368,15 +368,15 @@ const PeerReviewForm = ({ onSubmit, onCancel, submitting }) => {
             </svg>
           </div>
           <div>
-            <h4 className="font-display text-sm font-bold" style={{ color: "#F1F5F9" }}>Peer Review</h4>
-            <p className="font-code text-[9px] text-slate-500">Score each dimension 1-10</p>
+            <h4 className="font-display text-sm font-bold" style={{ color: "#111827" }}>Peer Review</h4>
+            <p className="font-code text-[9px] text-gray-600">Score each dimension 1-10</p>
           </div>
         </div>
         <div className="text-center px-3 py-1.5 rounded-lg" style={{ background: "rgba(139,92,246,0.08)" }}>
           <span className="font-display text-xl font-black" style={{ color: "#A78BFA" }}>
             {avgScore.toFixed(1)}
           </span>
-          <span className="font-code text-[8px] text-slate-500 block">avg</span>
+          <span className="font-code text-[8px] text-gray-600 block">avg</span>
         </div>
       </div>
 
@@ -394,10 +394,10 @@ const PeerReviewForm = ({ onSubmit, onCancel, submitting }) => {
         {/* Comments */}
         <div>
           <div className="flex items-center justify-between mb-2">
-            <span className="font-code text-[10px] uppercase tracking-wider" style={{ color: "#64748B" }}>
+            <span className="font-code text-[10px] uppercase tracking-wider" style={{ color: "#374151" }}>
               Detailed Review
             </span>
-            <span className={`font-code text-[10px] ${comments.trim().length >= 10 ? "text-slate-500" : "text-red-400"}`}>
+            <span className={`font-code text-[10px] ${comments.trim().length >= 10 ? "text-gray-600" : "text-red-400"}`}>
               {comments.trim().length}/10 min
             </span>
           </div>
@@ -407,19 +407,19 @@ const PeerReviewForm = ({ onSubmit, onCancel, submitting }) => {
             placeholder="Provide detailed feedback on the analysis quality, strengths, weaknesses, and suggestions for improvement..."
             rows="5"
             className="w-full px-4 py-3 rounded-lg font-body text-sm focus:outline-none focus:border-purple-500 focus:ring-1 focus:ring-purple-500/20 resize-none transition-all"
-            style={{ background: "rgba(10,11,16,0.8)", border: "1px solid rgba(30,34,51,0.8)", color: "#F1F5F9" }}
+            style={{ background: "rgba(249,250,251,0.8)", border: "1px solid rgba(229,231,235,0.8)", color: "#111827" }}
           />
           {error && <p className="font-code text-[10px] text-red-400 mt-1">{error}</p>}
         </div>
       </div>
 
       {/* Actions */}
-      <div className="px-5 py-4 flex items-center justify-between gap-3" style={{ borderTop: "1px solid rgba(30,34,51,0.5)" }}>
+      <div className="px-5 py-4 flex items-center justify-between gap-3" style={{ borderTop: "1px solid rgba(229,231,235,0.5)" }}>
         <button
           type="button"
           onClick={onCancel}
           className="px-4 py-2 rounded-lg font-code text-xs uppercase tracking-wider transition-colors"
-          style={{ color: "#64748B" }}
+          style={{ color: "#374151" }}
         >
           Cancel
         </button>
@@ -458,10 +458,10 @@ const PeerReviewSection = ({ reviews, aggregate, hasReviewed, userReview, isAuth
   const hasReviews = reviews.length > 0;
 
   return (
-    <div className="mt-8 pt-6 border-t border-[rgba(30,34,51,0.5)]">
+    <div className="mt-8 pt-6 border-t border-[rgba(229,231,235,0.5)]">
       {/* Header */}
       <div className="flex items-center justify-between mb-3 flex-wrap gap-3">
-        <h3 className="font-display text-sm font-bold uppercase tracking-wider flex items-center gap-2" style={{ color: "#F1F5F9" }}>
+        <h3 className="font-display text-sm font-bold uppercase tracking-wider flex items-center gap-2" style={{ color: "#111827" }}>
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke={PURPLE} strokeWidth="2">
             <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" />
             <circle cx="9" cy="7" r="4" />
@@ -475,7 +475,7 @@ const PeerReviewSection = ({ reviews, aggregate, hasReviewed, userReview, isAuth
         </h3>
 
         {!collapsed && reviews.length > 1 && (
-          <div className="flex gap-1" style={{ background: "rgba(10,11,16,0.5)", borderRadius: "6px", padding: "2px" }}>
+          <div className="flex gap-1" style={{ background: "rgba(249,250,251,0.5)", borderRadius: "6px", padding: "2px" }}>
             {[
               { key: "newest", label: "Newest" },
               { key: "highest", label: "Highest" },
@@ -487,7 +487,7 @@ const PeerReviewSection = ({ reviews, aggregate, hasReviewed, userReview, isAuth
                 className="px-3 py-1 rounded font-code text-[9px] uppercase tracking-wider transition-all"
                 style={{
                   background: sortBy === opt.key ? "rgba(139,92,246,0.15)" : "transparent",
-                  color: sortBy === opt.key ? "#A78BFA" : "#64748B",
+                  color: sortBy === opt.key ? "#A78BFA" : "#374151",
                 }}
               >
                 {opt.label}
@@ -500,9 +500,9 @@ const PeerReviewSection = ({ reviews, aggregate, hasReviewed, userReview, isAuth
           onClick={() => setCollapsed(!collapsed)}
           className="flex items-center gap-2 px-3 py-1.5 rounded-lg font-code text-[10px] uppercase tracking-wider transition-all"
           style={{
-            background: collapsed ? "rgba(139,92,246,0.1)" : "rgba(10,11,16,0.5)",
-            border: `1px solid ${collapsed ? "rgba(139,92,246,0.2)" : "rgba(30,34,51,0.5)"}`,
-            color: collapsed ? "#A78BFA" : "#64748B",
+            background: collapsed ? "rgba(139,92,246,0.1)" : "rgba(249,250,251,0.5)",
+            border: `1px solid ${collapsed ? "rgba(139,92,246,0.2)" : "rgba(229,231,235,0.5)"}`,
+            color: collapsed ? "#A78BFA" : "#374151",
           }}
         >
           {collapsed ? "Show reviews" : "Hide reviews"}
@@ -553,7 +553,7 @@ const PeerReviewSection = ({ reviews, aggregate, hasReviewed, userReview, isAuth
                 <span className="font-display text-xl font-black" style={{ color: "#A78BFA" }}>
                   {aggregate.averageScores.overall}
                 </span>
-                <span className="font-code text-[7px] text-slate-500">/10</span>
+                <span className="font-code text-[7px] text-gray-600">/10</span>
               </div>
             </div>
 
@@ -566,11 +566,11 @@ const PeerReviewSection = ({ reviews, aggregate, hasReviewed, userReview, isAuth
             </div>
 
             {/* Review Count */}
-            <div className="text-center flex-shrink-0 px-4 py-2 rounded-lg" style={{ background: "rgba(10,11,16,0.4)" }}>
-              <span className="font-display text-lg font-bold" style={{ color: "#F1F5F9" }}>
+            <div className="text-center flex-shrink-0 px-4 py-2 rounded-lg" style={{ background: "rgba(249,250,251,0.4)" }}>
+              <span className="font-display text-lg font-bold" style={{ color: "#111827" }}>
                 {aggregate.reviewCount}
               </span>
-              <span className="font-code text-[8px] text-slate-500 uppercase block">reviews</span>
+              <span className="font-code text-[8px] text-gray-600 uppercase block">reviews</span>
             </div>
           </div>
         </div>
@@ -599,7 +599,7 @@ const PeerReviewSection = ({ reviews, aggregate, hasReviewed, userReview, isAuth
       {/* Author view */}
       {isAuthor && reviews.length === 0 && (
         <div className="mb-5 rounded-lg p-6 text-center border border-dashed" style={{ borderColor: "rgba(139,92,246,0.15)" }}>
-          <p className="font-code text-xs" style={{ color: "#64748B" }}>Peer reviews from other analysts will appear here once published submissions receive community feedback.</p>
+          <p className="font-code text-xs" style={{ color: "#374151" }}>Peer reviews from other analysts will appear here once published submissions receive community feedback.</p>
         </div>
       )}
 
@@ -609,8 +609,8 @@ const PeerReviewSection = ({ reviews, aggregate, hasReviewed, userReview, isAuth
           <ReviewCard key={review.review_id} review={review} />
         ))}
         {sortedReviews.length === 0 && !isAuthenticated && (
-          <div className="py-8 text-center border border-dashed rounded-lg" style={{ borderColor: "rgba(30,34,51,0.5)" }}>
-            <p className="font-code text-xs" style={{ color: "#64748B" }}>No peer reviews yet. Be the first to review this analysis.</p>
+          <div className="py-8 text-center border border-dashed rounded-lg" style={{ borderColor: "rgba(229,231,235,0.5)" }}>
+            <p className="font-code text-xs" style={{ color: "#374151" }}>No peer reviews yet. Be the first to review this analysis.</p>
           </div>
         )}
       </div>

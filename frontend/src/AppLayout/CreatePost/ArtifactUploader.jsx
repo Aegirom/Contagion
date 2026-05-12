@@ -20,7 +20,7 @@ function ArtifactUploader() {
 
   return (
     <div className="space-y-3">
-      <label className="font-code text-[10px] uppercase tracking-widest block" style={{ color: '#475569' }}>
+      <label className="font-code text-[10px] uppercase tracking-widest block" style={{ color: '#9CA3AF' }}>
         Malware Artifact
       </label>
 
@@ -30,7 +30,7 @@ function ArtifactUploader() {
         onDrop={handleDrop}
         onDragOver={(event) => event.preventDefault()}
         className="w-full rounded-lg border border-dashed px-4 py-6 text-left transition-all hover:border-[#22C55E]/40"
-        style={{ background: '#0A0B10', borderColor: 'rgba(30,34,51,0.9)' }}
+        style={{ background: '#F9FAFB', borderColor: 'rgba(229,231,235,0.9)' }}
       >
         <input
           ref={inputRef}
@@ -41,10 +41,10 @@ function ArtifactUploader() {
 
         <div className="flex items-center justify-between gap-4">
           <div>
-            <p className="font-display text-sm font-bold" style={{ color: '#F1F5F9' }}>
+            <p className="font-display text-sm font-bold" style={{ color: '#111827' }}>
               {selectedFile ? selectedFile.name : 'Drop artifact here or browse'}
             </p>
-            <p className="mt-1 font-code text-[10px]" style={{ color: '#64748B' }}>
+            <p className="mt-1 font-code text-[10px]" style={{ color: '#6B7280' }}>
               {selectedFile ? `${formatBytes(selectedFile.size)} • ${selectedFile.type || 'application/octet-stream'}` : 'Uploaded to Cloudflare R2 quarantine storage'}
             </p>
           </div>
@@ -55,12 +55,12 @@ function ArtifactUploader() {
       </button>
 
       {uploadStatus !== 'idle' && uploadStatus !== 'selected' && (
-        <div className="rounded border border-[rgba(30,34,51,0.8)] bg-[#050508] p-3">
+        <div className="rounded border border-[rgba(229,231,235,0.8)] bg-[#FFFFFF] p-3">
           <div className="flex items-center justify-between font-code text-[10px] uppercase tracking-widest">
-            <span style={{ color: '#94A3B8' }}>{uploadStatus}</span>
+            <span style={{ color: '#6B7280' }}>{uploadStatus}</span>
             <span style={{ color: '#22C55E' }}>{uploadProgress}%</span>
           </div>
-          <div className="mt-2 h-2 rounded bg-white/5">
+          <div className="mt-2 h-2 rounded bg-gray-100">
             <div className="h-2 rounded bg-[#22C55E]" style={{ width: `${uploadProgress}%` }} />
           </div>
         </div>

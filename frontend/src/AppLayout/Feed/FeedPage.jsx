@@ -110,8 +110,8 @@ const FeedPage = () => {
         <div
           className="flex items-center gap-2 mb-6 p-2 rounded-xl"
           style={{
-            background: "rgba(12,13,20,0.8)",
-            border: "1px solid rgba(30,34,51,0.8)",
+            background: "rgba(255,255,255,0.8)",
+            border: "1px solid rgba(229,231,235,0.8)",
           }}
         >
           {sortOptions.map((option) => (
@@ -122,7 +122,7 @@ const FeedPage = () => {
               style={{
                 background:
                   sortBy === option.key ? "rgba(34,197,94,0.1)" : "transparent",
-                color: sortBy === option.key ? "#22C55E" : "#64748B",
+                color: sortBy === option.key ? "#22C55E" : "#374151",
                 border:
                   sortBy === option.key
                     ? "1px solid rgba(34,197,94,0.2)"
@@ -144,7 +144,7 @@ const FeedPage = () => {
 
         <div className="space-y-2">
           {loading && (
-            <div className="py-20 text-center font-code text-xs uppercase tracking-widest text-slate-500">
+            <div className="py-20 text-center font-code text-xs uppercase tracking-widest text-gray-600">
               Loading feed...
             </div>
           )}
@@ -156,7 +156,7 @@ const FeedPage = () => {
           {!loading && posts.length === 0 && (
             <div className="py-24 text-center rounded-xl border border-dashed border-phantom bg-obsidian/30">
               <div className="w-12 h-12 mx-auto mb-4 rounded-full bg-void border border-phantom flex items-center justify-center">
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#475569" strokeWidth="1.5">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#4B5563" strokeWidth="1.5">
                   <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
                   <polyline points="14 2 14 8 20 8"/>
                   <line x1="16" y1="13" x2="8" y2="13"/>
@@ -164,8 +164,8 @@ const FeedPage = () => {
                   <polyline points="10 9 9 9 8 9"/>
                 </svg>
               </div>
-              <p className="font-code text-xs uppercase tracking-widest text-slate-500 mb-2">No submissions in the feed yet</p>
-              <p className="font-code text-[10px] text-slate-600">Published analysis reports will appear here</p>
+              <p className="font-code text-xs uppercase tracking-widest text-gray-600 mb-2">No submissions in the feed yet</p>
+              <p className="font-code text-[10px] text-gray-500">Published analysis reports will appear here</p>
             </div>
           )}
         </div>

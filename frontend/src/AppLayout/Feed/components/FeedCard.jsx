@@ -51,18 +51,18 @@ const ShareMenu = ({ isOpen, onClose, postId, onShare }) => {
     <div 
       className="absolute bottom-full left-0 mb-2 z-50 rounded-lg shadow-xl border overflow-hidden animate-fade-up"
       style={{ 
-        background: 'rgba(12,13,20,0.98)', 
+        background: 'rgba(255,255,255,0.98)', 
         border: '1px solid rgba(34,197,94,0.2)',
         minWidth: '190px',
-        boxShadow: '0 8px 32px rgba(0,0,0,0.6), 0 0 12px rgba(34,197,94,0.1)'
+        boxShadow: '0 8px 32px rgba(0,0,0,0.1), 0 0 12px rgba(34,197,94,0.1)'
       }}
     >
       {shareOptions.map((option) => (
         <button
           key={option.id}
           onClick={(e) => { e.stopPropagation(); handleShare(option.id); }}
-          className="flex items-center gap-3 w-full px-4 py-2.5 font-code text-xs transition-colors hover:bg-white/5"
-          style={{ color: '#F1F5F9' }}
+          className="flex items-center gap-3 w-full px-4 py-2.5 font-code text-xs transition-colors hover:bg-gray-100"
+          style={{ color: '#111827' }}
         >
           <span style={{ color: '#22C55E' }}>{option.icon}</span>
           {option.label}
@@ -158,8 +158,8 @@ const FeedCard = ({ post, onInteract }) => {
       onClick={handleCardClick}
       className="group cursor-pointer rounded-xl p-6 animate-fade-up border transition-all duration-300 hover:border-[#22C55E]/40 relative overflow-hidden"
       style={{
-        background: "rgba(12,13,20,0.8)",
-        border: "1px solid rgba(30,34,51,0.8)",
+        background: "rgba(255,255,255,0.8)",
+        border: "1px solid rgba(229,231,235,0.8)",
         backdropFilter: "blur(16px)",
         marginBottom: "1rem",
         opacity: isInteractive ? 1 : 0.7,
@@ -167,9 +167,9 @@ const FeedCard = ({ post, onInteract }) => {
     >
       {!isInteractive && (
         <div className="absolute top-3 right-3 font-code text-[9px] uppercase tracking-widest px-2 py-0.5 rounded" style={{
-          background: post.submissionStatus === "Pending" ? "rgba(245,158,11,0.15)" : post.submissionStatus === "Archived" ? "rgba(100,116,139,0.15)" : "rgba(100,116,139,0.10)",
-          color: post.submissionStatus === "Pending" ? "#F59E0B" : post.submissionStatus === "Archived" ? "#94A3B8" : "#64748B",
-          border: `1px solid ${post.submissionStatus === "Pending" ? "rgba(245,158,11,0.3)" : post.submissionStatus === "Archived" ? "rgba(100,116,139,0.3)" : "rgba(100,116,139,0.2)"}`,
+          background: post.submissionStatus === "Pending" ? "rgba(245,158,11,0.15)" : post.submissionStatus === "Archived" ? "rgba(107,114,128,0.15)" : "rgba(107,114,128,0.10)",
+          color: post.submissionStatus === "Pending" ? "#F59E0B" : post.submissionStatus === "Archived" ? "#374151" : "#374151",
+          border: `1px solid ${post.submissionStatus === "Pending" ? "rgba(245,158,11,0.3)" : post.submissionStatus === "Archived" ? "rgba(107,114,128,0.3)" : "rgba(107,114,128,0.2)"}`,
         }}>
           {post.submissionStatus === "Pending" ? "Sandbox Running" : post.submissionStatus === "Archived" ? "Archived" : "Draft"}
         </div>
@@ -180,7 +180,7 @@ const FeedCard = ({ post, onInteract }) => {
             onClick={isInteractive ? handleLike : undefined}
             disabled={!isInteractive}
             className="transition-all duration-200 disabled:opacity-20 disabled:cursor-not-allowed"
-            style={{ color: isLiked ? '#EF4444' : '#475569' }}
+            style={{ color: isLiked ? '#EF4444' : '#4B5563' }}
           >
             <svg
               width="20"
@@ -206,13 +206,13 @@ const FeedCard = ({ post, onInteract }) => {
           <div className="flex items-center gap-2 mb-2">
             <span
               className="font-code text-[10px]"
-              style={{ color: "#475569" }}
+              style={{ color: "#4B5563" }}
             >
-              Posted by <span style={{ color: "#94A3B8" }}>{post.user}</span><VerifiedBadge role={post.role} size={12} />
+              Posted by <span style={{ color: "#374151" }}>{post.user}</span><VerifiedBadge role={post.role} size={12} />
             </span>
             <span
               className="font-code text-[10px]"
-              style={{ color: "#475569" }}
+              style={{ color: "#4B5563" }}
             >
               {post.date}
             </span>
@@ -220,14 +220,14 @@ const FeedCard = ({ post, onInteract }) => {
 
           <h3
             className="font-display text-lg font-bold mb-2"
-            style={{ color: "#F1F5F9" }}
+            style={{ color: "#111827" }}
           >
             {post.family} — {post.hash}
           </h3>
 
           <p
             className="text-sm leading-relaxed mb-4"
-            style={{ color: "#94A3B8" }}
+            style={{ color: "#374151" }}
           >
             {post.caption}
           </p>
@@ -241,17 +241,17 @@ const FeedCard = ({ post, onInteract }) => {
                   ? "rgba(34,197,94,0.08)"
                   : post.submissionStatus === "Pending"
                   ? "rgba(245,158,11,0.08)"
-                  : "rgba(100,116,139,0.08)",
+                  : "rgba(107,114,128,0.08)",
                 color: post.submissionStatus === "Published"
                   ? "#22C55E"
                   : post.submissionStatus === "Pending"
                   ? "#F59E0B"
-                  : "#64748B",
+                  : "#374151",
                 border: post.submissionStatus === "Published"
                   ? "1px solid rgba(34,197,94,0.2)"
                   : post.submissionStatus === "Pending"
                   ? "1px solid rgba(245,158,11,0.2)"
-                  : "1px solid rgba(100,116,139,0.2)",
+                  : "1px solid rgba(107,114,128,0.2)",
               }}
             >
               {post.submissionStatus}
@@ -260,9 +260,9 @@ const FeedCard = ({ post, onInteract }) => {
               <span
                 className="font-code text-[10px] uppercase tracking-widest px-2 py-1 rounded"
                 style={{
-                  background: "rgba(30,34,51,0.5)",
-                  color: "#94A3B8",
-                  border: "1px solid rgba(30,34,51,0.5)",
+                  background: "rgba(229,231,235,0.5)",
+                  color: "#374151",
+                  border: "1px solid rgba(229,231,235,0.5)",
                 }}
               >
                 {post.sandboxStatus}
@@ -270,7 +270,7 @@ const FeedCard = ({ post, onInteract }) => {
             )}
             <code
               className="font-code text-[10px] px-2 py-1 rounded"
-              style={{ background: "rgba(30,34,51,0.5)", color: "#475569" }}
+              style={{ background: "rgba(229,231,235,0.5)", color: "#4B5563" }}
             >
               {post.location || "GLOBAL NETWORK"}
             </code>
@@ -281,13 +281,13 @@ const FeedCard = ({ post, onInteract }) => {
       {/* Footer Actions */}
       <div
         className="flex items-center gap-4 ml-8 mt-3 pt-3"
-        style={{ borderTop: "1px solid rgba(30,34,51,0.5)" }}
+        style={{ borderTop: "1px solid rgba(229,231,235,0.5)" }}
       >
         <button
           onClick={() => isInteractive ? navigate(`/post/${post.id}`) : undefined}
           disabled={!isInteractive}
           className="flex items-center gap-2 font-code text-[10px] uppercase tracking-wider transition-colors disabled:opacity-20 disabled:cursor-not-allowed"
-          style={{ color: "#64748B" }}
+          style={{ color: "#374151" }}
         >
           <svg
             width="16"
@@ -307,7 +307,7 @@ const FeedCard = ({ post, onInteract }) => {
             onClick={isInteractive ? toggleShareMenu : undefined}
             disabled={!isInteractive}
             className="flex items-center gap-2 font-code text-[10px] uppercase tracking-wider transition-colors disabled:opacity-20 disabled:cursor-not-allowed"
-            style={{ color: showShareMenu ? '#22C55E' : '#64748B' }}
+            style={{ color: showShareMenu ? '#22C55E' : '#374151' }}
           >
             <svg
               width="16"
@@ -333,7 +333,7 @@ const FeedCard = ({ post, onInteract }) => {
           onClick={isInteractive ? handleSave : undefined}
           disabled={!isInteractive}
           className="flex items-center gap-2 font-code text-[10px] uppercase tracking-wider transition-colors disabled:opacity-20 disabled:cursor-not-allowed"
-          style={{ color: isSaved ? '#F59E0B' : '#64748B' }}
+          style={{ color: isSaved ? '#F59E0B' : '#374151' }}
         >
           <svg
             width="16"
