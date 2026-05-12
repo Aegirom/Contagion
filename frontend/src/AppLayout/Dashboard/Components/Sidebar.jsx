@@ -9,27 +9,27 @@ const SidebarItem = ({ item, active, isOpen }) => (
     className="flex items-center gap-3 px-4 py-3 rounded-lg font-body text-sm transition-all duration-200 group"
     style={{
       background: active ? "rgba(34,197,94,0.08)" : "transparent",
-      color: active ? "#22C55E" : "#64748B",
+      color: active ? "#22C55E" : "#6B7280",
       border: active
         ? "1px solid rgba(34,197,94,0.15)"
         : "1px solid transparent",
     }}
     onMouseEnter={(e) => {
       if (!active) {
-        e.currentTarget.style.background = "rgba(255,255,255,0.03)";
-        e.currentTarget.style.color = "#94A3B8";
+        e.currentTarget.style.background = "rgba(0,0,0,0.03)";
+        e.currentTarget.style.color = "#6B7280";
       }
     }}
     onMouseLeave={(e) => {
       if (!active) {
         e.currentTarget.style.background = "transparent";
-        e.currentTarget.style.color = "#64748B";
+        e.currentTarget.style.color = "#6B7280";
       }
     }}
   >
     <span
       className="transition-colors duration-200"
-      style={{ color: active ? "#22C55E" : "#475569" }}
+      style={{ color: active ? "#22C55E" : "#9CA3AF" }}
     >
       {item.icon}
     </span>
@@ -53,7 +53,7 @@ const CollapsedItem = ({ item, active }) => (
     className="flex items-center justify-center w-10 h-10 rounded-lg mx-auto transition-all duration-200"
     style={{
       background: active ? "rgba(34,197,94,0.1)" : "transparent",
-      color: active ? "#22C55E" : "#475569",
+      color: active ? "#22C55E" : "#9CA3AF",
       border: active
         ? "1px solid rgba(34,197,94,0.2)"
         : "1px solid transparent",
@@ -69,7 +69,7 @@ const SectionLabel = ({ label, isOpen }) => {
     <div className="px-4 pt-4 pb-1">
       <span
         className="font-code text-[10px] tracking-widest uppercase"
-        style={{ color: "#334155" }}
+        style={{ color: "#9CA3AF" }}
       >
         {label}
       </span>
@@ -270,15 +270,15 @@ const Sidebar = ({ isOpen, toggleSidebar }) => {
       className="fixed left-0 top-0 bottom-0 flex flex-col z-30 transition-all duration-300"
       style={{
         width: isOpen ? "220px" : "64px",
-        background: "rgba(5,5,8,0.95)",
-        borderRight: "1px solid rgba(30,34,51,0.8)",
+        background: "rgba(255,255,255,0.95)",
+        borderRight: "1px solid rgba(229,231,235,0.8)",
         backdropFilter: "blur(20px)",
       }}
     >
       {/* Logo */}
       <div
         className="flex items-center gap-3 px-4 h-16 flex-shrink-0"
-        style={{ borderBottom: "1px solid rgba(30,34,51,0.6)" }}
+        style={{ borderBottom: "1px solid rgba(229,231,235,0.6)" }}
       >
         <Link
           to="/dashboard"
@@ -288,13 +288,13 @@ const Sidebar = ({ isOpen, toggleSidebar }) => {
             src={logo}
             alt="Contagion"
             className="w-8 h-8 rounded-lg object-cover"
-            style={{ backgroundColor: "#0F1118" }}
+            style={{ backgroundColor: "#F3F4F6" }}
           />
         </Link>
         {isOpen && (
           <span
             className="font-display text-sm font-bold tracking-[0.15em]"
-            style={{ color: "#F1F5F9", whiteSpace: "nowrap" }}
+            style={{ color: "#111827", whiteSpace: "nowrap" }}
           >
             CONTAGION
           </span>
@@ -302,9 +302,9 @@ const Sidebar = ({ isOpen, toggleSidebar }) => {
         <button
           onClick={toggleSidebar}
           className="ml-auto transition-colors duration-200"
-          style={{ color: "#475569" }}
+          style={{ color: "#9CA3AF" }}
           onMouseEnter={(e) => (e.currentTarget.style.color = "#22C55E")}
-          onMouseLeave={(e) => (e.currentTarget.style.color = "#475569")}
+          onMouseLeave={(e) => (e.currentTarget.style.color = "#9CA3AF")}
         >
           <svg
             width="16"

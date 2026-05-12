@@ -54,7 +54,7 @@ const notificationIcon = (type) => {
       );
     default:
       return (
-        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#64748B" strokeWidth="2">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#6B7280" strokeWidth="2">
           <circle cx="12" cy="12" r="10" />
           <line x1="12" y1="8" x2="12" y2="12" />
           <line x1="12" y1="16" x2="12.01" y2="16" />
@@ -123,17 +123,17 @@ const TopBar = ({ pageName }) => {
     <header
       className="sticky top-0 z-20 flex items-center justify-between px-6 h-16 flex-shrink-0"
       style={{
-        background: "rgba(10,11,16,0.9)",
-        borderBottom: "1px solid rgba(30,34,51,0.7)",
+        background: "rgba(249,250,251,0.9)",
+        borderBottom: "1px solid rgba(229,231,235,0.7)",
         backdropFilter: "blur(20px)",
       }}
     >
       {/* Breadcrumb */}
       <div className="flex items-center gap-2">
-        <span className="font-code text-xs" style={{ color: "#475569" }}>
+        <span className="font-code text-xs" style={{ color: "#9CA3AF" }}>
           CONTAGION
         </span>
-        <span style={{ color: "#1E2233" }}>/</span>
+        <span style={{ color: "#E5E7EB" }}>/</span>
         <span className="font-code text-xs" style={{ color: "#22C55E" }}>
           {pageName}
         </span>
@@ -145,8 +145,8 @@ const TopBar = ({ pageName }) => {
         <div
           className="hidden md:flex items-center gap-3 px-3 py-1.5 rounded-lg"
           style={{
-            background: "rgba(5,5,8,0.6)",
-            border: "1px solid rgba(30,34,51,0.7)",
+            background: "rgba(243,244,246,0.6)",
+            border: "1px solid rgba(229,231,235,0.7)",
           }}
         >
           <div
@@ -163,7 +163,7 @@ const TopBar = ({ pageName }) => {
           >
             {formatTime(currentTime)}
           </span>
-          <span className="font-code text-[10px]" style={{ color: "#475569" }}>
+          <span className="font-code text-[10px]" style={{ color: "#9CA3AF" }}>
             {formatDate(currentTime)}
           </span>
         </div>
@@ -177,9 +177,9 @@ const TopBar = ({ pageName }) => {
             }}
             className="relative w-9 h-9 rounded-lg flex items-center justify-center transition-all duration-200"
             style={{
-              background: notifOpen ? "rgba(34,197,94,0.08)" : "rgba(5,5,8,0.6)",
-              border: `1px solid ${notifOpen ? "rgba(34,197,94,0.25)" : "rgba(30,34,51,0.7)"}`,
-              color: notifOpen ? "#22C55E" : "#64748B",
+              background: notifOpen ? "rgba(34,197,94,0.08)" : "rgba(243,244,246,0.6)",
+              border: `1px solid ${notifOpen ? "rgba(34,197,94,0.25)" : "rgba(229,231,235,0.7)"}`,
+              color: notifOpen ? "#22C55E" : "#6B7280",
             }}
           >
             <svg
@@ -211,17 +211,17 @@ const TopBar = ({ pageName }) => {
             <div
               className="absolute right-0 top-full mt-2 w-80 rounded-xl overflow-hidden animate-scale-in z-50"
               style={{
-                background: "rgba(10,11,16,0.98)",
-                border: "1px solid rgba(30,34,51,0.9)",
-                boxShadow: "0 20px 40px rgba(0,0,0,0.6)",
+                background: "rgba(255,255,255,0.98)",
+                border: "1px solid rgba(229,231,235,0.9)",
+                boxShadow: "0 20px 40px rgba(0,0,0,0.1)",
                 backdropFilter: "blur(20px)",
               }}
             >
               <div
                 className="flex items-center justify-between px-4 py-3"
-                style={{ borderBottom: "1px solid rgba(30,34,51,0.6)" }}
+                style={{ borderBottom: "1px solid rgba(229,231,235,0.6)" }}
               >
-                <span className="font-body text-sm font-semibold" style={{ color: "#F1F5F9" }}>
+                <span className="font-body text-sm font-semibold" style={{ color: "#111827" }}>
                   Notifications
                 </span>
                 {unreadCount > 0 && (
@@ -244,14 +244,14 @@ const TopBar = ({ pageName }) => {
                       height="24"
                       viewBox="0 0 24 24"
                       fill="none"
-                      stroke="#475569"
+                      stroke="#9CA3AF"
                       strokeWidth="1.5"
                       className="mx-auto mb-2"
                     >
                       <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9" />
                       <path d="M13.73 21a2 2 0 0 1-3.46 0" />
                     </svg>
-                    <p className="font-body text-xs" style={{ color: "#475569" }}>
+                    <p className="font-body text-xs" style={{ color: "#9CA3AF" }}>
                       No notifications
                     </p>
                   </div>
@@ -263,9 +263,9 @@ const TopBar = ({ pageName }) => {
                       className="w-full flex items-start gap-3 px-4 py-3 text-left transition-colors duration-150"
                       style={{
                         background: notif.is_read ? "transparent" : "rgba(34,197,94,0.03)",
-                        borderBottom: "1px solid rgba(30,34,51,0.4)",
+                        borderBottom: "1px solid rgba(229,231,235,0.4)",
                       }}
-                      onMouseEnter={(e) => (e.currentTarget.style.background = "rgba(255,255,255,0.02)")}
+                      onMouseEnter={(e) => (e.currentTarget.style.background = "rgba(0,0,0,0.02)")}
                       onMouseLeave={(e) =>
                         (e.currentTarget.style.background = notif.is_read
                           ? "transparent"
@@ -274,18 +274,18 @@ const TopBar = ({ pageName }) => {
                     >
                       <div
                         className="w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0 mt-0.5"
-                        style={{ background: "rgba(30,34,51,0.6)" }}
+                        style={{ background: "rgba(229,231,235,0.6)" }}
                       >
                         {notificationIcon(notif.type)}
                       </div>
                       <div className="min-w-0 flex-1">
-                        <p className="font-body text-xs" style={{ color: "#94A3B8" }}>
-                          <span className="font-semibold" style={{ color: "#F1F5F9" }}>
+                        <p className="font-body text-xs" style={{ color: "#6B7280" }}>
+                          <span className="font-semibold" style={{ color: "#111827" }}>
                             {notif.actor_username}
                           </span>{" "}
                           {notif.message}
                         </p>
-                        <p className="font-code text-[10px] mt-1" style={{ color: "#475569" }}>
+                        <p className="font-code text-[10px] mt-1" style={{ color: "#9CA3AF" }}>
                           {timeAgo(notif.created_at)}
                         </p>
                       </div>
@@ -311,14 +311,14 @@ const TopBar = ({ pageName }) => {
             style={{
               background: profileOpen
                 ? "rgba(34,197,94,0.08)"
-                : "rgba(5,5,8,0.6)",
-              border: `1px solid ${profileOpen ? "rgba(34,197,94,0.25)" : "rgba(30,34,51,0.7)"}`,
+                : "rgba(243,244,246,0.6)",
+              border: `1px solid ${profileOpen ? "rgba(34,197,94,0.25)" : "rgba(229,231,235,0.7)"}`,
             }}
           >
             <div
               className="w-7 h-7 rounded-full overflow-hidden flex items-center justify-center font-display text-xs font-bold"
               style={{
-                background: "#1e2233",
+                background: "#E5E7EB",
                 color: "#22C55E",
               }}
             >
@@ -337,7 +337,7 @@ const TopBar = ({ pageName }) => {
             </div>
             <span
               className="font-body text-sm hidden md:block"
-              style={{ color: "#94A3B8" }}
+              style={{ color: "#6B7280" }}
             >
               {user?.username?.split(" ")[0] || "Analyst"}
             </span>
@@ -346,7 +346,7 @@ const TopBar = ({ pageName }) => {
               height="12"
               viewBox="0 0 24 24"
               fill="none"
-              stroke="#475569"
+              stroke="#9CA3AF"
               strokeWidth="2"
               style={{
                 transition: "transform 0.2s ease",
@@ -361,15 +361,15 @@ const TopBar = ({ pageName }) => {
             <div
               className="absolute right-0 top-full mt-2 w-52 rounded-xl overflow-hidden animate-scale-in z-50"
               style={{
-                background: "rgba(10,11,16,0.98)",
-                border: "1px solid rgba(30,34,51,0.9)",
-                boxShadow: "0 20px 40px rgba(0,0,0,0.6)",
+                background: "rgba(255,255,255,0.98)",
+                border: "1px solid rgba(229,231,235,0.9)",
+                boxShadow: "0 20px 40px rgba(0,0,0,0.1)",
                 backdropFilter: "blur(20px)",
               }}
             >
               <div
                 className="px-4 py-3 flex items-center gap-3"
-                style={{ borderBottom: "1px solid rgba(30,34,51,0.6)" }}
+                style={{ borderBottom: "1px solid rgba(229,231,235,0.6)" }}
               >
                 <div className="w-10 h-10 rounded-full overflow-hidden flex-shrink-0">
                   {user?.profile?.avatar_url ? (
@@ -383,7 +383,7 @@ const TopBar = ({ pageName }) => {
                       className="w-full h-full flex items-center justify-center font-display text-sm font-bold"
                       style={{
                         background: "linear-gradient(135deg, #22C55E, #16A34A)",
-                        color: "#050508",
+                        color: "#FFFFFF",
                       }}
                     >
                       {user?.username?.charAt(0) || "A"}
@@ -393,13 +393,13 @@ const TopBar = ({ pageName }) => {
                 <div className="min-w-0 flex-1">
                   <p
                     className="font-body text-sm font-semibold truncate"
-                    style={{ color: "#F1F5F9" }}
+                    style={{ color: "#111827" }}
                   >
                     {user?.username || "Analyst"}
                   </p>
                   <p
                     className="font-code text-xs mt-0.5 truncate"
-                    style={{ color: "#475569" }}
+                    style={{ color: "#9CA3AF" }}
                   >
                     {user?.email || ""}
                   </p>
@@ -414,14 +414,14 @@ const TopBar = ({ pageName }) => {
                 to="/profile"
                 onClick={() => setProfileOpen(false)}
                 className="flex items-center gap-3 w-full text-left px-4 py-3 font-body text-sm transition-all duration-150"
-                style={{ color: "#64748B" }}
+                style={{ color: "#6B7280" }}
                 onMouseEnter={(e) => {
-                  e.currentTarget.style.background = "rgba(255,255,255,0.03)";
-                  e.currentTarget.style.color = "#94A3B8";
+                  e.currentTarget.style.background = "rgba(0,0,0,0.03)";
+                  e.currentTarget.style.color = "#6B7280";
                 }}
                 onMouseLeave={(e) => {
                   e.currentTarget.style.background = "transparent";
-                  e.currentTarget.style.color = "#64748B";
+                  e.currentTarget.style.color = "#6B7280";
                 }}
               >
                 <svg
@@ -437,7 +437,7 @@ const TopBar = ({ pageName }) => {
                 </svg>
                 Profile Settings
               </Link>
-              <div style={{ borderTop: "1px solid rgba(30,34,51,0.6)" }}>
+              <div style={{ borderTop: "1px solid rgba(229,231,235,0.6)" }}>
                 <button
                   onClick={logout}
                   className="w-full flex items-center gap-3 px-4 py-3 text-left font-body text-sm transition-all duration-150"
