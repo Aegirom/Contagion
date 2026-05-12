@@ -16,8 +16,7 @@ const processQueue = (error, tokens = null) => {
 
 const getStoredTokens = () => {
   const storedTokens =
-    localStorage.getItem("authTokens") ||
-    sessionStorage.getItem("authTokens");
+    localStorage.getItem("authTokens") || sessionStorage.getItem("authTokens");
   try {
     return storedTokens ? JSON.parse(storedTokens) : {};
   } catch {
@@ -85,7 +84,7 @@ API.interceptors.request.use(
       try {
         const response = await axios.post(
           `${config.baseURL || "http://localhost:3000"}/auth/refresh-token`,
-          { refreshToken }
+          { refreshToken },
         );
         const newTokens = {
           accessToken: response.data.accessToken,
@@ -95,7 +94,7 @@ API.interceptors.request.use(
         config.headers["Authorization"] = `Bearer ${newTokens.accessToken}`;
 
         window.dispatchEvent(
-          new CustomEvent("auth:tokensRefreshed", { detail: newTokens })
+          new CustomEvent("auth:tokensRefreshed", { detail: newTokens }),
         );
 
         return config;
@@ -116,7 +115,7 @@ API.interceptors.request.use(
     }
     return config;
   },
-  (error) => Promise.reject(error)
+  (error) => Promise.reject(error),
 );
 
 // Response Interceptor - handle 401 with queue to prevent race conditions
@@ -141,7 +140,8 @@ API.interceptors.response.use(
           failedQueue.push({ resolve, reject });
         })
           .then((tokens) => {
-            originalRequest.headers["Authorization"] = `Bearer ${tokens.accessToken}`;
+            originalRequest.headers["Authorization"] =
+              `Bearer ${tokens.accessToken}`;
             return API(originalRequest);
           })
           .catch((err) => Promise.reject(err));
@@ -167,12 +167,13 @@ API.interceptors.response.use(
         saveTokens(newTokens);
 
         window.dispatchEvent(
-          new CustomEvent("auth:tokensRefreshed", { detail: newTokens })
+          new CustomEvent("auth:tokensRefreshed", { detail: newTokens }),
         );
 
         processQueue(null, newTokens);
 
-        originalRequest.headers["Authorization"] = `Bearer ${newTokens.accessToken}`;
+        originalRequest.headers["Authorization"] =
+          `Bearer ${newTokens.accessToken}`;
         return API(originalRequest);
       } catch (err) {
         processQueue(err, null);
@@ -188,7 +189,7 @@ API.interceptors.response.use(
     }
 
     return Promise.reject(error);
-  }
+  },
 );
 
 // Auth API functions
@@ -203,15 +204,18 @@ export const authAPI = {
 
 // User Submissions API functions
 export const getAllSubmissions = () => API.get("/submissions/get");
-export const getUserSubmissions = () => API.get("/submissions/mine");
+export const getUserSubmissions = (limit) =>
+  API.get(`/submissions/mine${limit ? `?limit=${limit}` : ""}`);
 export const getUserSavedSubmissions = () => API.get("/submissions/saved");
 export const getUserStats = () => API.get("/submissions/stats");
 export const getUserDrafts = () => API.get("/submissions/drafts");
 export const getSubmissionById = (id) => API.get(`/submissions/${id}`);
 export const createSubmission = (payload, turnstileToken) =>
-  API.post("/submissions/post", { ...payload, "cf-turnstile-response": turnstileToken });
-export const importSubmission = (id) =>
-  API.post(`/submissions/${id}/import`);
+  API.post("/submissions/post", {
+    ...payload,
+    "cf-turnstile-response": turnstileToken,
+  });
+export const importSubmission = (id) => API.post(`/submissions/${id}/import`);
 export const updateSubmission = (id, payload) =>
   API.patch(`/submissions/${id}`, payload);
 export const deleteSubmission = (id) => API.delete(`/submissions/${id}`);
@@ -234,7 +238,10 @@ export const getAnalystReputation = () => API.get("/dashboard/reputation");
 export const getSandboxSubmissions = () => API.get("/sandbox/submissions");
 export const getSandboxExecutions = () => API.get("/sandbox/executions");
 export const evaluateSandboxFile = (payload, turnstileToken) =>
-  API.post("/sandbox/evaluate", { ...payload, "cf-turnstile-response": turnstileToken });
+  API.post("/sandbox/evaluate", {
+    ...payload,
+    "cf-turnstile-response": turnstileToken,
+  });
 
 // Post Interaction API functions
 export const getPostComments = (submissionId) =>

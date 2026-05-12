@@ -74,7 +74,7 @@ const DashboardPage = () => {
 
     Promise.all([
       getUserStats().then((r) => r.data),
-      getUserSubmissions().then((r) => r.data),
+      getUserSubmissions(7).then((r) => r.data),
       getDashboardActivity()
         .then((r) => r.data)
         .catch(() => ({ items: [] })),
