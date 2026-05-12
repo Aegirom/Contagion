@@ -169,7 +169,7 @@ const DashboardPage = () => {
 
       {/* Page content */}
       <div
-        className="relative px-7 py-8 max-w-[1440px] mx-auto space-y-6"
+        className="relative px-7 py-8 max-w-[1440px] mx-auto space-y-6 animate-fade-up"
         style={{ zIndex: 1 }}
       >
         {/* Page Header */}

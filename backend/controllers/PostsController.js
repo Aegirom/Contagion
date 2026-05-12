@@ -4,9 +4,12 @@ import { createNotification } from "../services/notificationService.js";
 import { awardCommentXp, awardLikeXp } from "../services/reputationService.js";
 
 const getPostOwnerId = async (submissionId) => {
-  const result = await pool.request()
+  const result = await pool
+    .request()
     .input("submissionId", sql.Int, Number(submissionId))
-    .query("SELECT author_id FROM Analysis_Submissions WHERE submission_id = @submissionId");
+    .query(
+      "SELECT author_id FROM Analysis_Submissions WHERE submission_id = @submissionId",
+    );
   return result.recordset[0]?.author_id;
 };
 
@@ -14,9 +17,9 @@ export const getComments = async (req, res) => {
   try {
     const { submissionId } = req.params;
 
-    const result = await pool.request()
-      .input("submissionId", sql.Int, Number(submissionId))
-      .query(`
+    const result = await pool
+      .request()
+      .input("submissionId", sql.Int, Number(submissionId)).query(`
         SELECT 
           pc.comment_id,
           pc.content,
@@ -43,8 +46,6 @@ export const addComment = async (req, res) => {
     const { content } = req.body;
     const userId = req.user.userId || req.user.user_id;
 
-    console.log(`[Comment] Adding comment: user=${userId}, submission=${submissionId}`);
-
     if (!userId) {
       return res.status(401).json({ error: "Not authorized" });
     }
@@ -53,28 +54,30 @@ export const addComment = async (req, res) => {
       return res.status(400).json({ error: "Comment content is required" });
     }
 
-    const result = await pool.request()
+    const result = await pool
+      .request()
       .input("submissionId", sql.Int, Number(submissionId))
       .input("userId", sql.Int, Number(userId))
-      .input("content", sql.NVarChar(sql.MAX), content.trim())
-      .query(`
+      .input("content", sql.NVarChar(sql.MAX), content.trim()).query(`
         INSERT INTO Post_Comments (submission_id, user_id, content)
         OUTPUT INSERTED.comment_id, INSERTED.created_at
         VALUES (@submissionId, @userId, @content)
       `);
 
-    const userResult = await pool.request()
+    const userResult = await pool
+      .request()
       .input("userId", sql.Int, Number(userId))
       .query("SELECT username FROM Users WHERE user_id = @userId");
 
     const postOwnerId = await getPostOwnerId(submissionId);
-    console.log(`[Comment] Post owner=${postOwnerId}, commenter=${userId}, same=${postOwnerId === userId}`);
 
     if (!result.recordset || !result.recordset[0]) {
       return res.status(500).json({ error: "Failed to create comment" });
     }
     if (!userResult.recordset || !userResult.recordset[0]) {
-      return res.status(500).json({ error: "Failed to retrieve user information" });
+      return res
+        .status(500)
+        .json({ error: "Failed to retrieve user information" });
     }
 
     if (postOwnerId && postOwnerId !== userId) {
@@ -113,7 +116,8 @@ export const deleteComment = async (req, res) => {
       return res.status(401).json({ error: "Not authorized" });
     }
 
-    const check = await pool.request()
+    const check = await pool
+      .request()
       .input("commentId", sql.Int, Number(commentId))
       .input("userId", sql.Int, Number(userId))
       .query("SELECT user_id FROM Post_Comments WHERE comment_id = @commentId");
@@ -123,14 +127,20 @@ export const deleteComment = async (req, res) => {
     }
 
     if (check.recordset[0].user_id !== userId) {
-      return res.status(403).json({ error: "Not authorized to delete this comment" });
+      return res
+        .status(403)
+        .json({ error: "Not authorized to delete this comment" });
     }
 
-    await pool.request()
+    await pool
+      .request()
       .input("commentId", sql.Int, Number(commentId))
-      .query("UPDATE Notifications SET related_comment_id = NULL WHERE related_comment_id = @commentId");
+      .query(
+        "UPDATE Notifications SET related_comment_id = NULL WHERE related_comment_id = @commentId",
+      );
 
-    await pool.request()
+    await pool
+      .request()
       .input("commentId", sql.Int, Number(commentId))
       .query("DELETE FROM Post_Comments WHERE comment_id = @commentId");
 
@@ -145,9 +155,9 @@ export const getLikes = async (req, res) => {
   try {
     const { submissionId } = req.params;
 
-    const result = await pool.request()
-      .input("submissionId", sql.Int, Number(submissionId))
-      .query(`
+    const result = await pool
+      .request()
+      .input("submissionId", sql.Int, Number(submissionId)).query(`
         SELECT COUNT(*) as like_count FROM Post_Likes WHERE submission_id = @submissionId
       `);
 
@@ -167,10 +177,10 @@ export const getUserLike = async (req, res) => {
       return res.status(401).json({ error: "Not authorized" });
     }
 
-    const result = await pool.request()
+    const result = await pool
+      .request()
       .input("submissionId", sql.Int, Number(submissionId))
-      .input("userId", sql.Int, Number(userId))
-      .query(`
+      .input("userId", sql.Int, Number(userId)).query(`
         SELECT like_id FROM Post_Likes 
         WHERE submission_id = @submissionId AND user_id = @userId
       `);
@@ -187,52 +197,59 @@ export const toggleLike = async (req, res) => {
     const { submissionId } = req.params;
     const userId = req.user.userId || req.user.user_id;
 
-    console.log(`[Like] Toggling like: user=${userId}, submission=${submissionId}`);
-
     if (!userId) {
       return res.status(401).json({ error: "Not authorized" });
     }
 
-    const existing = await pool.request()
+    const existing = await pool
+      .request()
       .input("submissionId", sql.Int, Number(submissionId))
-      .input("userId", sql.Int, Number(userId))
-      .query(`
+      .input("userId", sql.Int, Number(userId)).query(`
         SELECT like_id FROM Post_Likes 
         WHERE submission_id = @submissionId AND user_id = @userId
       `);
 
     if (existing.recordset.length > 0) {
-      await pool.request()
+      await pool
+        .request()
         .input("submissionId", sql.Int, Number(submissionId))
-        .input("userId", sql.Int, Number(userId))
-        .query(`
+        .input("userId", sql.Int, Number(userId)).query(`
           DELETE FROM Post_Likes 
           WHERE submission_id = @submissionId AND user_id = @userId
         `);
 
-      const countResult = await pool.request()
+      const countResult = await pool
+        .request()
         .input("submissionId", sql.Int, Number(submissionId))
-        .query("SELECT COUNT(*) as like_count FROM Post_Likes WHERE submission_id = @submissionId");
+        .query(
+          "SELECT COUNT(*) as like_count FROM Post_Likes WHERE submission_id = @submissionId",
+        );
 
-      res.json({ isLiked: false, like_count: countResult.recordset[0].like_count });
+      res.json({
+        isLiked: false,
+        like_count: countResult.recordset[0].like_count,
+      });
     } else {
-      await pool.request()
+      await pool
+        .request()
         .input("submissionId", sql.Int, Number(submissionId))
-        .input("userId", sql.Int, Number(userId))
-        .query(`
+        .input("userId", sql.Int, Number(userId)).query(`
           INSERT INTO Post_Likes (submission_id, user_id) VALUES (@submissionId, @userId)
         `);
 
-      const countResult = await pool.request()
+      const countResult = await pool
+        .request()
         .input("submissionId", sql.Int, Number(submissionId))
-        .query("SELECT COUNT(*) as like_count FROM Post_Likes WHERE submission_id = @submissionId");
+        .query(
+          "SELECT COUNT(*) as like_count FROM Post_Likes WHERE submission_id = @submissionId",
+        );
 
-      const likerResult = await pool.request()
+      const likerResult = await pool
+        .request()
         .input("userId", sql.Int, Number(userId))
         .query("SELECT username FROM Users WHERE user_id = @userId");
 
       const postOwnerId = await getPostOwnerId(submissionId);
-      console.log(`[Like] Post owner=${postOwnerId}, liker=${userId}, same=${postOwnerId === userId}`);
 
       if (postOwnerId && postOwnerId !== userId) {
         await createNotification({
@@ -246,7 +263,11 @@ export const toggleLike = async (req, res) => {
 
       await awardLikeXp(userId, postOwnerId);
 
-      res.json({ isLiked: true, like_count: countResult.recordset[0].like_count, xp_gained: 1 });
+      res.json({
+        isLiked: true,
+        like_count: countResult.recordset[0].like_count,
+        xp_gained: 1,
+      });
     }
   } catch (error) {
     console.error("Error toggling like:", error);
@@ -258,9 +279,9 @@ export const getShares = async (req, res) => {
   try {
     const { submissionId } = req.params;
 
-    const result = await pool.request()
-      .input("submissionId", sql.Int, Number(submissionId))
-      .query(`
+    const result = await pool
+      .request()
+      .input("submissionId", sql.Int, Number(submissionId)).query(`
         SELECT COUNT(*) as share_count FROM Post_Shares WHERE submission_id = @submissionId
       `);
 
@@ -280,41 +301,53 @@ export const toggleShare = async (req, res) => {
       return res.status(401).json({ error: "Not authorized" });
     }
 
-    const existing = await pool.request()
+    const existing = await pool
+      .request()
       .input("submissionId", sql.Int, Number(submissionId))
-      .input("userId", sql.Int, Number(userId))
-      .query(`
+      .input("userId", sql.Int, Number(userId)).query(`
         SELECT share_id FROM Post_Shares 
         WHERE submission_id = @submissionId AND user_id = @userId
       `);
 
     if (existing.recordset.length > 0) {
-      await pool.request()
+      await pool
+        .request()
         .input("submissionId", sql.Int, Number(submissionId))
-        .input("userId", sql.Int, Number(userId))
-        .query(`
+        .input("userId", sql.Int, Number(userId)).query(`
           DELETE FROM Post_Shares 
           WHERE submission_id = @submissionId AND user_id = @userId
         `);
 
-      const countResult = await pool.request()
+      const countResult = await pool
+        .request()
         .input("submissionId", sql.Int, Number(submissionId))
-        .query("SELECT COUNT(*) as share_count FROM Post_Shares WHERE submission_id = @submissionId");
+        .query(
+          "SELECT COUNT(*) as share_count FROM Post_Shares WHERE submission_id = @submissionId",
+        );
 
-      res.json({ isShared: false, share_count: countResult.recordset[0].share_count });
+      res.json({
+        isShared: false,
+        share_count: countResult.recordset[0].share_count,
+      });
     } else {
-      await pool.request()
+      await pool
+        .request()
         .input("submissionId", sql.Int, Number(submissionId))
-        .input("userId", sql.Int, Number(userId))
-        .query(`
+        .input("userId", sql.Int, Number(userId)).query(`
           INSERT INTO Post_Shares (submission_id, user_id) VALUES (@submissionId, @userId)
         `);
 
-      const countResult = await pool.request()
+      const countResult = await pool
+        .request()
         .input("submissionId", sql.Int, Number(submissionId))
-        .query("SELECT COUNT(*) as share_count FROM Post_Shares WHERE submission_id = @submissionId");
+        .query(
+          "SELECT COUNT(*) as share_count FROM Post_Shares WHERE submission_id = @submissionId",
+        );
 
-      res.json({ isShared: true, share_count: countResult.recordset[0].share_count });
+      res.json({
+        isShared: true,
+        share_count: countResult.recordset[0].share_count,
+      });
     }
   } catch (error) {
     console.error("Error toggling share:", error);
@@ -326,9 +359,9 @@ export const getSaves = async (req, res) => {
   try {
     const { submissionId } = req.params;
 
-    const result = await pool.request()
-      .input("submissionId", sql.Int, Number(submissionId))
-      .query(`
+    const result = await pool
+      .request()
+      .input("submissionId", sql.Int, Number(submissionId)).query(`
         SELECT COUNT(*) as save_count FROM Post_Saves WHERE submission_id = @submissionId
       `);
 
@@ -348,10 +381,10 @@ export const getUserSave = async (req, res) => {
       return res.status(401).json({ error: "Not authorized" });
     }
 
-    const result = await pool.request()
+    const result = await pool
+      .request()
       .input("submissionId", sql.Int, Number(submissionId))
-      .input("userId", sql.Int, Number(userId))
-      .query(`
+      .input("userId", sql.Int, Number(userId)).query(`
         SELECT save_id FROM Post_Saves 
         WHERE submission_id = @submissionId AND user_id = @userId
       `);
@@ -372,29 +405,29 @@ export const toggleSave = async (req, res) => {
       return res.status(401).json({ error: "Not authorized" });
     }
 
-    const existing = await pool.request()
+    const existing = await pool
+      .request()
       .input("submissionId", sql.Int, Number(submissionId))
-      .input("userId", sql.Int, Number(userId))
-      .query(`
+      .input("userId", sql.Int, Number(userId)).query(`
         SELECT save_id FROM Post_Saves 
         WHERE submission_id = @submissionId AND user_id = @userId
       `);
 
     if (existing.recordset.length > 0) {
-      await pool.request()
+      await pool
+        .request()
         .input("submissionId", sql.Int, Number(submissionId))
-        .input("userId", sql.Int, Number(userId))
-        .query(`
+        .input("userId", sql.Int, Number(userId)).query(`
           DELETE FROM Post_Saves 
           WHERE submission_id = @submissionId AND user_id = @userId
         `);
 
       res.json({ isSaved: false });
     } else {
-      await pool.request()
+      await pool
+        .request()
         .input("submissionId", sql.Int, Number(submissionId))
-        .input("userId", sql.Int, Number(userId))
-        .query(`
+        .input("userId", sql.Int, Number(userId)).query(`
           INSERT INTO Post_Saves (submission_id, user_id) VALUES (@submissionId, @userId)
         `);
 

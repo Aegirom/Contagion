@@ -117,12 +117,7 @@ async function fetchUserStats(userId) {
 
 export const getAllSubmissions = async (req, res) => {
   try {
-    console.log(
-      "getAllSubmissions called, user:",
-      req.user?.userId || "unknown",
-    );
     const data = await fetchAllSubmissions();
-    console.log("All submissions fetched:", data.length, "items");
     res.json(data);
   } catch (err) {
     console.error("Failed to get Submissions:", err.message);
@@ -142,7 +137,6 @@ export const getUserSubmissions = async (req, res) => {
     const top =
       Math.min(Math.max(parseInt(req.query.limit) || 0, 0), 100) || undefined;
     const data = await fetchUserSubmissions(userId, top);
-    console.log(`Submissions fetched for user ${userId}:`, data.length);
     res.json(data);
   } catch (err) {
     console.log("Failed to get user Submissions: ", err);

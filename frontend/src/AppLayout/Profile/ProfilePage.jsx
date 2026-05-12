@@ -199,7 +199,7 @@ const ProfilePage = () => {
 
   return (
     <main className="flex-1 overflow-auto relative bg-white">
-      <div className="px-7 py-8 max-w-[1440px] mx-auto space-y-6">
+      <div className="px-7 py-8 max-w-[1440px] mx-auto space-y-6 animate-fade-up">
         {/* Page Header */}
         <div className="flex items-start justify-between gap-4">
           <div>
