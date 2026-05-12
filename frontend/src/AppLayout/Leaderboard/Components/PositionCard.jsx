@@ -11,14 +11,14 @@ function PositionCard({
   reviews = 0,
   avgScore = 0
 }) {
-  const accent =
-    position === 1
-      ? "bg-toxic"
-      : position === 2
-        ? "bg-slate-400"
-        : position === 3
-          ? "bg-slate-600"
-          : "bg-transparent";
+   const accent =
+     position === 1
+       ? "bg-toxic"
+       : position === 2
+         ? "bg-gray-400"
+         : position === 3
+           ? "bg-gray-600"
+           : "bg-transparent";
 
   return (
     <div
@@ -44,37 +44,37 @@ function PositionCard({
 
       {/* Left */}
       <div className="flex items-center gap-4">
-        <div className="w-8 text-sm font-mono text-slate-500">
-          #{position}
-        </div>
+       <div className="w-8 text-sm font-mono text-gray-600">
+           #{position}
+         </div>
 
-        <img
-          src={userpfp}
-          alt={username}
-          className="w-10 h-10 rounded-full border border-phantom object-cover"
-        />
+         <img
+           src={userpfp}
+           alt={username}
+           className="w-10 h-10 rounded-full border border-phantom object-cover"
+         />
 
-        <div className="text-sm font-mono uppercase tracking-wider text-slate-200">
-          {username}
-        </div><VerifiedBadge role={role} size={14} />
-      </div>
+         <div className="text-sm font-mono uppercase tracking-wider text-gray-800">
+           {username}
+         </div><VerifiedBadge role={role} size={14} />
+       </div>
 
-      {/* Right Stats */}
-      <div className="hidden md:flex items-center gap-8 text-xs font-mono uppercase tracking-wider text-slate-400">
-        <div>
-          Reputation{" "}
-          <span className="text-slate-200">{trophies}</span>
-        </div>
+       {/* Right Stats */}
+       <div className="hidden md:flex items-center gap-8 text-xs font-mono uppercase tracking-wider text-gray-600">
+         <div>
+           Reputation{" "}
+           <span className="text-gray-800">{trophies}</span>
+         </div>
 
-        <div>
-          Analyses{" "}
-          <span className="text-slate-200">{analyses}</span>
-        </div>
+         <div>
+           Analyses{" "}
+           <span className="text-gray-800">{analyses}</span>
+         </div>
 
-        <div>
-          Reviews{" "}
-          <span className="text-slate-200">{reviews}</span>
-        </div>
+         <div>
+           Reviews{" "}
+           <span className="text-gray-800">{reviews}</span>
+         </div>
 
         <div>
           Average{" "}

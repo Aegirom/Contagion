@@ -68,18 +68,18 @@ const SavedPostsPage = () => {
           <div className="space-y-1">
             <div className="flex items-center gap-2">
               <div className="w-1 h-6 bg-toxic shadow-[0_0_8px_#22C55E]"></div>
-              <h3 className="text-3xl font-black text-slate-100 tracking-tighter uppercase">
-                Saved Analyses
-              </h3>
-            </div>
-            <p className="text-[10px] text-slate-500 font-black uppercase tracking-[0.2em] mt-2">
-              Bookmarks & Imported Intelligence
-            </p>
+               <h3 className="text-3xl font-black text-gray-900 tracking-tighter uppercase">
+                 Saved Analyses
+               </h3>
+             </div>
+             <p className="text-[10px] text-gray-600 font-black uppercase tracking-[0.2em] mt-2">
+               Bookmarks & Imported Intelligence
+             </p>
           </div>
         </div>
 
         {error && (
-          <div className="mb-6 rounded border border-red-900/40 bg-red-900/10 px-4 py-3 font-code text-xs text-red-300">
+          <div className="mb-6 rounded border border-red-200 bg-red-50 px-4 py-3 font-code text-xs text-red-500">
             {error}
           </div>
         )}
@@ -88,13 +88,13 @@ const SavedPostsPage = () => {
           {loading ? (
             <div className="py-20 text-center">
               <div className="inline-block animate-spin rounded-full h-12 w-12 border-4 border-toxic border-t-transparent mb-4"></div>
-              <p className="text-slate-500 font-mono text-sm uppercase tracking-widest">Accessing encrypted archives...</p>
+               <p className="text-gray-600 font-mono text-sm uppercase tracking-widest">Accessing encrypted archives...</p>
             </div>
           ) : submissions.length === 0 ? (
-            <div className="py-20 text-center border border-dashed border-phantom rounded-xl">
-              <p className="text-slate-500 font-mono text-sm uppercase">
-                Your saved archive is empty.
-              </p>
+             <div className="py-20 text-center border border-dashed border-phantom rounded-xl">
+               <p className="text-gray-600 font-mono text-sm uppercase">
+                 Your saved archive is empty.
+               </p>
               <button 
                 onClick={() => navigate('/feed')}
                 className="mt-4 text-toxic font-code text-xs uppercase tracking-widest hover:underline"
@@ -109,47 +109,47 @@ const SavedPostsPage = () => {
                 onClick={() => navigate(`/post/${post.submission_id}`)}
                 className="group cursor-pointer rounded-xl p-6 border transition-all duration-300 hover:border-toxic/40 relative overflow-hidden"
                 style={{
-                  background: "rgba(12,13,20,0.8)",
-                  border: "1px solid rgba(30,34,51,0.8)",
+                  background: "rgba(255,255,255,0.8)",
+                  border: "1px solid rgba(229,231,235,0.8)",
                   backdropFilter: "blur(16px)",
                 }}
               >
                 <div className="flex items-start gap-4">
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-2 mb-2">
-                      <span className="font-code text-[10px] text-slate-500">
-                        Posted by <span className="text-slate-400">{post.username}</span>
-                        <VerifiedBadge role={post.role} size={12} />
-                      </span>
-                      <span className="font-code text-[10px] text-slate-600">
-                        {new Date(post.submitted_at).toLocaleDateString()}
-                      </span>
-                    </div>
+                       <span className="font-code text-[10px] text-gray-600">
+                         Posted by <span className="text-gray-600">{post.username}</span>
+                         <VerifiedBadge role={post.role} size={12} />
+                       </span>
+                       <span className="font-code text-[10px] text-gray-500">
+                         {new Date(post.submitted_at).toLocaleDateString()}
+                       </span>
+                     </div>
 
-                    <h3 className="font-display text-lg font-bold mb-2 text-slate-100">
-                      {post.title}
-                    </h3>
+                     <h3 className="font-display text-lg font-bold mb-2 text-gray-900">
+                       {post.title}
+                     </h3>
 
-                    <p className="text-sm leading-relaxed mb-4 text-slate-400 line-clamp-2">
-                      {post.content}
-                    </p>
+                     <p className="text-sm leading-relaxed mb-4 text-gray-600 line-clamp-2">
+                       {post.content}
+                     </p>
 
                     <div className="flex items-center gap-3">
                       <SeverityBadge level={severityFromCategory(post.malware_category)} />
                       <span className="font-code text-[10px] uppercase tracking-widest px-2 py-1 rounded bg-toxic/5 text-toxic border border-toxic/20">
                         {post.status}
                       </span>
-                      <code className="font-code text-[10px] px-2 py-1 rounded bg-white/5 text-slate-500">
-                        {post.sha256_hash?.substring(0, 16)}...
-                      </code>
-                    </div>
-                  </div>
+                       <code className="font-code text-[10px] px-2 py-1 rounded bg-gray-100 text-gray-600">
+                         {post.sha256_hash?.substring(0, 16)}...
+                       </code>
+                     </div>
+                   </div>
 
-                  <div className="flex flex-col gap-2">
-                    <button
-                      onClick={(e) => handleUnsave(post.submission_id, e)}
-                      className="p-2 rounded-lg bg-white/5 text-orange-400 hover:bg-orange-400/10 transition-colors"
-                      title="Remove from saved"
+                   <div className="flex flex-col gap-2">
+                     <button
+                       onClick={(e) => handleUnsave(post.submission_id, e)}
+                       className="p-2 rounded-lg bg-gray-100 text-orange-500 hover:bg-orange-50 transition-colors"
+                       title="Remove from saved"
                     >
                       <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor" stroke="currentColor" strokeWidth="2">
                         <path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z" />

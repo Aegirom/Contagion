@@ -56,11 +56,11 @@ function Leaderboard() {
   }, []);
 
   return (
-    <div className="min-h-screen bg-abyss text-slate-100 px-6 py-12 md:px-12 lg:px-20">
+    <div className="min-h-screen bg-gray-50 text-gray-900 px-6 py-12 md:px-12 lg:px-20">
       <div className="flex flex-row justify-between items-center mb-10 pb-6 border-b border-phantom">
         <div className="flex items-center gap-2">
           <div className="w-1 h-6 bg-toxic shadow-[0_0_8px_#22C55E]"></div>
-          <h3 className="text-3xl font-black text-slate-100 tracking-tighter uppercase">
+          <h3 className="text-3xl font-black text-gray-900 tracking-tighter uppercase">
             Leaderboard
           </h3>
         </div>
@@ -72,7 +72,7 @@ function Leaderboard() {
             <PositionCard key={user.position} {...user} />
           ))
         ) : (
-          <p className="text-slate-500 font-mono text-sm uppercase text-center py-20">
+          <p className="text-gray-600 font-mono text-sm uppercase text-center py-20">
             Loading leaderboard...
           </p>
         )}

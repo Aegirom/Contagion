@@ -11,14 +11,14 @@ function DraftCard({ draft, onPublish, onDelete }) {
     <div
       className="rounded-xl p-6 border transition-all hover:border-amber-500/30"
       style={{
-        background: "rgba(12,13,20,0.8)",
-        border: "1px solid rgba(30,34,51,0.8)",
+        background: "rgba(255,255,255,0.8)",
+        border: "1px solid rgba(229,231,235,0.8)",
       }}
     >
       <div className="flex justify-between items-start mb-4">
         <h3
           className="font-display text-lg font-bold"
-          style={{ color: "#F1F5F9" }}
+          style={{ color: "#111827" }}
         >
           {draft.title || "Untitled Draft"}
         </h3>
@@ -34,13 +34,13 @@ function DraftCard({ draft, onPublish, onDelete }) {
         </span>
       </div>
 
-      <p className="text-sm mb-4 line-clamp-2" style={{ color: "#64748B" }}>
+      <p className="text-sm mb-4 line-clamp-2"         style={{ color: "#6B7280" }}>
         {draft.content || "No content yet..."}
       </p>
 
       <div
         className="flex items-center gap-4 mb-6 text-xs"
-        style={{ color: "#475569" }}
+        style={{ color: "#9CA3AF" }}
       >
         <span className="font-code">
           Last saved: {draft.updated_at ? new Date(draft.updated_at).toLocaleDateString() : "Unknown"}
@@ -55,8 +55,8 @@ function DraftCard({ draft, onPublish, onDelete }) {
           className="flex-1 py-3 rounded-lg font-display text-xs font-bold tracking-[0.2em] uppercase transition-all border"
           style={{
             background: "transparent",
-            color: "#F1F5F9",
-            borderColor: "rgba(30,34,51,0.8)",
+            color: "#111827",
+            borderColor: "rgba(229,231,235,0.8)",
           }}
         >
           Edit
@@ -64,7 +64,7 @@ function DraftCard({ draft, onPublish, onDelete }) {
         <button
           onClick={() => onPublish(draft)}
           className="flex-1 py-3 rounded-lg font-display text-xs font-bold tracking-[0.2em] uppercase transition-all"
-          style={{ background: "#22C55E", color: "#0A0B10" }}
+          style={{ background: "#22C55E", color: "#F9FAFB" }}
         >
           Publish
         </button>
