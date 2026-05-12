@@ -21,12 +21,12 @@ async function retrieveLeaderboard() {
 
 async function retrieveUserPosition(userId) {
   const result = await pool.query`
-    SELECT 
+    SELECT
       u.username,
       u.role,
       u.reputation_score,
       p.avatar_url,
-      DENSE_RANK() OVER (ORDER BY u.reputation_score DESC) AS position
+      (SELECT COUNT(*) + 1 FROM Users WHERE reputation_score > u.reputation_score AND is_active = 1) AS position
     FROM Users u
     LEFT JOIN User_Profiles p ON u.user_id = p.user_id
     WHERE u.user_id = ${userId} AND u.is_active = 1
@@ -38,16 +38,16 @@ async function retrieveUserPosition(userId) {
   return row;
 }
 
-function validateInput(input) {
-  const validTimeSpan = ["all-time", "monthly", "weekly"];
-  return validTimeSpan.includes(input) ? 1 : 0;
-}
-
 export const getLeaderboard = async (req, res) => {
   try {
-    const result = await retrieveLeaderboard();
-    console.log(result);
-    res.status(200).json(result);
+    const userId = req.user?.userId || req.user?.user_id;
+
+    const [leaderboard, position] = await Promise.all([
+      retrieveLeaderboard(),
+      userId ? retrieveUserPosition(userId) : Promise.resolve(null),
+    ]);
+
+    res.status(200).json({ leaderboard, position });
   } catch (err) {
     console.error("Unable to retrieve leaderboard: ", err);
     res.status(500).json({ error: "Internal Server Error" });
@@ -57,15 +57,11 @@ export const getLeaderboard = async (req, res) => {
 export const getMyLeaderboardPosition = async (req, res) => {
   try {
     const userId = req.user?.userId;
-    console.log("userId: ", userId);
     if (!userId) {
       return res.status(401).json({ error: "Unauthorized" });
     }
-    const row = await retrieveUserPosition(userId);
-    if (!row) {
-      return res.status(404).json({ error: "User not found" });
-    }
-    res.status(200).json(row);
+    const position = await retrieveUserPosition(userId);
+    res.status(200).json({ position });
   } catch (err) {
     console.error("Unable to retrieve user position: ", err);
     res.status(500).json({ error: "Internal Server Error" });

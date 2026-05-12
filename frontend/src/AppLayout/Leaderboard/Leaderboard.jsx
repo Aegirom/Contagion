@@ -12,34 +12,9 @@ function Leaderboard() {
     const getLeaderboard = async () => {
       try {
         const res = await API.get("/leaderboard");
-        const mapped = Array.isArray(res.data)
-          ? res.data.map((user, i) => ({
-              position: i + 1,
-              username: user.username,
-              userpfp:
-                user.avatar_url ||
-                `https://ui-avatars.com/api/?name=${encodeURIComponent(user.username)}&background=10b981&color=fff&size=256`,
-              role: user.role,
-              trophies: user.reputation_score ?? 0,
-              analyses: 0,
-              reviews: 0,
-              avgScore: 0,
-            }))
-          : [];
-        setLeaderboardData(mapped);
-      } catch (err) {
-        console.error("Could not receive leaderboard data: ", err);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    const getMyPosition = async () => {
-      try {
-        const res = await API.get("/leaderboard/me");
-        const user = res.data;
-        setCurrentUser({
-          position: user.position,
+        const { leaderboard, position } = res.data;
+        const mapped = (leaderboard || []).map((user, i) => ({
+          position: i + 1,
           username: user.username,
           userpfp:
             user.avatar_url ||
@@ -49,14 +24,31 @@ function Leaderboard() {
           analyses: 0,
           reviews: 0,
           avgScore: 0,
-        });
+        }));
+        setLeaderboardData(mapped);
+
+        if (position) {
+          setCurrentUser({
+            position: position.position,
+            username: position.username,
+            userpfp:
+              position.avatar_url ||
+              `https://ui-avatars.com/api/?name=${encodeURIComponent(position.username)}&background=10b981&color=fff&size=256`,
+            role: position.role,
+            trophies: position.reputation_score ?? 0,
+            analyses: 0,
+            reviews: 0,
+            avgScore: 0,
+          });
+        }
       } catch (err) {
-        console.error("Could not retrieve current user position: ", err);
+        console.error("Could not receive leaderboard data: ", err);
+      } finally {
+        setLoading(false);
       }
     };
 
     getLeaderboard();
-    getMyPosition();
   }, []);
 
   return (

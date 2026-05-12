@@ -5,30 +5,19 @@ import { awardSubmissionXp } from "../services/reputationService.js";
 async function fetchAllSubmissions() {
   try {
     const result = await pool.request().query(`
-      SELECT
+      SELECT TOP 50
         s.submission_id,
         s.author_id,
-        s.artifact_id,
         s.title,
-        s.content,
+        LEFT(s.content, 200) AS content,
         s.status,
-        s.version,
-        s.template_type,
         s.submitted_at,
-        s.updated_at,
         u.username,
         u.role,
-        a.file_name,
-        a.file_size,
-        a.file_type,
         a.sha256_hash,
         a.malware_family,
         a.malware_category,
-        ai.ai_score_percentage,
-        ai.threat_level AS ai_threat_level,
-        e.execution_id,
         e.sandbox_status,
-        e.finished_at AS sandbox_finished_at,
         ISNULL(lc.like_count, 0) AS like_count,
         ISNULL(cc.comment_count, 0) AS comment_count,
         ISNULL(sc.share_count, 0) AS share_count
@@ -36,20 +25,15 @@ async function fetchAllSubmissions() {
       INNER JOIN Users u ON u.user_id = s.author_id
       LEFT JOIN Malware_Artifacts a ON a.artifact_id = s.artifact_id
       LEFT JOIN (
-        SELECT evaluation_id, submission_id, ai_score_percentage, threat_level,
-               ROW_NUMBER() OVER(PARTITION BY submission_id ORDER BY evaluation_date DESC) AS rn
-        FROM AI_Evaluations
-      ) ai ON ai.submission_id = s.submission_id AND ai.rn = 1
-      LEFT JOIN (
-        SELECT se.submission_id, se.execution_id, se.status AS sandbox_status, se.finished_at,
-               ROW_NUMBER() OVER(PARTITION BY se.submission_id ORDER BY se.queued_at DESC) AS rn
-        FROM Sandbox_Executions se
+        SELECT submission_id, status AS sandbox_status,
+               ROW_NUMBER() OVER(PARTITION BY submission_id ORDER BY queued_at DESC) AS rn
+        FROM Sandbox_Executions
       ) e ON e.submission_id = s.submission_id AND e.rn = 1
       LEFT JOIN (SELECT submission_id, COUNT(*) AS like_count FROM Post_Likes GROUP BY submission_id) lc ON lc.submission_id = s.submission_id
       LEFT JOIN (SELECT submission_id, COUNT(*) AS comment_count FROM Post_Comments GROUP BY submission_id) cc ON cc.submission_id = s.submission_id
       LEFT JOIN (SELECT submission_id, COUNT(*) AS share_count FROM Post_Shares GROUP BY submission_id) sc ON sc.submission_id = s.submission_id
       WHERE s.status = 'Published'
-      ORDER BY s.updated_at DESC
+      ORDER BY s.submitted_at DESC
     `);
     return result.recordset;
   } catch (err) {
