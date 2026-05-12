@@ -302,6 +302,153 @@ export const getSubmissionByIdPublic = async (req, res) => {
 // Alias for backwards compatibility - uses protect middleware in routes
 export const getSubmissionById = getSubmissionByIdPublic;
 
+export const getPostOverview = async (req, res) => {
+  try {
+    const submissionId = Number(req.params.id);
+    const userId = req.user?.userId || req.user?.user_id;
+    const isAuthenticated = !!userId;
+
+    const [
+      submissionResult,
+      logsResult,
+      likesResult,
+      sharesResult,
+      commentsResult,
+      reviewsResult,
+      aggResult,
+      userLikeResult,
+      userSaveResult,
+      userReviewResult,
+    ] = await Promise.all([
+      pool.request().input("submission_id", sql.INT, submissionId).query(`
+        SELECT
+          s.submission_id, s.author_id, s.artifact_id, s.title, s.content,
+          s.status, s.version, s.template_type, s.submitted_at, s.updated_at,
+          u.username, u.role, u.reputation_score,
+          a.file_name, a.file_size, a.file_type, a.md5_hash, a.sha256_hash,
+          a.storage_path, a.is_quarantined, a.malware_family, a.malware_category, a.upload_time,
+          e.execution_id, e.status AS sandbox_status, e.environment, e.os_profile,
+          e.network_enabled, e.timeout_seconds, e.queued_at, e.started_at, e.finished_at, e.error_message
+        FROM Analysis_Submissions s
+        INNER JOIN Users u ON u.user_id = s.author_id
+        LEFT JOIN Malware_Artifacts a ON a.artifact_id = s.artifact_id
+        LEFT JOIN (
+          SELECT se.submission_id, se.execution_id, se.status, se.environment,
+                 se.os_profile, se.network_enabled, se.timeout_seconds,
+                 se.queued_at, se.started_at, se.finished_at, se.error_message,
+                 ROW_NUMBER() OVER(PARTITION BY se.submission_id ORDER BY se.queued_at DESC) AS rn
+          FROM Sandbox_Executions se
+        ) e ON e.submission_id = s.submission_id AND e.rn = 1
+        WHERE s.submission_id = @submission_id
+      `),
+      pool.request().input("submission_id", sql.INT, submissionId).query(`
+        SELECT l.log_id, l.log_type, l.log_data, l.captured_at
+        FROM Sandbox_Executions e
+        INNER JOIN Behavioral_Logs l ON l.execution_id = e.execution_id
+        WHERE e.submission_id = @submission_id
+        ORDER BY l.captured_at ASC
+      `),
+      pool.request().input("submissionId", sql.INT, submissionId).query(`
+        SELECT COUNT(*) as like_count FROM Post_Likes WHERE submission_id = @submissionId
+      `),
+      pool.request().input("submissionId", sql.INT, submissionId).query(`
+        SELECT COUNT(*) as share_count FROM Post_Shares WHERE submission_id = @submissionId
+      `),
+      pool.request().input("submissionId", sql.INT, submissionId).query(`
+        SELECT pc.comment_id, pc.content, pc.created_at, u.username, u.user_id, u.role
+        FROM Post_Comments pc
+        JOIN Users u ON pc.user_id = u.user_id
+        WHERE pc.submission_id = @submissionId
+        ORDER BY pc.created_at DESC
+      `),
+      pool.request().input("submissionId", sql.INT, submissionId).query(`
+        SELECT pr.review_id, pr.technical_score, pr.methodology_score, pr.documentation_score,
+               pr.insights_score, pr.comments, pr.status, pr.reviewed_at,
+               u.user_id AS reviewer_id, u.username AS reviewer_username,
+               u.role AS reviewer_role, u.expertise_level AS reviewer_expertise
+        FROM Peer_Reviews pr
+        JOIN Users u ON pr.reviewer_id = u.user_id
+        WHERE pr.submission_id = @submissionId
+        ORDER BY pr.reviewed_at DESC
+      `),
+      pool.request().input("submissionId", sql.INT, submissionId).query(`
+        SELECT
+          COUNT(*) AS review_count,
+          AVG(CAST(technical_score AS DECIMAL(5,2))) AS avg_technical,
+          AVG(CAST(methodology_score AS DECIMAL(5,2))) AS avg_methodology,
+          AVG(CAST(documentation_score AS DECIMAL(5,2))) AS avg_documentation,
+          AVG(CAST(insights_score AS DECIMAL(5,2))) AS avg_insights,
+          AVG(CAST(technical_score + methodology_score + documentation_score + insights_score AS DECIMAL(5,2))) / 4 AS avg_overall
+        FROM Peer_Reviews
+        WHERE submission_id = @submissionId
+      `),
+      isAuthenticated
+        ? pool
+            .request()
+            .input("submissionId", sql.INT, submissionId)
+            .input("userId", sql.INT, userId).query(`
+            SELECT like_id FROM Post_Likes WHERE submission_id = @submissionId AND user_id = @userId
+          `)
+        : { recordset: [] },
+      isAuthenticated
+        ? pool
+            .request()
+            .input("submissionId", sql.INT, submissionId)
+            .input("userId", sql.INT, userId).query(`
+            SELECT save_id FROM Post_Saves WHERE submission_id = @submissionId AND user_id = @userId
+          `)
+        : { recordset: [] },
+      isAuthenticated
+        ? pool
+            .request()
+            .input("submissionId", sql.INT, submissionId)
+            .input("userId", sql.INT, userId).query(`
+            SELECT pr.review_id, pr.technical_score, pr.methodology_score, pr.documentation_score,
+                   pr.insights_score, pr.comments, pr.status, pr.reviewed_at
+            FROM Peer_Reviews pr
+            WHERE pr.submission_id = @submissionId AND pr.reviewer_id = @userId
+          `)
+        : { recordset: [] },
+    ]);
+
+    const submission = submissionResult.recordset[0];
+    if (!submission) {
+      return res.status(404).json({ error: "Submission not found" });
+    }
+
+    const aggRow = aggResult.recordset[0];
+
+    res.json({
+      ...submission,
+      behavioral_logs: logsResult.recordset || [],
+      like_count: likesResult.recordset[0]?.like_count || 0,
+      share_count: sharesResult.recordset[0]?.share_count || 0,
+      isLiked: userLikeResult.recordset.length > 0,
+      isSaved: userSaveResult.recordset.length > 0,
+      comments: commentsResult.recordset || [],
+      reviews: reviewsResult.recordset || [],
+      userReview: userReviewResult.recordset[0] || null,
+      hasReviewed: userReviewResult.recordset.length > 0,
+      aggregate:
+        aggRow?.review_count > 0
+          ? {
+              reviewCount: aggRow.review_count,
+              averageScores: {
+                overall: Math.round(aggRow.avg_overall * 10) / 10,
+                technical: Math.round(aggRow.avg_technical * 10) / 10,
+                methodology: Math.round(aggRow.avg_methodology * 10) / 10,
+                documentation: Math.round(aggRow.avg_documentation * 10) / 10,
+                insights: Math.round(aggRow.avg_insights * 10) / 10,
+              },
+            }
+          : null,
+    });
+  } catch (err) {
+    console.log("Failed to load post overview:", err);
+    res.status(500).json({ error: "Internal Server Error" });
+  }
+};
+
 export const updateSubmission = async (req, res) => {
   try {
     const userId = req.user?.userId;

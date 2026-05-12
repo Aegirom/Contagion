@@ -7,25 +7,18 @@ import {
 } from "../Dashboard/Components/HooksAndBadges";
 import VerifiedBadge from "../Dashboard/Components/VerifiedBadge";
 import {
-  getSubmissionById,
-  getPostComments,
+  getPostOverview,
   addPostComment,
   deletePostComment,
-  getPostLikes,
-  getUserPostLike,
   togglePostLike,
-  getPostShares,
   togglePostShare,
-  getPostSaves,
   togglePostSave,
-  getSubmissionReviews,
-  getUserReview,
-  getAggregateScores,
   submitPeerReview,
   updateSubmission,
 } from "../../services/api";
 import { AuthContext } from "../../context/AuthContext";
 import { useToast } from "../../context/ToastContext";
+import PostSkeleton from "./Components/PostSkeleton";
 
 const formatBytes = (bytes) => {
   if (!bytes) return "0 B";
@@ -102,95 +95,27 @@ const Post = () => {
       setActionError("");
       setReviewError("");
 
-      const postRes = await getSubmissionById(postId);
-      setPost(postRes.data);
+      const res = await getPostOverview(postId);
 
-      let likesCount = 0;
-      let userLiked = false;
-      let sharesCount = 0;
-      let userSaved = false;
-      let commentsData = [];
-
-      try {
-        const likesRes = await getPostLikes(postId);
-        likesCount = likesRes.data?.like_count || 0;
-      } catch (e) {
-        console.log("Likes not available");
-      }
-
-      try {
-        if (isAuthenticated) {
-          const likedRes = await getUserPostLike(postId);
-          userLiked = likedRes.data?.isLiked || false;
-        }
-      } catch (e) {
-        console.log("User like check not available");
-      }
-
-      try {
-        const sharesRes = await getPostShares(postId);
-        sharesCount = sharesRes.data?.share_count || 0;
-      } catch (e) {
-        console.log("Shares not available");
-      }
-
-      try {
-        if (isAuthenticated) {
-          const savedRes = await getUserPostSave(postId);
-          userSaved = savedRes.data?.isSaved || false;
-        }
-      } catch (e) {
-        console.log("User save check not available");
-      }
-
-      try {
-        const commentsRes = await getPostComments(postId);
-        commentsData = commentsRes.data || [];
-      } catch (e) {
-        console.log("Comments not available");
-      }
-
-      // Load peer review data
-      try {
-        const aggRes = await getAggregateScores(postId);
-        setAggregate(aggRes.data);
-      } catch (e) {
-        console.log("Aggregate scores not available");
-      }
-
-      try {
-        const reviewsRes = await getSubmissionReviews(postId);
-        setReviews(reviewsRes.data?.reviews || []);
-      } catch (e) {
-        console.log("Reviews not available");
-      }
-
-      if (isAuthenticated) {
-        try {
-          const userReviewRes = await getUserReview(postId);
-          setUserReview(userReviewRes.data?.review || null);
-          setHasReviewed(userReviewRes.data?.hasReviewed || false);
-        } catch (e) {
-          console.log("User review check not available");
-        }
-      }
-
-      setLikes(likesCount);
-      setIsLiked(userLiked);
-      setShareCount(sharesCount);
+      setPost(res.data);
+      setLikes(res.data.like_count || 0);
+      setIsLiked(res.data.isLiked || false);
+      setShareCount(res.data.share_count || 0);
       setIsShared(false);
-      setIsSaved(userSaved);
-      setComments(commentsData);
+      setIsSaved(res.data.isSaved || false);
+      setComments(res.data.comments || []);
+      setAggregate(res.data.aggregate);
+      setReviews(res.data.reviews || []);
+      setUserReview(res.data.userReview || null);
+      setHasReviewed(res.data.hasReviewed || false);
     } catch (err) {
-      if (!post) {
-        setActionError(
-          err.response?.data?.error || "Failed to load analysis report",
-        );
-      }
+      setActionError(
+        err.response?.data?.error || "Failed to load analysis report",
+      );
     } finally {
       setLoading(false);
     }
-  }, [postId, isAuthenticated, post]);
+  }, [postId]);
 
   useEffect(() => {
     loadPost();
@@ -409,13 +334,7 @@ const Post = () => {
   const isNonInteractive = isPending || isArchived;
 
   if (loading) {
-    return (
-      <main className="flex-1 overflow-auto relative z-10">
-        <div className="max-w-4xl mx-auto py-20 px-4 text-center font-code text-xs uppercase tracking-widest text-gray-600">
-          Loading analysis report...
-        </div>
-      </main>
-    );
+    return <PostSkeleton />;
   }
 
   if (!post) {

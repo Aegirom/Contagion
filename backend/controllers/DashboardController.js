@@ -24,7 +24,7 @@ export const getActivityFeed = async (req, res) => {
           ORDER BY s.submitted_at DESC
         `),
       pool.request().input("user_id", sql.INT, userId).query(`
-          SELECT s.name as specialization, GETDATE() AS assigned_at
+          SELECT s.name as specialization, us.assigned_at
           FROM User_Specializations us
           JOIN Specializations s ON us.specialization_id = s.specialization_id
           WHERE us.user_id = @user_id
