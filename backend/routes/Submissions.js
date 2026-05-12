@@ -3,6 +3,7 @@ import {
   deleteSubmission,
   getAllSubmissions,
   getPostOverview,
+  getSubmissionArtifact,
   getSubmissionByIdPublic,
   getUserDrafts,
   getUserSubmissions,
@@ -27,6 +28,7 @@ router.get("/saved", protect, getUserSavedSubmissions);
 router.get("/stats", protect, getUserStats);
 router.get("/drafts", protect, getUserDrafts);
 router.get("/:id/overview", optionalAuth, getPostOverview);
+router.get("/:id/artifact", optionalAuth, getSubmissionArtifact);
 router.get("/:id", optionalAuth, getSubmissionByIdPublic);
 router.post(
   "/post",

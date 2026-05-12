@@ -223,8 +223,9 @@ export const getSubmissionByIdPublic = async (req, res) => {
   try {
     const submissionId = Number(req.params.id);
 
-    const isAuthenticated = req.user && req.user.userId;
-    const query = `
+    const result = await pool
+      .request()
+      .input("submission_id", sql.INT, submissionId).query(`
         SELECT
           s.submission_id,
           s.author_id,
@@ -238,29 +239,39 @@ export const getSubmissionByIdPublic = async (req, res) => {
           s.updated_at,
           u.username,
           u.role,
-          u.reputation_score,
-          a.file_name,
-          a.file_size,
-          a.file_type,
-          a.md5_hash,
-          a.sha256_hash,
-          a.storage_path,
-          a.is_quarantined,
-          a.malware_family,
-          a.malware_category,
-          a.upload_time,
-          e.execution_id,
-          e.status AS sandbox_status,
-          e.environment,
-          e.os_profile,
-          e.network_enabled,
-          e.timeout_seconds,
-          e.queued_at,
-          e.started_at,
-          e.finished_at,
-          e.error_message
+          u.reputation_score
         FROM Analysis_Submissions s
         INNER JOIN Users u ON u.user_id = s.author_id
+        WHERE s.submission_id = @submission_id
+      `);
+
+    const submission = result.recordset[0];
+    if (!submission) {
+      return res.status(404).json({ error: "Submission not found" });
+    }
+
+    res.json(submission);
+  } catch (err) {
+    console.log("Failed to get submission:", err);
+    res.status(500).json({ error: "Internal Server Error" });
+  }
+};
+
+// Alias for backwards compatibility - uses protect middleware in routes
+export const getSubmissionById = getSubmissionByIdPublic;
+
+export const getSubmissionArtifact = async (req, res) => {
+  try {
+    const submissionId = Number(req.params.id);
+
+    const [artifactResult, logsResult] = await Promise.all([
+      pool.request().input("submission_id", sql.INT, submissionId).query(`
+        SELECT
+          a.file_name, a.file_size, a.file_type, a.md5_hash, a.sha256_hash,
+          a.storage_path, a.is_quarantined, a.malware_family, a.malware_category, a.upload_time,
+          e.execution_id, e.status AS sandbox_status, e.environment, e.os_profile,
+          e.network_enabled, e.timeout_seconds, e.queued_at, e.started_at, e.finished_at, e.error_message
+        FROM Analysis_Submissions s
         LEFT JOIN Malware_Artifacts a ON a.artifact_id = s.artifact_id
         LEFT JOIN (
           SELECT se.submission_id, se.execution_id, se.status, se.environment,
@@ -270,37 +281,25 @@ export const getSubmissionByIdPublic = async (req, res) => {
           FROM Sandbox_Executions se
         ) e ON e.submission_id = s.submission_id AND e.rn = 1
         WHERE s.submission_id = @submission_id
-      `;
-
-    const result = await pool
-      .request()
-      .input("submission_id", sql.INT, submissionId)
-      .query(query);
-
-    const submission = result.recordset[0];
-    if (!submission) {
-      return res.status(404).json({ error: "Submission not found" });
-    }
-
-    const logs = await pool
-      .request()
-      .input("submission_id", sql.INT, submissionId).query(`
+      `),
+      pool.request().input("submission_id", sql.INT, submissionId).query(`
         SELECT l.log_id, l.log_type, l.log_data, l.captured_at
         FROM Sandbox_Executions e
         INNER JOIN Behavioral_Logs l ON l.execution_id = e.execution_id
         WHERE e.submission_id = @submission_id
         ORDER BY l.captured_at ASC
-      `);
+      `),
+    ]);
 
-    res.json({ ...submission, behavioral_logs: logs.recordset || [] });
+    res.json({
+      ...(artifactResult.recordset[0] || {}),
+      behavioral_logs: logsResult.recordset || [],
+    });
   } catch (err) {
-    console.log("Failed to get submission:", err);
+    console.log("Failed to get submission artifact:", err);
     res.status(500).json({ error: "Internal Server Error" });
   }
 };
-
-// Alias for backwards compatibility - uses protect middleware in routes
-export const getSubmissionById = getSubmissionByIdPublic;
 
 export const getPostOverview = async (req, res) => {
   try {

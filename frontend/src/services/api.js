@@ -210,6 +210,8 @@ export const getUserSavedSubmissions = () => API.get("/submissions/saved");
 export const getUserStats = () => API.get("/submissions/stats");
 export const getUserDrafts = () => API.get("/submissions/drafts");
 export const getSubmissionById = (id) => API.get(`/submissions/${id}`);
+export const getSubmissionArtifact = (id) =>
+  API.get(`/submissions/${id}/artifact`);
 export const getPostOverview = (id) => API.get(`/submissions/${id}/overview`);
 export const createSubmission = (payload, turnstileToken) =>
   API.post("/submissions/post", {
