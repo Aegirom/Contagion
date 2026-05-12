@@ -21,21 +21,15 @@ async function retrieveLeaderboard() {
 
 async function retrieveUserPosition(userId) {
   const result = await pool.query`
-    SELECT
+    SELECT 
       u.username,
       u.role,
       u.reputation_score,
       p.avatar_url,
-      (
-        SELECT COUNT(*) + 1
-        FROM Users u2
-        WHERE u2.reputation_score > u.reputation_score
-          AND u2.is_active = 1
-      ) AS position
+      DENSE_RANK() OVER (ORDER BY u.reputation_score DESC) AS position
     FROM Users u
     LEFT JOIN User_Profiles p ON u.user_id = p.user_id
-    WHERE u.user_id = ${userId}
-      AND u.is_active = 1;
+    WHERE u.user_id = ${userId} AND u.is_active = 1
   `;
   const row = result.recordset[0] ?? null;
   if (row) {
