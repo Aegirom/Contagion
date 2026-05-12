@@ -1,4 +1,9 @@
 import axios from "axios";
+import {
+  get as cacheGet,
+  set as cacheSet,
+  bust as cacheBust,
+} from "./cache.js";
 
 let isRefreshing = false;
 let failedQueue = [];
@@ -66,11 +71,27 @@ const isAuthEndpoint = (url) => {
   return AUTH_ENDPOINTS.some((endpoint) => url?.includes(endpoint));
 };
 
-// Request Interceptor - attach token and proactively refresh if expired
+// Request Interceptor - attach token, check cache, and proactively refresh if expired
 API.interceptors.request.use(
   async (config) => {
     if (isAuthEndpoint(config.url)) {
       return config;
+    }
+
+    // Serve GET requests from cache
+    if (config.method === "get") {
+      const cached = cacheGet(config);
+      if (cached) {
+        config.adapter = () =>
+          Promise.resolve({
+            data: cached,
+            status: 200,
+            statusText: "OK",
+            headers: {},
+            config,
+          });
+        return config;
+      }
     }
 
     const { accessToken, refreshToken } = getStoredTokens();
@@ -118,14 +139,31 @@ API.interceptors.request.use(
   (error) => Promise.reject(error),
 );
 
-// Response Interceptor - handle 401 with queue to prevent race conditions
+// Response Interceptor - cache GET responses, bust on writes, handle 401
 API.interceptors.response.use(
-  (response) => response,
+  (response) => {
+    const { config, data } = response;
+    const url = config.url || "";
+
+    // Cache successful GET responses (skip auth endpoints)
+    if (config.method === "get" && !isAuthEndpoint(url)) {
+      cacheSet(config, data);
+    }
+
+    // Bust related cache entries on write operations
+    if (["post", "put", "patch", "delete"].includes(config.method)) {
+      // Extract the base resource path to bust relevant GET caches
+      const basePath =
+        "/" + url.split("/").filter(Boolean).slice(0, 2).join("/");
+      if (basePath) cacheBust(basePath);
+    }
+
+    return response;
+  },
   async (error) => {
     const originalRequest = error.config;
 
     if (error.response?.status === 401 && !originalRequest._retry) {
-      // Never attempt token refresh on auth endpoints or refresh-token itself
       if (
         originalRequest.url?.includes("/auth/refresh-token") ||
         isAuthEndpoint(originalRequest.url)
