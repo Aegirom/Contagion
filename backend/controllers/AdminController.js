@@ -204,12 +204,29 @@ export async function moderateSubmission(req, res) {
       return res.status(404).json({ error: 'Submission not found or not pending' });
     }
 
+    const { author_id, title } = result.recordset[0];
+
     if (action === 'approve') {
-      // XP gain: +25 for getting approved
       await pool.request()
-        .input('author_id', sql.INT, result.recordset[0].author_id)
+        .input('author_id', sql.INT, author_id)
         .query('UPDATE Users SET reputation_score = reputation_score + 25 WHERE user_id = @author_id');
     }
+
+    // Send notification to author
+    const notifMessage = action === 'approve'
+      ? `Your analysis "${title}" has been approved and published`
+      : `Your analysis "${title}" has been rejected${reason ? `: ${reason}` : ''}`;
+
+    await pool.request()
+      .input('user_id', sql.INT, author_id)
+      .input('type', sql.NVARCHAR(50), 'moderation')
+      .input('message', sql.NVARCHAR(500), notifMessage)
+      .input('actor_username', sql.NVARCHAR(100), req.user?.username || 'System')
+      .input('related_submission_id', sql.INT, parseInt(submissionId))
+      .query(`
+        INSERT INTO Notifications (user_id, type, message, actor_username, related_submission_id, is_read)
+        VALUES (@user_id, @type, @message, @actor_username, @related_submission_id, 0)
+      `);
 
     console.log(`[Admin] Submission ${submissionId} ${action}d`);
     res.json({ message: `Submission ${action}d`, submission: result.recordset[0] });

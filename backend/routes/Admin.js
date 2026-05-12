@@ -78,7 +78,7 @@ router.get('/activity', protect, requireAdmin, getRecentActivity);
 router.get('/moderation/stats', protect, requireAdminOrModerator, getModerationStats);
 router.get('/moderation/pending', protect, requireAdminOrModerator, getPendingSubmissions);
 router.get('/moderation/comments', protect, requireAdminOrModerator, getAllComments);
-router.put('/moderation/submissions/:submissionId', protect, requireAdminOrModerator, verifyTurnstile, moderateSubmission);
+router.put('/moderation/submissions/:submissionId', protect, requireAdminOrModerator, moderateSubmission);
 router.delete('/moderation/comments/:commentId', protect, requireAdminOrModerator, deleteComment);
 
 export default router;
