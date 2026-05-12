@@ -88,6 +88,7 @@ const Post = () => {
   const [isSaving, setIsSaving] = useState(false);
   const [comments, setComments] = useState([]);
   const [commentsLoading, setCommentsLoading] = useState(true);
+  const [deletingCommentId, setDeletingCommentId] = useState(null);
   const [newComment, setNewComment] = useState("");
 
   // Peer review state
@@ -284,11 +285,14 @@ const Post = () => {
   };
 
   const handleDeleteComment = async (commentId) => {
+    setDeletingCommentId(commentId);
     try {
       await deletePostComment(commentId);
       setComments((prev) => prev.filter((c) => c.comment_id !== commentId));
     } catch (err) {
       console.error("Failed to delete comment:", err);
+    } finally {
+      setDeletingCommentId(null);
     }
   };
 
@@ -782,9 +786,46 @@ const Post = () => {
                                 onClick={() =>
                                   handleDeleteComment(comment.comment_id)
                                 }
-                                className="ml-auto font-code text-[10px] text-red-400 hover:text-red-300"
+                                disabled={
+                                  deletingCommentId === comment.comment_id
+                                }
+                                className="ml-auto font-code text-[10px] text-red-400 hover:text-red-600 disabled:opacity-50 flex items-center gap-1"
                               >
-                                Delete
+                                {deletingCommentId === comment.comment_id ? (
+                                  <svg
+                                    className="animate-spin h-3 w-3"
+                                    viewBox="0 0 24 24"
+                                    fill="none"
+                                  >
+                                    <circle
+                                      className="opacity-25"
+                                      cx="12"
+                                      cy="12"
+                                      r="10"
+                                      stroke="currentColor"
+                                      strokeWidth="4"
+                                    />
+                                    <path
+                                      className="opacity-75"
+                                      fill="currentColor"
+                                      d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"
+                                    />
+                                  </svg>
+                                ) : (
+                                  <svg
+                                    width="14"
+                                    height="14"
+                                    viewBox="0 0 24 24"
+                                    fill="none"
+                                    stroke="currentColor"
+                                    strokeWidth="2"
+                                    strokeLinecap="round"
+                                    strokeLinejoin="round"
+                                  >
+                                    <polyline points="3 6 5 6 21 6" />
+                                    <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" />
+                                  </svg>
+                                )}
                               </button>
                             )}
                           </div>
