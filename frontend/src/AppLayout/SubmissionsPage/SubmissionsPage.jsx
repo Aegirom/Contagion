@@ -19,7 +19,7 @@ function SubmissionsPage() {
   const [submissions, setSubmissions] = useState([]);
   const [filters, setFilters] = useState({
     query: "",
-    status: "all",
+    status: "Published",
     family: "all",
   });
   const [dataLoading, setDataLoading] = useState(true);
