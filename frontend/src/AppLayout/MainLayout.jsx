@@ -4,10 +4,7 @@ import TopBar from './Dashboard/Components/TopBar';
 
 export default function MainLayout({ pageName, children, sidebarOpen, toggleSidebar }) {
   return (
-    <div className="min-h-screen flex relative" style={{ background: '#0A0B10' }}>
-      <div className="fixed inset-0 bg-grid-toxic pointer-events-none opacity-40" />
-      <div className="fixed inset-0 bg-scanline pointer-events-none opacity-20" />
-
+    <div className="min-h-screen flex relative" style={{ background: '#F9FAFB' }}>
       <Sidebar isOpen={sidebarOpen} toggleSidebar={toggleSidebar} />
       <div
         className="flex-1 flex flex-col min-h-screen transition-all duration-300"

@@ -19,7 +19,7 @@ const TurnstileWidget = ({ onToken, onError, id = 'cf-turnstile' }) => {
         callback: (token) => onToken?.(token),
         'error-callback': () => onError?.('Turnstile verification failed. Please try again.'),
         'expired-callback': () => onToken?.(null),
-        theme: 'dark',
+        theme: 'light',
       });
     };
 
