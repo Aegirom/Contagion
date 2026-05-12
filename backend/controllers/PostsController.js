@@ -2,6 +2,7 @@ import sql from "mssql";
 import pool from "../config/db.js";
 import { createNotification } from "../services/notificationService.js";
 import { awardCommentXp, awardLikeXp } from "../services/reputationService.js";
+import { convertR2ToHttpUrl } from "../services/r2Service.js";
 
 const getPostOwnerId = async (submissionId) => {
   const result = await pool
@@ -26,14 +27,21 @@ export const getComments = async (req, res) => {
           pc.created_at,
           u.username,
           u.user_id,
-          u.role
+          u.role,
+          p.avatar_url
         FROM Post_Comments pc
         JOIN Users u ON pc.user_id = u.user_id
+        LEFT JOIN User_Profiles p ON u.user_id = p.user_id
         WHERE pc.submission_id = @submissionId
         ORDER BY pc.created_at DESC
       `);
 
-    res.json(result.recordset);
+    const comments = result.recordset.map((c) => ({
+      ...c,
+      avatar_url: convertR2ToHttpUrl(c.avatar_url),
+    }));
+
+    res.json(comments);
   } catch (error) {
     console.error("Error fetching comments:", error);
     res.status(500).json({ error: "Failed to fetch comments" });
