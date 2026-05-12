@@ -759,15 +759,14 @@ const Post = () => {
                           }}
                         >
                           <div className="flex items-center gap-2 mb-2">
-                            <div
-                              className="w-6 h-6 rounded-full flex items-center justify-center font-display text-[10px] font-bold"
-                              style={{
-                                background: "rgba(34,197,94,0.2)",
-                                color: "#22C55E",
-                              }}
-                            >
-                              {comment.username?.charAt(0).toUpperCase()}
-                            </div>
+                            <img
+                              src={
+                                comment.avatar_url ||
+                                `https://ui-avatars.com/api/?name=${encodeURIComponent(comment.username)}&background=10b981&color=fff&size=32`
+                              }
+                              alt=""
+                              className="w-6 h-6 rounded-full object-cover"
+                            />
                             <span
                               className="font-body text-sm font-semibold"
                               style={{ color: "#111827" }}
