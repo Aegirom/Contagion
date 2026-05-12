@@ -1,5 +1,5 @@
 import express from 'express';
-import { protect } from './Auth.js';
+import { protect } from '../middleware/auth.js';
 import { getArtifact, getArtifactDownload, listArtifacts, uploadArtifact, uploadMiddleware } from '../controllers/ArtifactsController.js';
 
 const router = express.Router();

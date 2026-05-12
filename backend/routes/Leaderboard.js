@@ -3,7 +3,7 @@ import {
   getLeaderboard,
   getMyLeaderboardPosition,
 } from "../controllers/LeaderboardController.js";
-import { protect } from "./Auth.js";
+import { protect } from "../middleware/auth.js";
 
 const router = express.Router();
 

@@ -1,6 +1,6 @@
 import sql from 'mssql';
 import pool from '../config/db.js';
-import jwt from 'jsonwebtoken';
+import { awardSubmissionXp } from '../services/reputationService.js';
 
 async function fetchAllSubmissions() {
   try {
@@ -221,26 +221,6 @@ export const getUserDrafts = async (req, res) => {
     res.status(500).json({ error: 'Internal Server Error' });
   }
 }
-
-// Middleware that optionally extracts user from token (doesn't fail if no token)
-export const optionalAuth = (req, res, next) => {
-  let token;
-
-  if (req.headers.authorization && req.headers.authorization.startsWith('Bearer')) {
-    try {
-      token = req.headers.authorization.split(' ')[1];
-      const decoded = jwt.verify(token, process.env.JWT_SECRET, {
-        algorithms: ['HS256'],
-        issuer: 'contagion',
-      });
-      req.user = decoded;
-    } catch (error) {
-      // Silently ignore token errors, just don't set req.user
-    }
-  }
-
-  next();
-};
 
 export const getSubmissionByIdPublic = async (req, res) => {
   try {
@@ -571,12 +551,7 @@ export const postSubmission = async (req, res) => {
           VALUES (@author_id, @artifact_id, @title, @content, @status, @version, @template_type)
         `);
 
-      // XP gain: +10 for creating a submission, +25 if published immediately
-      const xpGain = finalStatus === 'Published' ? 25 : 10;
-      await pool.request()
-        .input('author_id', sql.INT, authorId)
-        .input('xp', sql.INT, xpGain)
-        .query('UPDATE Users SET reputation_score = reputation_score + @xp WHERE user_id = @author_id');
+      const xpGain = await awardSubmissionXp(authorId, finalStatus);
 
       res.status(201).json({
         message: "Submission Created",

@@ -175,7 +175,7 @@ const ProfilePage = () => {
     expertiseLevel === "Expert"
       ? "#A78BFA"
       : expertiseLevel === "Advanced"
-        ? "#60A5FA"
+        ? "#2563EB"
         : "#4ADE80";
 
   const expertiseBg =

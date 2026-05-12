@@ -1,5 +1,6 @@
 import sql from 'mssql';
 import pool from '../config/db.js';
+import { awardApprovalXp } from '../services/reputationService.js';
 
 export async function getAdminStats(req, res) {
   try {
@@ -207,9 +208,7 @@ export async function moderateSubmission(req, res) {
     const { author_id, title } = result.recordset[0];
 
     if (action === 'approve') {
-      await pool.request()
-        .input('author_id', sql.INT, author_id)
-        .query('UPDATE Users SET reputation_score = reputation_score + 25 WHERE user_id = @author_id');
+      await awardApprovalXp(author_id);
     }
 
     // Send notification to author

@@ -4,6 +4,7 @@ import { fileTypeFromBuffer } from 'file-type';
 import sql from 'mssql';
 import pool from '../config/db.js';
 import { createSignedR2DownloadUrl, uploadBufferToR2 } from '../services/r2Service.js';
+import { getSha1Column } from '../services/artifactService.js';
 
 const MAX_ARTIFACT_BYTES = 25 * 1024 * 1024;
 const ALLOWED_CATEGORIES = new Set(['Ransomware', 'Trojan', 'Worm', 'APT', 'Rootkit', 'Spyware', 'Other']);
@@ -15,22 +16,6 @@ export const uploadMiddleware = multer({
     files: 1,
   },
 });
-
-let cachedSha1Column = null;
-
-const getSha1Column = async () => {
-  if (cachedSha1Column) return cachedSha1Column;
-
-  const result = await pool.request().query(`
-    SELECT name
-    FROM sys.columns
-    WHERE object_id = OBJECT_ID('Malware_Artifacts')
-      AND LOWER(name) LIKE 'sha1%'
-  `);
-
-  cachedSha1Column = result.recordset[0]?.name || 'sha1_hash';
-  return cachedSha1Column;
-};
 
 const sha = (algorithm, buffer) => crypto.createHash(algorithm).update(buffer).digest('hex');
 

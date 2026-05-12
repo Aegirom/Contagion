@@ -3,45 +3,11 @@ import pool from '../config/db.js';
 import { getBehaviorSummary, getFileReport, normalizeVerdict } from '../services/virusTotalService.js';
 import { lookupHash } from '../services/abuseChService.js';
 import { analyzeLocally, getStaticWarnings } from '../services/localAnalysisService.js';
+import { getSha1Column } from '../services/artifactService.js';
+import { createNotification } from '../services/notificationService.js';
 
 const HASH_PATTERN = /^[a-fA-F0-9]{32}$|^[a-fA-F0-9]{40}$|^[a-fA-F0-9]{64}$/;
 const ALLOWED_ENVIRONMENTS = new Set(['Docker', 'VirtualBox', 'KVM']);
-let cachedSha1Column = null;
-
-const createNotification = async ({ userId, type, message, actorUsername, relatedSubmissionId }) => {
-  try {
-    console.log(`[Notification] Creating: user=${userId}, type=${type}, actor=${actorUsername}, submission=${relatedSubmissionId}`);
-    const result = await pool.request()
-      .input("userId", sql.Int, Number(userId))
-      .input("type", sql.NVarChar(50), type)
-      .input("message", sql.NVarChar(500), message)
-      .input("actorUsername", sql.NVarChar(100), actorUsername)
-      .input("relatedSubmissionId", sql.Int, relatedSubmissionId ? Number(relatedSubmissionId) : null)
-      .query(`
-        INSERT INTO Notifications (user_id, type, message, actor_username, related_submission_id, is_read)
-        OUTPUT INSERTED.notification_id
-        VALUES (@userId, @type, @message, @actorUsername, @relatedSubmissionId, 0)
-      `);
-    console.log(`[Notification] Created notification_id=${result.recordset[0].notification_id}`);
-  } catch (error) {
-    console.error("[Notification] Error creating notification:", error.message);
-    console.error("[Notification] SQL details:", error);
-  }
-};
-
-const getSha1Column = async () => {
-  if (cachedSha1Column) return cachedSha1Column;
-
-  const result = await pool.request().query(`
-    SELECT name
-    FROM sys.columns
-    WHERE object_id = OBJECT_ID('Malware_Artifacts')
-      AND LOWER(name) LIKE 'sha1%'
-  `);
-
-  cachedSha1Column = result.recordset[0]?.name || 'sha1_hash';
-  return cachedSha1Column;
-};
 
 const assertSubmissionAccess = async (submissionId, userId) => {
   const result = await pool.request()
@@ -72,10 +38,8 @@ const getSubmissionHash = async (artifactId) => {
 };
 
 const getOrCreateArtifact = async (fileReport, uploaderId, abuseData, localArtifact) => {
-  // Prefer local artifact if it exists
   if (localArtifact) return localArtifact.artifact_id;
 
-  // Check for existing artifact by hash
   const attributes = fileReport?.data?.attributes || {};
   const sha256 = attributes.sha256 || fileReport?.data?.id || abuseData?.sha256_hash;
   if (!sha256) {
@@ -92,7 +56,6 @@ const getOrCreateArtifact = async (fileReport, uploaderId, abuseData, localArtif
     return existing.recordset[0].artifact_id;
   }
 
-  // Build from best available source
   const sha1 = attributes.sha1 || abuseData?.sha1_hash;
   const md5 = attributes.md5 || abuseData?.md5_hash;
   const fileName = attributes.meaningful_name || attributes.names?.[0] || abuseData?.file_name || `${sha256.slice(0, 12)}.bin`;
@@ -369,7 +332,6 @@ export const evaluateFile = async (req, res) => {
       return res.status(400).json({ error: 'A valid MD5, SHA-1, or SHA-256 hash is required' });
     }
 
-    // Resolve artifact: use existing local one or try external sources
     let artifactId = submission.artifact_id;
     let localArtifact = null;
 
@@ -380,7 +342,6 @@ export const evaluateFile = async (req, res) => {
       localArtifact = artResult.recordset[0];
     }
 
-    // Query external sources in parallel
     let fileReport = null;
     let abuseData = null;
     let vtData = false;
@@ -400,10 +361,8 @@ export const evaluateFile = async (req, res) => {
       abuseFound = true;
     }
 
-    // Run local static analysis
     const localVerdict = analyzeLocally(localArtifact || { file_name: abuseData?.file_name, file_type: abuseData?.file_type, malware_family: abuseData?.malware_family, malware_category: abuseData?.malware_category, file_hash: hash });
 
-    // Create artifact from best available source
     if (!artifactId) {
       artifactId = await getOrCreateArtifact(fileReport, req.user.userId, abuseData, localArtifact);
     }
@@ -415,7 +374,6 @@ export const evaluateFile = async (req, res) => {
       });
     }
 
-    // Link artifact to submission if not already linked
     if (artifactId && !submission.artifact_id) {
       await pool.request()
         .input('submission_id', sql.INT, submission.submission_id)
@@ -441,7 +399,6 @@ export const evaluateFile = async (req, res) => {
     let warnings = [];
 
     if (vtData && fileReport?.data?.attributes) {
-      // Full external analysis available
       behaviorSummary = await getBehaviorSummary(
         fileReport.data.attributes.sha256 || fileReport.data.id
       );
@@ -449,7 +406,6 @@ export const evaluateFile = async (req, res) => {
       await storeBehaviorLogs(executionId, fileReport, behaviorSummary, verdict);
       await updateExecution(executionId, 'Completed');
     } else if (abuseData) {
-      // abuse.ch data with local analysis
       verdict = {
         stats: {
           malicious: localVerdict?.stats?.malicious || 1,
@@ -469,7 +425,6 @@ export const evaluateFile = async (req, res) => {
       await storeLocalLogs(executionId, abuseData, verdict, warnings);
       await updateExecution(executionId, 'Completed', 'Analyzed via threat intelligence feed');
     } else if (localArtifact) {
-      // Local static analysis only
       verdict = {
         stats: localVerdict?.stats || { malicious: 0, suspicious: 0, harmless: 0, undetected: 1 },
         severity: localVerdict?.severity || 'Low',
