@@ -9,7 +9,7 @@ export const getActivityFeed = async (req, res) => {
       return res.status(401).json({ error: "Unauthorized" });
     }
 
-    // Get user's recent submissions and badges in parallel
+    // Get user's recent submissions and specializations in parallel
     const [submissionsResult, specializationsResult] = await Promise.all([
       pool.request().input("user_id", sql.INT, userId).query(`
           SELECT TOP 5
@@ -24,49 +24,53 @@ export const getActivityFeed = async (req, res) => {
           ORDER BY s.submitted_at DESC
         `),
       pool.request().input("user_id", sql.INT, userId).query(`
-          SELECT s.name as specialization, us.assigned_at
+          SELECT s.name AS specialization, GETDATE() AS assigned_at
           FROM User_Specializations us
           JOIN Specializations s ON us.specialization_id = s.specialization_id
           WHERE us.user_id = @user_id
         `),
     ]);
 
-    // Format activity items
+    // Build activity items, keeping raw date for sorting
     const activityItems = [];
 
-    // Add submissions to activity
     submissionsResult.recordset.forEach((sub) => {
+      const rawDate = new Date(sub.submitted_at);
       activityItems.push({
         type: "submission",
         msg: `Analysis completed: ${sub.title || "Untitled"}`,
-        time: new Date(sub.submitted_at).toLocaleDateString("en-US", {
+        time: rawDate.toLocaleDateString("en-US", {
           month: "short",
           day: "numeric",
           hour: "2-digit",
           minute: "2-digit",
         }),
+        _rawDate: rawDate,
         color: "#22C55E",
         data: sub,
       });
     });
 
-    // Add specializations to activity
     specializationsResult.recordset.forEach((spec) => {
+      const rawDate = new Date(spec.assigned_at);
       activityItems.push({
         type: "badge",
         msg: `Earned: ${spec.specialization}`,
-        time: new Date(spec.assigned_at).toLocaleDateString("en-US", {
+        time: rawDate.toLocaleDateString("en-US", {
           month: "short",
           day: "numeric",
         }),
+        _rawDate: rawDate,
         color: "#F59E0B",
         data: spec,
       });
     });
 
-    // Sort by time (most recent first) and limit to 8 items
-    activityItems.sort((a, b) => new Date(b.time) - new Date(a.time));
-    const items = activityItems.slice(0, 8);
+    // Sort by raw date (most recent first), then strip the internal field
+    activityItems.sort((a, b) => b._rawDate - a._rawDate);
+    const items = activityItems
+      .slice(0, 8)
+      .map(({ _rawDate, ...item }) => item);
 
     // If no activity, return placeholder items
     if (items.length === 0) {
