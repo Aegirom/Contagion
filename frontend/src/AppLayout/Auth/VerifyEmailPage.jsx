@@ -37,10 +37,10 @@ const VerifyEmailPage = () => {
     <AuthLayout>
       {/* Branding */}
       <div style={{ marginBottom: 36 }}>
-        <h1 style={{ fontSize: 13, fontWeight: 600, letterSpacing: '0.25em', color: '#3A3A3A', textTransform: 'uppercase', margin: '0 0 4px' }}>
+        <h1 style={{ fontSize: 13, fontWeight: 600, letterSpacing: '0.25em', color: '#6B7280', textTransform: 'uppercase', margin: '0 0 4px' }}>
           Contagion
         </h1>
-        <p style={{ fontSize: 10, letterSpacing: '0.12em', textTransform: 'uppercase', color: '#2A2A2A', margin: 0 }}>
+        <p style={{ fontSize: 10, letterSpacing: '0.12em', textTransform: 'uppercase', color: '#9CA3AF', margin: 0 }}>
           Email Verification
         </p>
       </div>
@@ -73,14 +73,14 @@ const VerifyEmailPage = () => {
         </div>
 
         {/* Title */}
-        <h2 style={{ fontSize: 18, fontWeight: 500, color: '#D4D4D4', letterSpacing: '-0.02em', margin: '0 0 10px' }}>
+        <h2 style={{ fontSize: 18, fontWeight: 500, color: '#111827', letterSpacing: '-0.02em', margin: '0 0 10px' }}>
           {status === 'verifying' ? 'Verifying…' :
            status === 'success'   ? 'Email Verified' :
                                     'Verification Failed'}
         </h2>
 
         {/* Message */}
-        <p style={{ fontSize: 12, color: '#5A5A5A', lineHeight: 1.65, margin: '0 0 28px' }}>
+        <p style={{ fontSize: 12, color: '#6B7280', lineHeight: 1.65, margin: '0 0 28px' }}>
           {message}
         </p>
 

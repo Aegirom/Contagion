@@ -71,10 +71,10 @@ const LoginForm = () => {
     <AuthLayout leftContent={FEED}>
       {/* Header */}
       <div style={{ marginBottom: 32 }}>
-        <h1 style={{ fontSize: 20, fontWeight: 500, color: '#D4D4D4', letterSpacing: '-0.025em', margin: '0 0 6px' }}>
+        <h1 style={{ fontSize: 20, fontWeight: 500, color: '#111827', letterSpacing: '-0.025em', margin: '0 0 6px' }}>
           Sign in
         </h1>
-        <p style={{ fontSize: 12, color: '#4A4A4A', margin: 0 }}>
+        <p style={{ fontSize: 12, color: '#6B7280', margin: 0 }}>
           No account?{' '}
           <Link to="/register" style={{ color: ACCENT, textDecoration: 'none' }}>Request access</Link>
         </p>
@@ -120,7 +120,7 @@ const LoginForm = () => {
             accentColor={ACCENT}
             suffixButton={
               <button type="button" onClick={() => setShowPass(!showPass)}
-                style={{ background: 'none', border: 'none', padding: 0, cursor: 'pointer', color: showPass ? ACCENT : '#404040', display: 'flex' }}>
+                style={{ background: 'none', border: 'none', padding: 0, cursor: 'pointer', color: showPass ? ACCENT : '#6B7280', display: 'flex' }}>
                 <EyeIcon open={showPass} />
               </button>
             }
@@ -129,9 +129,9 @@ const LoginForm = () => {
           <div style={{ textAlign: 'right', marginTop: 7 }}>
             <Link
               to="/forgot-password"
-              style={{ fontSize: 11, color: '#6B6B6B', textDecoration: 'none', transition: 'color 0.15s' }}
+              style={{ fontSize: 11, color: '#9CA3AF', textDecoration: 'none', transition: 'color 0.15s' }}
               onMouseEnter={e => e.target.style.color = ACCENT}
-              onMouseLeave={e => e.target.style.color = '#6B6B6B'}
+              onMouseLeave={e => e.target.style.color = '#9CA3AF'}
             >
               Forgot password?
             </Link>
@@ -158,8 +158,8 @@ const LoginForm = () => {
                 width: 32,
                 height: 18,
                 borderRadius: 9,
-                background: rememberMe ? ACCENT : '#1a1a1a',
-                border: `1px solid ${rememberMe ? ACCENT : '#2A2A2A'}`,
+                background: rememberMe ? ACCENT : '#E5E7EB',
+                border: `1px solid ${rememberMe ? ACCENT : '#D1D5DB'}`,
                 position: 'relative',
                 transition: 'all 0.2s ease',
               }}
@@ -169,7 +169,7 @@ const LoginForm = () => {
                   width: 14,
                   height: 14,
                   borderRadius: '50%',
-                  background: rememberMe ? '#000' : '#404040',
+                  background: rememberMe ? '#000' : '#9CA3AF',
                   position: 'absolute',
                   top: 1,
                   left: rememberMe ? 15 : 1,
@@ -177,7 +177,7 @@ const LoginForm = () => {
                 }}
               />
             </div>
-            <span style={{ fontSize: 11, color: rememberMe ? '#888' : '#555', transition: 'color 0.2s' }}>Remember me</span>
+            <span style={{ fontSize: 11, color: rememberMe ? '#4B5563' : '#6B7280', transition: 'color 0.2s' }}>Remember me</span>
           </button>
         </div>
 
@@ -193,8 +193,8 @@ const LoginForm = () => {
           disabled={loading || !turnstileToken}
           style={{
             padding: '11px',
-            background: loading ? '#111' : ACCENT,
-            border: `1px solid ${loading ? '#1E1E1E' : ACCENT}`,
+            background: loading ? '#E5E7EB' : ACCENT,
+            border: `1px solid ${loading ? '#D1D5DB' : ACCENT}`,
             borderRadius: 6,
             color: loading ? '#404040' : '#000',
             fontSize: 13,
@@ -212,14 +212,14 @@ const LoginForm = () => {
       </form>
 
       {/* Footer link */}
-      <div style={{ marginTop: 24, paddingTop: 20, borderTop: '1px solid #111', textAlign: 'center' }}>
-        <span style={{ fontSize: 11, color: '#3A3A3A' }}>
+      <div style={{ marginTop: 24, paddingTop: 20, borderTop: '1px solid #E5E7EB', textAlign: 'center' }}>
+        <span style={{ fontSize: 11, color: '#6B7280' }}>
           New to Contagion?{' '}
           <Link
             to="/register"
-            style={{ color: '#5A5A5A', textDecoration: 'none' }}
+            style={{ color: '#9CA3AF', textDecoration: 'none' }}
             onMouseEnter={e => e.target.style.color = ACCENT}
-            onMouseLeave={e => e.target.style.color = '#5A5A5A'}
+            onMouseLeave={e => e.target.style.color = '#9CA3AF'}
           >
             Request analyst access →
           </Link>

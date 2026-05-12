@@ -68,21 +68,21 @@ const RegisterForm = () => {
     return (
       <AuthLayout leftContent={REASONS}>
         <div style={{ marginBottom: 36 }}>
-          <h1 style={{ fontSize: 20, fontWeight: 500, color: '#D4D4D4', letterSpacing: '-0.025em', margin: '0 0 8px' }}>
+          <h1 style={{ fontSize: 20, fontWeight: 500, color: '#111827', letterSpacing: '-0.025em', margin: '0 0 8px' }}>
             Check your inbox
           </h1>
-          <p style={{ fontSize: 12, color: '#4A4A4A', margin: '0 0 20px', lineHeight: 1.6 }}>
+          <p style={{ fontSize: 12, color: '#6B7280', margin: '0 0 20px', lineHeight: 1.6 }}>
             Verification link sent to{' '}
             <span style={{ color: ACCENT }}>{formData.email}</span>
           </p>
-          <p style={{ fontSize: 11, color: '#525252', lineHeight: 1.7, marginBottom: 28 }}>
+          <p style={{ fontSize: 11, color: '#6B7280', lineHeight: 1.7, marginBottom: 28 }}>
             Click the link in the email to activate your account. The link expires in 24 hours.
           </p>
           <Link
             to="/login"
-            style={{ fontSize: 12, color: '#5A5A5A', textDecoration: 'none', transition: 'color 0.15s' }}
+            style={{ fontSize: 12, color: '#9CA3AF', textDecoration: 'none', transition: 'color 0.15s' }}
             onMouseEnter={e => e.target.style.color = ACCENT}
-            onMouseLeave={e => e.target.style.color = '#5A5A5A'}
+            onMouseLeave={e => e.target.style.color = '#9CA3AF'}
           >
             ← Back to login
           </Link>
@@ -94,10 +94,10 @@ const RegisterForm = () => {
   return (
     <AuthLayout leftContent={REASONS}>
       <div style={{ marginBottom: 30 }}>
-        <h1 style={{ fontSize: 20, fontWeight: 500, color: '#D4D4D4', letterSpacing: '-0.025em', margin: '0 0 6px' }}>
+        <h1 style={{ fontSize: 20, fontWeight: 500, color: '#111827', letterSpacing: '-0.025em', margin: '0 0 6px' }}>
           Create account
         </h1>
-        <p style={{ fontSize: 12, color: '#4A4A4A', margin: 0 }}>
+        <p style={{ fontSize: 12, color: '#6B7280', margin: 0 }}>
           Already have access?{' '}
           <Link to="/login" style={{ color: ACCENT, textDecoration: 'none' }}>Sign in</Link>
         </p>
@@ -132,8 +132,8 @@ const RegisterForm = () => {
             required
             accentColor={ACCENT}
             suffixButton={
-              <button type="button" onClick={() => setShowPass(!showPass)}
-                style={{ background: 'none', border: 'none', padding: 0, cursor: 'pointer', color: showPass ? ACCENT : '#404040', display: 'flex' }}>
+                  <button type="button" onClick={() => setShowPass(!showPass)}
+                style={{ background: 'none', border: 'none', padding: 0, cursor: 'pointer', color: showPass ? ACCENT : '#6B7280', display: 'flex' }}>
                 <EyeIcon open={showPass} />
               </button>
             }
@@ -144,7 +144,7 @@ const RegisterForm = () => {
                 {[1,2,3,4].map(n => (
                   <div key={n} style={{
                     flex: 1, height: 2, borderRadius: 2,
-                    background: n <= strength ? STR_COLORS[strength] : '#181818',
+                    background: n <= strength ? STR_COLORS[strength] : '#E5E7EB',
                     transition: 'background 0.2s',
                   }} />
                 ))}
@@ -177,8 +177,8 @@ const RegisterForm = () => {
           disabled={loading || !turnstileToken}
           style={{
             padding: '11px',
-            background: loading ? '#111' : ACCENT,
-            border: `1px solid ${loading ? '#1E1E1E' : ACCENT}`,
+            background: loading ? '#E5E7EB' : ACCENT,
+            border: `1px solid ${loading ? '#D1D5DB' : ACCENT}`,
             borderRadius: 6,
             color: loading ? '#404040' : '#fff',
             fontSize: 13,

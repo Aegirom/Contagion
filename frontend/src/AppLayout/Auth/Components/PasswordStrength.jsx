@@ -14,7 +14,7 @@ const PasswordStrength = ({ password, strength }) => {
             key={n}
             className="flex-1 h-[2px] rounded-full transition-all duration-300"
             style={{
-              background: n <= strength ? strengthColor : 'rgba(30,34,51,0.9)',
+              background: n <= strength ? strengthColor : '#E5E7EB',
             }}
           />
         ))}

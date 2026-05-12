@@ -5,7 +5,7 @@ const InputField = ({ label, name, type = 'text', value, onChange, placeholder, 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
       {label && (
-        <label style={{ fontSize: 10, letterSpacing: '0.14em', textTransform: 'uppercase', color: error ? '#EF4444' : '#303030', fontWeight: 500 }}>
+        <label style={{ fontSize: 10, letterSpacing: '0.14em', textTransform: 'uppercase', color: error ? '#EF4444' : '#6B7280', fontWeight: 500 }}>
           {label}
         </label>
       )}
@@ -24,10 +24,10 @@ const InputField = ({ label, name, type = 'text', value, onChange, placeholder, 
             width: '100%',
             padding: '10px 13px',
             paddingRight: suffixButton ? 38 : 13,
-            background: '#0D0D0D',
-            border: `1px solid ${error ? '#EF444430' : focused ? `${accentColor}30` : '#161616'}`,
+            background: '#FFFFFF',
+            border: `1px solid ${error ? '#EF444430' : focused ? `${accentColor}30` : '#E5E7EB'}`,
             borderRadius: 6,
-            color: '#C8C8C8',
+            color: '#111827',
             fontSize: 13,
             outline: 'none',
             fontFamily: 'inherit',

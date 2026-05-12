@@ -15,8 +15,8 @@ const ThemeOrbs = ({ orbs, containerRef }) => {
 
   // Gradient opacity stops - tune these for visual effect
   const GRADIENT_CONFIG = {
-    centerOpacity: 0.13,
-    midOpacity: 0.045,
+    centerOpacity: 0.03,
+    midOpacity: 0.01,
     edgeOpacity: 0,
   };
 

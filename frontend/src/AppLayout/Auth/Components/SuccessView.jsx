@@ -92,7 +92,7 @@ const SuccessView = ({
       <h2
         className="font-display text-xl font-bold tracking-wider mb-3"
         style={{ 
-          color: '#F1F5F9', 
+          color: '#111827', 
           textShadow: `0 0 20px ${iconColor}40`,
           animation: 'fadeUp 0.5s ease 0.35s both', 
           opacity: 0 
@@ -105,7 +105,7 @@ const SuccessView = ({
       <div style={{ animation: 'fadeUp 0.5s ease 0.5s both', opacity: 0 }}>
         {/* Subtitle */}
         {subtitle && (
-          <p className="font-body text-sm mb-3" style={{ color: '#64748B' }}>
+          <p className="font-body text-sm mb-3" style={{ color: '#6B7280' }}>
             {subtitle}
           </p>
         )}
@@ -130,14 +130,14 @@ const SuccessView = ({
 
         {/* Custom Message - Only if provided */}
         {message && (
-          <p className="font-body text-sm mb-5" style={{ color: '#94A3B8' }}>
+          <p className="font-body text-sm mb-5" style={{ color: '#6B7280' }}>
             {message}
           </p>
         )}
 
         {/* Additional Info - Only if showAdditionalInfo is true */}
         {showAdditionalInfo && additionalInfo && (
-          <p className="font-code text-xs mb-6" style={{ color: '#334155' }}>
+          <p className="font-code text-xs mb-6" style={{ color: '#9CA3AF' }}>
             {additionalInfo}
           </p>
         )}

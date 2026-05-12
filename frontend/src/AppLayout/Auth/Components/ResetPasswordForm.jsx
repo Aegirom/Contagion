@@ -56,10 +56,10 @@ const ResetPasswordForm = () => {
     return (
       <AuthLayout leftContent={PW_REQUIREMENTS}>
         <div style={{ marginBottom: 36 }}>
-          <h1 style={{ fontSize: 20, fontWeight: 500, color: '#D4D4D4', margin: '0 0 8px', letterSpacing: '-0.025em' }}>
+          <h1 style={{ fontSize: 20, fontWeight: 500, color: '#111827', margin: '0 0 8px', letterSpacing: '-0.025em' }}>
             Password updated
           </h1>
-          <p style={{ fontSize: 12, color: '#4A4A4A', margin: '0 0 28px' }}>
+          <p style={{ fontSize: 12, color: '#6B7280', margin: '0 0 28px' }}>
             Your password has been reset successfully.
           </p>
           <Link
@@ -88,10 +88,10 @@ const ResetPasswordForm = () => {
   return (
     <AuthLayout leftContent={PW_REQUIREMENTS}>
       <div style={{ marginBottom: 32 }}>
-        <h1 style={{ fontSize: 20, fontWeight: 500, color: '#D4D4D4', margin: '0 0 8px', letterSpacing: '-0.025em' }}>
+        <h1 style={{ fontSize: 20, fontWeight: 500, color: '#111827', margin: '0 0 8px', letterSpacing: '-0.025em' }}>
           New password
         </h1>
-        <p style={{ fontSize: 12, color: '#4A4A4A', margin: 0 }}>
+        <p style={{ fontSize: 12, color: '#6B7280', margin: 0 }}>
           Choose a strong password for your account.
         </p>
       </div>
@@ -122,8 +122,8 @@ const ResetPasswordForm = () => {
             required
             accentColor={ACCENT}
             suffixButton={
-              <button type="button" onClick={() => setShowPass(!showPass)}
-                style={{ background: 'none', border: 'none', padding: 0, cursor: 'pointer', color: showPass ? ACCENT : '#404040', display: 'flex' }}>
+                  <button type="button" onClick={() => setShowPass(!showPass)}
+                style={{ background: 'none', border: 'none', padding: 0, cursor: 'pointer', color: showPass ? ACCENT : '#6B7280', display: 'flex' }}>
                 {showPass
                   ? <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19M1 1l22 22" strokeLinecap="round"/></svg>
                   : <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
@@ -137,7 +137,7 @@ const ResetPasswordForm = () => {
                 {[1,2,3,4].map(n => (
                   <div key={n} style={{
                     flex: 1, height: 2, borderRadius: 2,
-                    background: n <= pw.score ? pw.color : '#181818',
+                    background: n <= pw.score ? pw.color : '#E5E7EB',
                     transition: 'background 0.2s',
                   }} />
                 ))}
@@ -165,8 +165,8 @@ const ResetPasswordForm = () => {
           style={{
             marginTop: 4,
             padding: '11px',
-            background: loading ? '#111' : ACCENT,
-            border: `1px solid ${loading ? '#1E1E1E' : ACCENT}`,
+            background: loading ? '#E5E7EB' : ACCENT,
+            border: `1px solid ${loading ? '#D1D5DB' : ACCENT}`,
             borderRadius: 6,
             color: loading ? '#404040' : '#fff',
             fontSize: 13,
@@ -185,9 +185,9 @@ const ResetPasswordForm = () => {
       <div style={{ marginTop: 28 }}>
         <Link
           to="/login"
-          style={{ fontSize: 12, color: '#5A5A5A', textDecoration: 'none', transition: 'color 0.15s' }}
+          style={{ fontSize: 12, color: '#9CA3AF', textDecoration: 'none', transition: 'color 0.15s' }}
           onMouseEnter={e => e.target.style.color = ACCENT}
-          onMouseLeave={e => e.target.style.color = '#5A5A5A'}
+          onMouseLeave={e => e.target.style.color = '#9CA3AF'}
         >
           ← Back to login
         </Link>

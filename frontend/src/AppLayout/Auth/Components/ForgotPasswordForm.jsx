@@ -32,22 +32,22 @@ const ForgotPasswordForm = () => {
     return (
       <AuthLayout leftContent={RESET_STEPS}>
         <div style={{ marginBottom: 36 }}>
-          <h1 style={{ fontSize: 20, fontWeight: 500, color: '#D4D4D4', margin: '0 0 8px', letterSpacing: '-0.025em' }}>
+          <h1 style={{ fontSize: 20, fontWeight: 500, color: '#111827', margin: '0 0 8px', letterSpacing: '-0.025em' }}>
             Check your inbox
           </h1>
-          <p style={{ fontSize: 12, color: '#4A4A4A', margin: 0, lineHeight: 1.6 }}>
+          <p style={{ fontSize: 12, color: '#6B7280', margin: 0, lineHeight: 1.6 }}>
             Reset link sent to{' '}
             <span style={{ color: ACCENT }}>{email}</span>
           </p>
         </div>
-        <p style={{ fontSize: 11, color: '#525252', lineHeight: 1.7, marginBottom: 32 }}>
+        <p style={{ fontSize: 11, color: '#6B7280', lineHeight: 1.7, marginBottom: 32 }}>
           The link expires in 15 minutes. Check your spam folder if you don't see it.
         </p>
         <Link
           to="/login"
-          style={{ fontSize: 12, color: '#5A5A5A', textDecoration: 'none', transition: 'color 0.15s' }}
+          style={{ fontSize: 12, color: '#9CA3AF', textDecoration: 'none', transition: 'color 0.15s' }}
           onMouseEnter={e => e.target.style.color = ACCENT}
-          onMouseLeave={e => e.target.style.color = '#5A5A5A'}
+          onMouseLeave={e => e.target.style.color = '#9CA3AF'}
         >
           ← Back to login
         </Link>
@@ -58,10 +58,10 @@ const ForgotPasswordForm = () => {
   return (
     <AuthLayout leftContent={RESET_STEPS}>
       <div style={{ marginBottom: 32 }}>
-        <h1 style={{ fontSize: 20, fontWeight: 500, color: '#D4D4D4', margin: '0 0 8px', letterSpacing: '-0.025em' }}>
+        <h1 style={{ fontSize: 20, fontWeight: 500, color: '#111827', margin: '0 0 8px', letterSpacing: '-0.025em' }}>
           Reset password
         </h1>
-        <p style={{ fontSize: 12, color: '#4A4A4A', margin: 0 }}>
+        <p style={{ fontSize: 12, color: '#6B7280', margin: 0 }}>
           Enter your email and we'll send a reset link.
         </p>
       </div>
@@ -98,8 +98,8 @@ const ForgotPasswordForm = () => {
           style={{
             marginTop: 4,
             padding: '11px',
-            background: loading ? '#111' : ACCENT,
-            border: `1px solid ${loading ? '#1E1E1E' : ACCENT}`,
+            background: loading ? '#E5E7EB' : ACCENT,
+            border: `1px solid ${loading ? '#D1D5DB' : ACCENT}`,
             borderRadius: 6,
             color: loading ? '#404040' : '#000',
             fontSize: 13,
@@ -118,9 +118,9 @@ const ForgotPasswordForm = () => {
       <div style={{ marginTop: 28 }}>
         <Link
           to="/login"
-          style={{ fontSize: 12, color: '#5A5A5A', textDecoration: 'none', transition: 'color 0.15s' }}
+          style={{ fontSize: 12, color: '#9CA3AF', textDecoration: 'none', transition: 'color 0.15s' }}
           onMouseEnter={e => e.target.style.color = ACCENT}
-          onMouseLeave={e => e.target.style.color = '#5A5A5A'}
+          onMouseLeave={e => e.target.style.color = '#9CA3AF'}
         >
           ← Back to login
         </Link>
