@@ -3,37 +3,18 @@ import dotenv from 'dotenv';
 
 dotenv.config();
 
-const connString = process.env.AZURE_SQL_CONNECTION_STRING;
-
-const parseConnectionString = (str) => {
-  const config = {};
-  str.split(';').forEach(part => {
-    if (part.includes('=')) {
-      const [key, value] = part.split('=');
-      config[key.trim()] = value.trim();
-    }
-  });
-  return config;
-};
-
 let pool = null;
 let connecting = false;
 
 const buildSqlConfig = () => {
-  const connConfig = parseConnectionString(connString);
-
-  if (!connConfig['Server'] || !connConfig['Database'] || !connConfig['User ID'] || !connConfig['Password']) {
-    throw new Error('Invalid connection string. Missing required fields.');
-  }
-
   return {
-    server: connConfig['Server'].replace('tcp:', '').replace(',1433', ''),
-    port: parseInt(connConfig['Server'].match(/,(\d+)/)?.[1] || '1433'),
-    database: connConfig['Database'],
-    user: connConfig['User ID'],
-    password: connConfig['Password'],
+    server: process.env.DB_SERVER,
+    port: parseInt(process.env.DB_PORT || '1433'),
+    database: process.env.DB_NAME,
+    user: process.env.DB_USER,
+    password: process.env.DB_PASSWORD,
     encrypt: true,
-    trustServerCertificate: false,
+    trustServerCertificate: true,
     connectionTimeout: 15000,
     requestTimeout: 30000,
     pool: {
@@ -48,13 +29,13 @@ const buildSqlConfig = () => {
 };
 
 const createPool = async () => {
-  if (!connString) {
-    throw new Error('AZURE_SQL_CONNECTION_STRING not set');
+  if (!process.env.DB_SERVER) {
+    throw new Error('DB_SERVER not set');
   }
 
   const sqlConfig = buildSqlConfig();
   const newPool = await sql.connect(sqlConfig);
-  console.log('[DB] Connected to Azure SQL successfully');
+  console.log('[DB] Connected to AWS RDS successfully');
   return newPool;
 };
 

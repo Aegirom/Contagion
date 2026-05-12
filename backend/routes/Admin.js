@@ -21,6 +21,31 @@ import {
 
 const router = express.Router();
 
+const verifyTurnstile = async (req, res, next) => {
+  const token = req.body['cf-turnstile-response'];
+  if (!token) {
+    return res.status(400).json({ error: 'Please complete the CAPTCHA' });
+  }
+  try {
+    const verify = await fetch('https://challenges.cloudflare.com/turnstile/v0/siteverify', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        secret: process.env.TURNSTILE_SECRET,
+        response: token
+      })
+    });
+    const data = await verify.json();
+    if (!data.success) {
+      return res.status(400).json({ error: 'CAPTCHA failed' });
+    }
+    next();
+  } catch (err) {
+    console.error('Turnstile verification error:', err);
+    return res.status(500).json({ error: 'CAPTCHA verification failed' });
+  }
+};
+
 function requireAdminOrModerator(req, res, next) {
   const role = req.user?.role;
   if (role !== 'Administrator' && role !== 'Moderator') {
@@ -53,7 +78,7 @@ router.get('/activity', protect, requireAdmin, getRecentActivity);
 router.get('/moderation/stats', protect, requireAdminOrModerator, getModerationStats);
 router.get('/moderation/pending', protect, requireAdminOrModerator, getPendingSubmissions);
 router.get('/moderation/comments', protect, requireAdminOrModerator, getAllComments);
-router.put('/moderation/submissions/:submissionId', protect, requireAdminOrModerator, moderateSubmission);
+router.put('/moderation/submissions/:submissionId', protect, requireAdminOrModerator, verifyTurnstile, moderateSubmission);
 router.delete('/moderation/comments/:commentId', protect, requireAdminOrModerator, deleteComment);
 
 export default router;
