@@ -9,7 +9,7 @@ function DraftCard({ draft, onPublish, onDelete }) {
 
   return (
     <div
-      className="rounded-xl p-6 border transition-all hover:border-amber-500/30"
+      className="rounded-xl p-6 border transition-all hover:border-amber-500/30 animate-fade-up"
       style={{
         background: "rgba(255,255,255,0.8)",
         border: "1px solid rgba(229,231,235,0.8)",
@@ -34,7 +34,7 @@ function DraftCard({ draft, onPublish, onDelete }) {
         </span>
       </div>
 
-      <p className="text-sm mb-4 line-clamp-2"         style={{ color: "#6B7280" }}>
+      <p className="text-sm mb-4 line-clamp-2" style={{ color: "#6B7280" }}>
         {draft.content || "No content yet..."}
       </p>
 
@@ -43,10 +43,15 @@ function DraftCard({ draft, onPublish, onDelete }) {
         style={{ color: "#9CA3AF" }}
       >
         <span className="font-code">
-          Last saved: {draft.updated_at ? new Date(draft.updated_at).toLocaleDateString() : "Unknown"}
+          Last saved:{" "}
+          {draft.updated_at
+            ? new Date(draft.updated_at).toLocaleDateString()
+            : "Unknown"}
         </span>
         <span className="font-code">v{draft.version || 1}</span>
-        {draft.file_name && <span className="font-code">{draft.file_name}</span>}
+        {draft.file_name && (
+          <span className="font-code">{draft.file_name}</span>
+        )}
       </div>
 
       <div className="flex gap-3">

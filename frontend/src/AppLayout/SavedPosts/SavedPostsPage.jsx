@@ -116,7 +116,7 @@ const SavedPostsPage = () => {
               <div
                 key={post.submission_id}
                 onClick={() => navigate(`/post/${post.submission_id}`)}
-                className="group cursor-pointer rounded-xl p-6 border transition-all duration-300 hover:border-toxic/40 relative overflow-hidden"
+                className="group cursor-pointer rounded-xl p-6 border transition-all duration-300 hover:border-toxic/40 relative overflow-hidden animate-fade-up"
                 style={{
                   background: "rgba(255,255,255,0.8)",
                   border: "1px solid rgba(229,231,235,0.8)",
