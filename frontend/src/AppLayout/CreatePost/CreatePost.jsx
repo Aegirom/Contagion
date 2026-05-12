@@ -1,4 +1,4 @@
-import React, { useContext, useEffect, useState } from "react";
+import React, { useContext, useEffect, useState, useCallback } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import {
   createSubmission,
@@ -10,6 +10,7 @@ import { AuthContext } from "../../context/AuthContext";
 import { useArtifactStore } from "../../stores/artifactStore";
 import { useToast } from "../../context/ToastContext";
 import ArtifactUploader from "./ArtifactUploader";
+import TurnstileWidget from "../../components/TurnstileWidget";
 
 const CreatePost = () => {
   const navigate = useNavigate();
@@ -37,6 +38,11 @@ const CreatePost = () => {
   const [isLoadingDraft, setIsLoadingDraft] = useState(Boolean(draftId));
   const [runSandbox, setRunSandbox] = useState(true);
   const [submitError, setSubmitError] = useState("");
+  const [turnstileToken, setTurnstileToken] = useState(null);
+
+  const handleTurnstileToken = useCallback((token) => {
+    setTurnstileToken(token);
+  }, []);
 
   useEffect(() => {
     if (!draftId) return;
@@ -70,6 +76,7 @@ const CreatePost = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    if (!turnstileToken) { setSubmitError("Please complete the security verification"); return; }
     const submitStatus = e.nativeEvent.submitter?.value || formData.status;
     setIsSubmitting(true);
     setSubmitError("");
@@ -94,7 +101,7 @@ const CreatePost = () => {
 
       const response = draftId
         ? await updateSubmission(draftId, payload)
-        : await createSubmission(payload);
+        : await createSubmission(payload, turnstileToken);
       const submissionId =
         response.data.submission_id ||
         response.data.submission?.submission_id ||
@@ -118,7 +125,7 @@ const CreatePost = () => {
             os_profile: "Windows10",
             network_enabled: false,
             timeout_seconds: 120,
-          });
+          }, turnstileToken);
         } catch (sandboxError) {
           console.warn("Sandbox evaluation did not complete:", sandboxError);
         }
@@ -236,6 +243,8 @@ const CreatePost = () => {
                 </div>
               )}
 
+              <TurnstileWidget onToken={handleTurnstileToken} />
+
               {/* Buttons */}
               <div className="flex gap-3">
                 <button
@@ -250,7 +259,7 @@ const CreatePost = () => {
                   type="submit"
                   name="status"
                   value="Pending"
-                  disabled={isSubmitting || !user}
+                  disabled={isSubmitting || !user || !turnstileToken}
                   className="flex-1 flex items-center justify-center gap-2 px-6 py-3 text-xs font-mono uppercase tracking-wider bg-toxic text-void border border-phantom rounded-lg transition-colors duration-200 hover:bg-green-300 disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   {isSubmitting ? "Submitting..." : "Submit Analysis"}

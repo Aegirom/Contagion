@@ -6,15 +6,17 @@ export const register = async (userData) => {
     username: userData.name,
     email: userData.email,
     password: userData.password,
+    "cf-turnstile-response": userData.turnstileToken,
   });
   return response.data;
 };
 
 // Login user
-export const login = async (email, password) => {
+export const login = async (email, password, turnstileToken) => {
   const response = await API.post("/auth/login", {
     email,
     password,
+    "cf-turnstile-response": turnstileToken,
   });
   return response.data;
 };

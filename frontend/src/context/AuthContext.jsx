@@ -120,10 +120,10 @@ export const AuthProvider = ({ children }) => {
       window.removeEventListener("auth:tokensRefreshed", handleTokensRefreshed);
   }, [updateUserFromStorage]);
 
-  const login = async (email, password, rememberMe) => {
+  const login = async (email, password, rememberMe, turnstileToken) => {
     setLoading(true);
     try {
-      const response = await apiLogin(email, password);
+      const response = await apiLogin(email, password, turnstileToken);
       const { user: userData, tokens: authTokens } = response;
       const normalizedUser = normalizeUser(userData);
 
@@ -156,6 +156,7 @@ export const AuthProvider = ({ children }) => {
     setLoading(true);
     try {
       const response = await apiRegister(userData);
+
       const { user: newUser, message } = response;
 
       return {

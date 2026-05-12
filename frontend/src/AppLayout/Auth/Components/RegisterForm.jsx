@@ -1,7 +1,8 @@
-import { useState, useContext } from 'react';
+import { useState, useContext, useCallback } from 'react';
 import { Link } from 'react-router-dom';
 import AuthLayout, { REASONS } from './AuthLayout';
 import InputField from './InputField';
+import TurnstileWidget from '../../../components/TurnstileWidget';
 import { AuthContext } from '../../../context/AuthContext';
 
 const ACCENT = '#8B5CF6';
@@ -28,9 +29,20 @@ const RegisterForm = () => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState(false);
+  const [turnstileToken, setTurnstileToken] = useState(null);
+  const [turnstileError, setTurnstileError] = useState(false);
 
   const strength = calcStr(formData.password);
   const pwMismatch = formData.confirmPassword && formData.password !== formData.confirmPassword;
+
+  const handleTurnstileToken = useCallback((token) => {
+    setTurnstileToken(token);
+    setTurnstileError(false);
+  }, []);
+
+  const handleTurnstileError = useCallback(() => {
+    setTurnstileError(true);
+  }, []);
 
   const handleChange = e => {
     setFormData(p => ({ ...p, [e.target.name]: e.target.value }));
@@ -42,9 +54,10 @@ const RegisterForm = () => {
     if (!formData.name || !formData.email || !formData.password || !formData.confirmPassword) { setError('Please fill in all fields'); return; }
     if (formData.password !== formData.confirmPassword) { setError("Passwords don't match"); return; }
     if (strength < 2) { setError('Password is too weak'); return; }
+    if (!turnstileToken) { setError('Please complete the security verification'); return; }
     setLoading(true); setError('');
     try {
-      const result = await register(formData);
+      const result = await register({ ...formData, turnstileToken });
       if (result.success) setSuccess(true);
       else setError(result.error || 'Registration failed');
     } catch { setError('Something went wrong. Please try again.'); }
@@ -153,9 +166,15 @@ const RegisterForm = () => {
           error={pwMismatch ? "Passwords don't match" : undefined}
         />
 
+        {/* Turnstile */}
+        <TurnstileWidget
+          onToken={handleTurnstileToken}
+          onError={handleTurnstileError}
+        />
+
         <button
           type="submit"
-          disabled={loading}
+          disabled={loading || !turnstileToken}
           style={{
             padding: '11px',
             background: loading ? '#111' : ACCENT,

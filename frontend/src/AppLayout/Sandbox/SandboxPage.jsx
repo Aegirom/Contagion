@@ -5,6 +5,7 @@ import {
   getSandboxExecutions,
   getSandboxSubmissions,
 } from "../../services/api";
+import TurnstileWidget from "../../components/TurnstileWidget";
 
 const severityStyles = {
   Critical: "text-red-400 border-red-500/40 bg-red-500/10",
@@ -103,6 +104,11 @@ function SandboxPage() {
   const [running, setRunning] = useState(false);
   const [error, setError] = useState("");
   const [latestResult, setLatestResult] = useState(null);
+  const [turnstileToken, setTurnstileToken] = useState(null);
+
+  const handleTurnstileToken = useCallback((token) => {
+    setTurnstileToken(token);
+  }, []);
 
   const selectedSubmission = useMemo(
     () =>
@@ -146,6 +152,7 @@ function SandboxPage() {
 
   const handleRun = async (event) => {
     event.preventDefault();
+    if (!turnstileToken) { setError("Please complete the security verification"); return; }
     setRunning(true);
     setError("");
     setLatestResult(null);
@@ -158,7 +165,7 @@ function SandboxPage() {
         os_profile: osProfile,
         network_enabled: networkEnabled,
         timeout_seconds: Number(timeoutSeconds),
-      });
+      }, turnstileToken);
 
       setLatestResult(response.data);
       await loadData();
@@ -317,9 +324,11 @@ function SandboxPage() {
             />
           </label>
 
+          <TurnstileWidget onToken={handleTurnstileToken} />
+
           <button
             type="submit"
-            disabled={running || loading || submissions.length === 0}
+            disabled={running || loading || submissions.length === 0 || !turnstileToken}
             className="w-full rounded-lg bg-toxic px-5 py-3 font-display text-xs font-bold uppercase tracking-[0.22em] text-black transition hover:bg-green-300 disabled:cursor-not-allowed disabled:opacity-50"
           >
             {running ? "Evaluating..." : "Run Sandbox Evaluation"}

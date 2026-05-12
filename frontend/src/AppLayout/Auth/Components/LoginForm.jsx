@@ -1,7 +1,8 @@
-import { useState, useContext } from 'react';
+import { useState, useContext, useCallback } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import AuthLayout, { FEED } from './AuthLayout';
 import InputField from './InputField';
+import TurnstileWidget from '../../../components/TurnstileWidget';
 import { AuthContext } from '../../../context/AuthContext';
 
 const ACCENT = '#22C55E';
@@ -21,13 +22,25 @@ const LoginForm = () => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState(false);
+  const [turnstileToken, setTurnstileToken] = useState(null);
+  const [turnstileError, setTurnstileError] = useState(false);
+
+  const handleTurnstileToken = useCallback((token) => {
+    setTurnstileToken(token);
+    setTurnstileError(false);
+  }, []);
+
+  const handleTurnstileError = useCallback(() => {
+    setTurnstileError(true);
+  }, []);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (!formData.email || !formData.password) { setError('Please fill in all fields'); return; }
+    if (!turnstileToken) { setError('Please complete the security verification'); return; }
     setLoading(true); setError('');
     try {
-      const result = await login(formData.email, formData.password, rememberMe);
+      const result = await login(formData.email, formData.password, rememberMe, turnstileToken);
       if (result.success) { setSuccess(true); setTimeout(() => navigate('/dashboard'), 1200); }
       else setError(result.error || 'Invalid credentials');
     } catch { setError('Something went wrong. Please try again.'); }
@@ -168,10 +181,16 @@ const LoginForm = () => {
           </button>
         </div>
 
+        {/* Turnstile */}
+        <TurnstileWidget
+          onToken={handleTurnstileToken}
+          onError={handleTurnstileError}
+        />
+
         {/* Submit */}
         <button
           type="submit"
-          disabled={loading}
+          disabled={loading || !turnstileToken}
           style={{
             padding: '11px',
             background: loading ? '#111' : ACCENT,

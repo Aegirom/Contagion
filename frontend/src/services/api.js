@@ -208,8 +208,8 @@ export const getUserSavedSubmissions = () => API.get("/submissions/saved");
 export const getUserStats = () => API.get("/submissions/stats");
 export const getUserDrafts = () => API.get("/submissions/drafts");
 export const getSubmissionById = (id) => API.get(`/submissions/${id}`);
-export const createSubmission = (payload) =>
-  API.post("/submissions/post", payload);
+export const createSubmission = (payload, turnstileToken) =>
+  API.post("/submissions/post", { ...payload, "cf-turnstile-response": turnstileToken });
 export const importSubmission = (id) =>
   API.post(`/submissions/${id}/import`);
 export const updateSubmission = (id, payload) =>
@@ -233,8 +233,8 @@ export const getAnalystReputation = () => API.get("/dashboard/reputation");
 // Sandbox API functions
 export const getSandboxSubmissions = () => API.get("/sandbox/submissions");
 export const getSandboxExecutions = () => API.get("/sandbox/executions");
-export const evaluateSandboxFile = (payload) =>
-  API.post("/sandbox/evaluate", payload);
+export const evaluateSandboxFile = (payload, turnstileToken) =>
+  API.post("/sandbox/evaluate", { ...payload, "cf-turnstile-response": turnstileToken });
 
 // Post Interaction API functions
 export const getPostComments = (submissionId) =>
