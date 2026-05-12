@@ -1,6 +1,6 @@
 function Dropdown({ options = [], value, onChange, name }) {
   const selectBaseStyles =
-    "bg-void border border-phantom text-slate-300 py-2 px-3 focus:outline-none focus:border-toxic cursor-pointer font-mono text-xs uppercase tracking-wider";
+    "bg-void border border-phantom text-gray-700 py-2 px-3 focus:outline-none focus:border-toxic cursor-pointer font-mono text-xs uppercase tracking-wider";
 
   return (
     <div className="flex flex-col">

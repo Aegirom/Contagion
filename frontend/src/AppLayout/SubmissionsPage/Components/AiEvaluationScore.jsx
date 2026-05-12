@@ -4,7 +4,7 @@ function AiEvaluationScore({ percentage }) {
   return (
     <div className="w-full space-y-1">
       <div className="flex justify-between items-center text-[10px] font-mono">
-        <span className="text-slate-500 uppercase">Confidence Level</span>
+        <span className="text-gray-600 uppercase">Confidence Level</span>
         <span className="text-toxic font-bold">{percentage}</span>
       </div>
       <div className="h-1.5 w-full bg-phantom rounded-full overflow-hidden border border-phantom/30">

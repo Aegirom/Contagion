@@ -4,7 +4,7 @@ import Modal from 'react-modal';
 const AiEvaluationModal = ({ isOpen, onRequestClose, evaluationResult }) => {
     const customStyles = {
         overlay: {
-            backgroundColor: 'rgba(2, 6, 23, 0.85)',
+            backgroundColor: 'rgba(0, 0, 0, 0.1)',
             backdropFilter: 'blur(4px)',
             zIndex: 1000,
             display: 'flex',
@@ -16,11 +16,11 @@ const AiEvaluationModal = ({ isOpen, onRequestClose, evaluationResult }) => {
             inset: 'auto',
             width: '90%',
             maxWidth: '500px',
-            backgroundColor: '#020617',
-            border: '1px solid #1e293b',
+            backgroundColor: '#FFFFFF',
+            border: '1px solid #E5E7EB',
             padding: '0',
             borderRadius: '4px',
-            color: '#f8fafc',
+            color: '#111827',
             overflow: 'hidden'
         }
     };
@@ -33,27 +33,27 @@ const AiEvaluationModal = ({ isOpen, onRequestClose, evaluationResult }) => {
             contentLabel="AI Evaluation Result"
             ariaHideApp={false}
         >
-            <div className="border-b border-phantom p-4 flex justify-between items-center bg-obsidian">
+            <div className="border-b border-gray-200 p-4 flex justify-between items-center bg-white">
                 <div className="flex items-center gap-2">
                     <div className="w-2 h-2 bg-toxic shadow-[0_0_8px_#22C55E]"></div>
-                    <h2 className="text-sm font-black uppercase tracking-widest text-slate-100">Neural Analysis Report</h2>
+                    <h2 className="text-sm font-black uppercase tracking-widest text-gray-900">Neural Analysis Report</h2>
                 </div>
                 <button 
                     onClick={onRequestClose}
-                    className="text-slate-500 hover:text-toxic transition-colors text-lg font-mono"
+                    className="text-gray-600 hover:text-toxic transition-colors text-lg font-mono"
                 >
                     [×]
                 </button>
             </div>
 
-            <div className="p-6 bg-abyss">
+            <div className="p-6 bg-gray-50">
                 {evaluationResult}
             </div>
 
-            <div className="border-t border-phantom p-4 bg-obsidian flex justify-end">
+            <div className="border-t border-gray-200 p-4 bg-white flex justify-end">
                 <button 
                     onClick={onRequestClose}
-                    className="text-[10px] font-bold uppercase tracking-[0.2em] text-slate-500 hover:text-slate-300 transition-colors"
+                    className="text-[10px] font-bold uppercase tracking-[0.2em] text-gray-600 hover:text-gray-700 transition-colors"
                 >
                     Close Terminal
                 </button>

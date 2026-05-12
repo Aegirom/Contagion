@@ -3,9 +3,9 @@ import Dropdown from "./Dropdown";
 
 function SearchBar({ filters, onFilterChange }) {
   const inputBaseStyles =
-    "bg-void border border-phantom text-slate-100 py-2 px-4 focus:outline-none focus:border-toxic focus:ring-1 focus:ring-toxic/30 transition-all duration-200 placeholder:text-slate-600 font-mono text-sm";
+    "bg-void border border-phantom text-gray-900 py-2 px-4 focus:outline-none focus:border-toxic focus:ring-1 focus:ring-toxic/30 transition-all duration-200 placeholder:text-gray-500 font-mono text-sm";
   const selectBaseStyles =
-    "bg-void border border-phantom text-slate-300 py-2 px-3 focus:outline-none focus:border-toxic cursor-pointer font-mono text-xs uppercase tracking-wider";
+    "bg-void border border-phantom text-gray-700 py-2 px-3 focus:outline-none focus:border-toxic cursor-pointer font-mono text-xs uppercase tracking-wider";
 
   // Helper to update specific filter keys
   const handleChange = (e) => {

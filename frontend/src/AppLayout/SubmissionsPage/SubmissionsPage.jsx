@@ -163,12 +163,12 @@ function SubmissionsPage() {
 
   return (
     <>
-      <div className="min-h-screen bg-abyss text-slate-100 px-6 py-12 md:px-12 lg:px-20">
+      <div className="min-h-screen bg-abyss text-gray-900 px-6 py-12 md:px-12 lg:px-20">
         <div className="flex flex-row justify-between items-end mb-10 pb-6 border-b border-phantom">
           <div className="space-y-1">
             <div className="flex items-center gap-2">
               <div className="w-1 h-6 bg-toxic shadow-[0_0_8px_#22C55E]"></div>
-              <h3 className="text-3xl font-black text-slate-100 tracking-tighter uppercase">
+              <h3 className="text-3xl font-black text-gray-900 tracking-tighter uppercase">
                 My Submissions
               </h3>
             </div>
@@ -181,14 +181,14 @@ function SubmissionsPage() {
         </div>
 
         {actionError && (
-          <div className="mb-6 rounded border border-red-900/40 bg-red-900/10 px-4 py-3 font-code text-xs text-red-300">
+          <div className="mb-6 rounded border border-red-200 bg-red-50 px-4 py-3 font-code text-xs text-red-500">
             {actionError}
           </div>
         )}
 
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 w-full">
           <div className="col-span-full flex items-center gap-4 mb-2">
-            <span className="text-[10px] text-slate-600 font-black uppercase tracking-[0.3em]">
+            <span className="text-[10px] text-gray-500 font-black uppercase tracking-[0.3em]">
               Query Results ({filteredSubmissions.length})
             </span>
             <div className="h-[1px] flex-grow bg-phantom"></div>
@@ -211,7 +211,7 @@ function SubmissionsPage() {
 
           {filteredSubmissions.length === 0 && !dataLoading && (
             <div className="col-span-full py-20 text-center border border-dashed border-phantom">
-              <p className="text-slate-500 font-mono text-sm uppercase">
+              <p className="text-gray-600 font-mono text-sm uppercase">
                 No intelligence found matching current parameters.
               </p>
             </div>
@@ -220,7 +220,7 @@ function SubmissionsPage() {
           {dataLoading && filteredSubmissions.length === 0 && (
             <div className="col-span-full py-20 text-center">
               <div className="inline-block animate-spin rounded-full h-12 w-12 border-4 border-toxic border-t-transparent mb-4"></div>
-              <p className="text-slate-500 font-mono text-sm uppercase">
+              <p className="text-gray-600 font-mono text-sm uppercase">
                 Loading submissions...
               </p>
             </div>
@@ -234,12 +234,12 @@ function SubmissionsPage() {
           onRequestClose={handleCloseModal}
           evaluationResult={
             <div className="space-y-4">
-              <p className="text-slate-400 text-sm">
+              <p className="text-gray-600 text-sm">
                 Summary for{" "}
                 <span className="text-toxic">{selectedSubmission.name}</span>
               </p>
               <div className="bg-void p-4 border border-phantom rounded">
-                <p className="text-xs font-mono text-slate-300">
+                <p className="text-xs font-mono text-gray-700">
                   Automated analysis confirms{" "}
                   <span className="text-red-500">
                     {selectedSubmission.threatLevel}
