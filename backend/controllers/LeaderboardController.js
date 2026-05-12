@@ -1,7 +1,16 @@
 import pool from "../config/db.js";
 import { convertR2ToHttpUrl } from "../services/r2Service.js";
+import {
+  get as cacheGet,
+  set as cacheSet,
+  TTL,
+} from "../services/cacheService.js";
 
 async function retrieveLeaderboard() {
+  const cacheKey = "leaderboard:top";
+  const cached = cacheGet(cacheKey);
+  if (cached) return cached;
+
   const result = await pool.query`
     SELECT TOP 10
       u.username,
@@ -13,13 +22,19 @@ async function retrieveLeaderboard() {
     WHERE u.is_active = 1
     ORDER BY u.reputation_score DESC;
   `;
-  return result.recordset.map((user) => ({
+  const data = result.recordset.map((user) => ({
     ...user,
     avatar_url: convertR2ToHttpUrl(user.avatar_url),
   }));
+  cacheSet(cacheKey, data, TTL.LEADERBOARD);
+  return data;
 }
 
 async function retrieveUserPosition(userId) {
+  const cacheKey = `leaderboard:position:${userId}`;
+  const cached = cacheGet(cacheKey);
+  if (cached) return cached;
+
   const result = await pool.query`
     SELECT
       u.username,
@@ -35,6 +50,7 @@ async function retrieveUserPosition(userId) {
   if (row) {
     row.avatar_url = convertR2ToHttpUrl(row.avatar_url);
   }
+  cacheSet(cacheKey, row, TTL.USER_POSITION);
   return row;
 }
 

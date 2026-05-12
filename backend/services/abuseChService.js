@@ -1,4 +1,6 @@
-const MALWAREBAZAAR_URL = 'https://mb-api.abuse.ch/api/v1/';
+import { get as cacheGet, set as cacheSet, TTL } from "./cacheService.js";
+
+const MALWAREBAZAAR_URL = "https://mb-api.abuse.ch/api/v1/";
 
 const getApiKey = () => {
   const key = process.env.ABUSECH_API_KEY;
@@ -7,24 +9,37 @@ const getApiKey = () => {
 };
 
 export const lookupHash = async (hash) => {
+  const cacheKey = `abuse:hash:${hash}`;
+  const cached = cacheGet(cacheKey);
+  if (cached !== null) return cached;
+
   const apiKey = getApiKey();
-  const body = new URLSearchParams({ query: 'get_info', hash });
-  if (apiKey) body.set('key', apiKey);
+  const body = new URLSearchParams({ query: "get_info", hash });
+  if (apiKey) body.set("key", apiKey);
 
   const response = await fetch(MALWAREBAZAAR_URL, {
-    method: 'POST',
+    method: "POST",
     body,
   });
 
   const payload = await response.json().catch(() => ({}));
 
-  if (payload.query_status === 'hash_not_found') return null;
-  if (payload.query_status !== 'ok') return null;
+  if (payload.query_status === "hash_not_found") {
+    cacheSet(cacheKey, null, TTL.ABUSECH_LOOKUP);
+    return null;
+  }
+  if (payload.query_status !== "ok") {
+    cacheSet(cacheKey, null, TTL.ABUSECH_LOOKUP);
+    return null;
+  }
 
   const entry = payload.data?.[0];
-  if (!entry) return null;
+  if (!entry) {
+    cacheSet(cacheKey, null, TTL.ABUSECH_LOOKUP);
+    return null;
+  }
 
-  return {
+  const result = {
     sha256_hash: entry.sha256_hash,
     md5_hash: entry.md5_hash,
     sha1_hash: entry.sha1_hash,
@@ -32,13 +47,21 @@ export const lookupHash = async (hash) => {
     file_type: entry.file_type,
     file_size: entry.file_size,
     malware_family: entry.signature || null,
-    malware_category: entry.tags?.find(t => ['Ransomware', 'Trojan', 'Worm', 'APT', 'Rootkit', 'Spyware'].includes(t)) || null,
+    malware_category:
+      entry.tags?.find((t) =>
+        ["Ransomware", "Trojan", "Worm", "APT", "Rootkit", "Spyware"].includes(
+          t,
+        ),
+      ) || null,
     tags: entry.tags || [],
     first_seen: entry.first_seen,
     delivery_method: entry.delivery_method || null,
     vendor_intel: entry.intel_feed || null,
     confidence: entry.confidence_level || null,
     signatures: entry.signature ? [entry.signature] : [],
-    source: 'abuse.ch',
+    source: "abuse.ch",
   };
+
+  cacheSet(cacheKey, result, TTL.ABUSECH_LOOKUP);
+  return result;
 };

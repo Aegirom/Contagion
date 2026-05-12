@@ -1,19 +1,49 @@
-import sql from 'mssql';
-import pool from '../config/db.js';
-import { awardApprovalXp } from '../services/reputationService.js';
+import sql from "mssql";
+import pool from "../config/db.js";
+import { awardApprovalXp } from "../services/reputationService.js";
+import {
+  get as cacheGet,
+  set as cacheSet,
+  invalidatePrefix,
+  TTL,
+} from "../services/cacheService.js";
 
 export async function getAdminStats(req, res) {
   try {
-    const totalUsers = await pool.request().query('SELECT COUNT(*) AS count FROM Users');
-    const activeUsers = await pool.request().query("SELECT COUNT(*) AS count FROM Users WHERE is_active = 1");
-    const suspendedUsers = await pool.request().query("SELECT COUNT(*) AS count FROM Users WHERE is_active = 0");
-    const totalSubmissions = await pool.request().query("SELECT COUNT(*) AS count FROM Analysis_Submissions");
-    const publishedSubmissions = await pool.request().query("SELECT COUNT(*) AS count FROM Analysis_Submissions WHERE status = 'Published'");
-    const pendingSubmissions = await pool.request().query("SELECT COUNT(*) AS count FROM Analysis_Submissions WHERE status = 'Pending'");
-    const totalComments = await pool.request().query('SELECT COUNT(*) AS count FROM Post_Comments');
-    const totalArtifacts = await pool.request().query('SELECT COUNT(*) AS count FROM Malware_Artifacts');
+    const cacheKey = "admin:stats";
+    const cached = cacheGet(cacheKey);
+    if (cached) return res.json(cached);
 
-    res.json({
+    const totalUsers = await pool
+      .request()
+      .query("SELECT COUNT(*) AS count FROM Users");
+    const activeUsers = await pool
+      .request()
+      .query("SELECT COUNT(*) AS count FROM Users WHERE is_active = 1");
+    const suspendedUsers = await pool
+      .request()
+      .query("SELECT COUNT(*) AS count FROM Users WHERE is_active = 0");
+    const totalSubmissions = await pool
+      .request()
+      .query("SELECT COUNT(*) AS count FROM Analysis_Submissions");
+    const publishedSubmissions = await pool
+      .request()
+      .query(
+        "SELECT COUNT(*) AS count FROM Analysis_Submissions WHERE status = 'Published'",
+      );
+    const pendingSubmissions = await pool
+      .request()
+      .query(
+        "SELECT COUNT(*) AS count FROM Analysis_Submissions WHERE status = 'Pending'",
+      );
+    const totalComments = await pool
+      .request()
+      .query("SELECT COUNT(*) AS count FROM Post_Comments");
+    const totalArtifacts = await pool
+      .request()
+      .query("SELECT COUNT(*) AS count FROM Malware_Artifacts");
+
+    const response = {
       total_users: totalUsers.recordset[0].count,
       active_users: activeUsers.recordset[0].count,
       suspended_users: suspendedUsers.recordset[0].count,
@@ -22,16 +52,22 @@ export async function getAdminStats(req, res) {
       pending_submissions: pendingSubmissions.recordset[0].count,
       total_comments: totalComments.recordset[0].count,
       total_artifacts: totalArtifacts.recordset[0].count,
-    });
+    };
+    cacheSet(cacheKey, response, TTL.ADMIN_STATS);
+    res.json(response);
   } catch (err) {
-    console.error('[Admin] getAdminStats error:', err.message);
-    res.status(500).json({ error: 'Failed to fetch admin statistics' });
+    console.error("[Admin] getAdminStats error:", err.message);
+    res.status(500).json({ error: "Failed to fetch admin statistics" });
   }
 }
 
 export async function getAllUsers(req, res) {
   try {
-    console.log('[Admin] Fetching all users...');
+    const cacheKey = "admin:users";
+    const cached = cacheGet(cacheKey);
+    if (cached) return res.json(cached);
+
+    console.log("[Admin] Fetching all users...");
     const result = await pool.request().query(`
       SELECT 
         u.user_id, u.username, u.email, u.role, u.is_active, u.expertise_level,
@@ -42,10 +78,11 @@ export async function getAllUsers(req, res) {
       ORDER BY u.created_at DESC
     `);
     console.log(`[Admin] Fetched ${result.recordset.length} users`);
+    cacheSet(cacheKey, result.recordset, TTL.ALL_USERS);
     res.json(result.recordset);
   } catch (err) {
-    console.error('[Admin] getAllUsers error:', err.message);
-    res.status(500).json({ error: 'Failed to fetch users' });
+    console.error("[Admin] getAllUsers error:", err.message);
+    res.status(500).json({ error: "Failed to fetch users" });
   }
 }
 
@@ -53,28 +90,39 @@ export async function updateUserRole(req, res) {
   try {
     const { userId } = req.params;
     const { role } = req.body;
-    const validRoles = ['Analyst', 'Moderator', 'Administrator'];
+    const validRoles = ["Analyst", "Moderator", "Administrator"];
 
     console.log(`[Admin] Updating role for user ${userId} to ${role}`);
 
     if (!validRoles.includes(role)) {
-      return res.status(400).json({ error: 'Invalid role. Must be Analyst, Moderator, or Administrator' });
+      return res.status(400).json({
+        error: "Invalid role. Must be Analyst, Moderator, or Administrator",
+      });
     }
 
-    const result = await pool.request()
-      .input('user_id', sql.INT, parseInt(userId))
-      .input('role', sql.NVARCHAR(50), role)
-      .query('UPDATE Users SET role = @role OUTPUT INSERTED.user_id, INSERTED.role, INSERTED.username WHERE user_id = @user_id');
+    const result = await pool
+      .request()
+      .input("user_id", sql.INT, parseInt(userId))
+      .input("role", sql.NVARCHAR(50), role)
+      .query(
+        "UPDATE Users SET role = @role OUTPUT INSERTED.user_id, INSERTED.role, INSERTED.username WHERE user_id = @user_id",
+      );
 
     if (!result.recordset[0]) {
-      return res.status(404).json({ error: 'User not found' });
+      return res.status(404).json({ error: "User not found" });
     }
 
-    console.log(`[Admin] Role updated: ${result.recordset[0].username} -> ${role}`);
-    res.json({ message: 'Role updated', user: result.recordset[0] });
+    invalidatePrefix("leaderboard");
+    invalidatePrefix("admin:users");
+    invalidatePrefix("admin:stats");
+
+    console.log(
+      `[Admin] Role updated: ${result.recordset[0].username} -> ${role}`,
+    );
+    res.json({ message: "Role updated", user: result.recordset[0] });
   } catch (err) {
-    console.error('[Admin] updateUserRole error:', err.message);
-    res.status(500).json({ error: 'Failed to update user role' });
+    console.error("[Admin] updateUserRole error:", err.message);
+    res.status(500).json({ error: "Failed to update user role" });
   }
 }
 
@@ -84,19 +132,26 @@ export async function suspendUser(req, res) {
 
     console.log(`[Admin] Suspending user ${userId}`);
 
-    const result = await pool.request()
-      .input('user_id', sql.INT, parseInt(userId))
-      .query('UPDATE Users SET is_active = 0 OUTPUT INSERTED.user_id, INSERTED.username, INSERTED.is_active WHERE user_id = @user_id');
+    const result = await pool
+      .request()
+      .input("user_id", sql.INT, parseInt(userId))
+      .query(
+        "UPDATE Users SET is_active = 0 OUTPUT INSERTED.user_id, INSERTED.username, INSERTED.is_active WHERE user_id = @user_id",
+      );
 
     if (!result.recordset[0]) {
-      return res.status(404).json({ error: 'User not found' });
+      return res.status(404).json({ error: "User not found" });
     }
 
+    invalidatePrefix("leaderboard");
+    invalidatePrefix("admin:users");
+    invalidatePrefix("admin:stats");
+
     console.log(`[Admin] User suspended: ${result.recordset[0].username}`);
-    res.json({ message: 'User suspended', user: result.recordset[0] });
+    res.json({ message: "User suspended", user: result.recordset[0] });
   } catch (err) {
-    console.error('[Admin] suspendUser error:', err.message);
-    res.status(500).json({ error: 'Failed to suspend user' });
+    console.error("[Admin] suspendUser error:", err.message);
+    res.status(500).json({ error: "Failed to suspend user" });
   }
 }
 
@@ -106,19 +161,26 @@ export async function unsuspendUser(req, res) {
 
     console.log(`[Admin] Unsuspending user ${userId}`);
 
-    const result = await pool.request()
-      .input('user_id', sql.INT, parseInt(userId))
-      .query('UPDATE Users SET is_active = 1 OUTPUT INSERTED.user_id, INSERTED.username, INSERTED.is_active WHERE user_id = @user_id');
+    const result = await pool
+      .request()
+      .input("user_id", sql.INT, parseInt(userId))
+      .query(
+        "UPDATE Users SET is_active = 1 OUTPUT INSERTED.user_id, INSERTED.username, INSERTED.is_active WHERE user_id = @user_id",
+      );
 
     if (!result.recordset[0]) {
-      return res.status(404).json({ error: 'User not found' });
+      return res.status(404).json({ error: "User not found" });
     }
 
+    invalidatePrefix("leaderboard");
+    invalidatePrefix("admin:users");
+    invalidatePrefix("admin:stats");
+
     console.log(`[Admin] User unsuspended: ${result.recordset[0].username}`);
-    res.json({ message: 'User unsuspended', user: result.recordset[0] });
+    res.json({ message: "User unsuspended", user: result.recordset[0] });
   } catch (err) {
-    console.error('[Admin] unsuspendUser error:', err.message);
-    res.status(500).json({ error: 'Failed to unsuspend user' });
+    console.error("[Admin] unsuspendUser error:", err.message);
+    res.status(500).json({ error: "Failed to unsuspend user" });
   }
 }
 
@@ -129,37 +191,69 @@ export async function deleteUser(req, res) {
 
     console.log(`[Admin] Deleting user ${uid}...`);
 
-    const userCheck = await pool.request()
-      .input('user_id', sql.INT, uid)
-      .query('SELECT user_id, username FROM Users WHERE user_id = @user_id');
+    const userCheck = await pool
+      .request()
+      .input("user_id", sql.INT, uid)
+      .query("SELECT user_id, username FROM Users WHERE user_id = @user_id");
 
     if (!userCheck.recordset[0]) {
-      return res.status(404).json({ error: 'User not found' });
+      return res.status(404).json({ error: "User not found" });
     }
 
     const username = userCheck.recordset[0].username;
 
-    await pool.request().input('user_id', sql.INT, uid).query('DELETE FROM Notifications WHERE user_id = @user_id');
-    await pool.request().input('user_id', sql.INT, uid).query('DELETE FROM User_Specializations WHERE user_id = @user_id');
-    await pool.request().input('user_id', sql.INT, uid).query('DELETE FROM Post_Saves WHERE user_id = @user_id');
-    await pool.request().input('user_id', sql.INT, uid).query('DELETE FROM Post_Shares WHERE user_id = @user_id');
-    await pool.request().input('user_id', sql.INT, uid).query('DELETE FROM Post_Likes WHERE user_id = @user_id');
-    await pool.request().input('user_id', sql.INT, uid).query('DELETE FROM Post_Comments WHERE user_id = @user_id');
-    await pool.request().input('user_id', sql.INT, uid).query('DELETE FROM Peer_Reviews WHERE reviewer_id = @user_id');
+    await pool
+      .request()
+      .input("user_id", sql.INT, uid)
+      .query("DELETE FROM Notifications WHERE user_id = @user_id");
+    await pool
+      .request()
+      .input("user_id", sql.INT, uid)
+      .query("DELETE FROM User_Specializations WHERE user_id = @user_id");
+    await pool
+      .request()
+      .input("user_id", sql.INT, uid)
+      .query("DELETE FROM Post_Saves WHERE user_id = @user_id");
+    await pool
+      .request()
+      .input("user_id", sql.INT, uid)
+      .query("DELETE FROM Post_Shares WHERE user_id = @user_id");
+    await pool
+      .request()
+      .input("user_id", sql.INT, uid)
+      .query("DELETE FROM Post_Likes WHERE user_id = @user_id");
+    await pool
+      .request()
+      .input("user_id", sql.INT, uid)
+      .query("DELETE FROM Post_Comments WHERE user_id = @user_id");
+    await pool
+      .request()
+      .input("user_id", sql.INT, uid)
+      .query("DELETE FROM Peer_Reviews WHERE reviewer_id = @user_id");
 
-    const deleted = await pool.request()
-      .input('user_id', sql.INT, uid)
-      .query('DELETE FROM Users WHERE user_id = @user_id OUTPUT DELETED.user_id, DELETED.username');
+    const deleted = await pool
+      .request()
+      .input("user_id", sql.INT, uid)
+      .query(
+        "DELETE FROM Users WHERE user_id = @user_id OUTPUT DELETED.user_id, DELETED.username",
+      );
 
     if (!deleted.recordset[0]) {
-      return res.status(404).json({ error: 'User not found' });
+      return res.status(404).json({ error: "User not found" });
     }
 
+    invalidatePrefix("leaderboard");
+    invalidatePrefix("admin:users");
+    invalidatePrefix("admin:stats");
+
     console.log(`[Admin] User deleted: ${username}`);
-    res.json({ message: 'User and all associated data deleted', user: deleted.recordset[0] });
+    res.json({
+      message: "User and all associated data deleted",
+      user: deleted.recordset[0],
+    });
   } catch (err) {
-    console.error('[Admin] deleteUser error:', err.message);
-    res.status(500).json({ error: 'Failed to delete user' });
+    console.error("[Admin] deleteUser error:", err.message);
+    res.status(500).json({ error: "Failed to delete user" });
   }
 }
 
@@ -176,8 +270,8 @@ export async function getPendingSubmissions(req, res) {
     `);
     res.json(result.recordset);
   } catch (err) {
-    console.error('[Admin] getPendingSubmissions error:', err.message);
-    res.status(500).json({ error: 'Failed to fetch pending submissions' });
+    console.error("[Admin] getPendingSubmissions error:", err.message);
+    res.status(500).json({ error: "Failed to fetch pending submissions" });
   }
 }
 
@@ -186,52 +280,68 @@ export async function moderateSubmission(req, res) {
     const { submissionId } = req.params;
     const { action, reason } = req.body;
 
-    if (!['approve', 'reject'].includes(action)) {
-      return res.status(400).json({ error: 'Action must be approve or reject' });
+    if (!["approve", "reject"].includes(action)) {
+      return res
+        .status(400)
+        .json({ error: "Action must be approve or reject" });
     }
 
-    const newStatus = action === 'approve' ? 'Published' : 'Rejected';
+    const newStatus = action === "approve" ? "Published" : "Rejected";
 
-    const result = await pool.request()
-      .input('submission_id', sql.INT, parseInt(submissionId))
-      .input('status', sql.NVARCHAR(20), newStatus)
-      .query(`
+    const result = await pool
+      .request()
+      .input("submission_id", sql.INT, parseInt(submissionId))
+      .input("status", sql.NVARCHAR(20), newStatus).query(`
         UPDATE Analysis_Submissions SET status = @status, updated_at = GETDATE()
         OUTPUT INSERTED.submission_id, INSERTED.status, INSERTED.title, INSERTED.author_id
         WHERE submission_id = @submission_id AND status = 'Pending'
       `);
 
     if (!result.recordset[0]) {
-      return res.status(404).json({ error: 'Submission not found or not pending' });
+      return res
+        .status(404)
+        .json({ error: "Submission not found or not pending" });
     }
 
     const { author_id, title } = result.recordset[0];
 
-    if (action === 'approve') {
+    if (action === "approve") {
       await awardApprovalXp(author_id);
     }
 
     // Send notification to author
-    const notifMessage = action === 'approve'
-      ? `Your analysis "${title}" has been approved and published`
-      : `Your analysis "${title}" has been rejected${reason ? `: ${reason}` : ''}`;
+    const notifMessage =
+      action === "approve"
+        ? `Your analysis "${title}" has been approved and published`
+        : `Your analysis "${title}" has been rejected${reason ? `: ${reason}` : ""}`;
 
-    await pool.request()
-      .input('user_id', sql.INT, author_id)
-      .input('type', sql.NVARCHAR(50), 'moderation')
-      .input('message', sql.NVARCHAR(500), notifMessage)
-      .input('actor_username', sql.NVARCHAR(100), req.user?.username || 'System')
-      .input('related_submission_id', sql.INT, parseInt(submissionId))
-      .query(`
+    await pool
+      .request()
+      .input("user_id", sql.INT, author_id)
+      .input("type", sql.NVARCHAR(50), "moderation")
+      .input("message", sql.NVARCHAR(500), notifMessage)
+      .input(
+        "actor_username",
+        sql.NVARCHAR(100),
+        req.user?.username || "System",
+      )
+      .input("related_submission_id", sql.INT, parseInt(submissionId)).query(`
         INSERT INTO Notifications (user_id, type, message, actor_username, related_submission_id, is_read)
         VALUES (@user_id, @type, @message, @actor_username, @related_submission_id, 0)
       `);
 
+    invalidatePrefix("submissions:overview:" + submissionId);
+    invalidatePrefix("submissions:feed");
+    invalidatePrefix("admin:stats");
+
     console.log(`[Admin] Submission ${submissionId} ${action}d`);
-    res.json({ message: `Submission ${action}d`, submission: result.recordset[0] });
+    res.json({
+      message: `Submission ${action}d`,
+      submission: result.recordset[0],
+    });
   } catch (err) {
-    console.error('[Admin] moderateSubmission error:', err.message);
-    res.status(500).json({ error: 'Failed to moderate submission' });
+    console.error("[Admin] moderateSubmission error:", err.message);
+    res.status(500).json({ error: "Failed to moderate submission" });
   }
 }
 
@@ -242,32 +352,73 @@ export async function forceDeleteSubmission(req, res) {
 
     console.log(`[Admin] Force deleting submission ${sid}...`);
 
-    const subCheck = await pool.request()
-      .input('submission_id', sql.INT, sid)
-      .query('SELECT submission_id, title, author_id FROM Analysis_Submissions WHERE submission_id = @submission_id');
+    const subCheck = await pool
+      .request()
+      .input("submission_id", sql.INT, sid)
+      .query(
+        "SELECT submission_id, title, author_id FROM Analysis_Submissions WHERE submission_id = @submission_id",
+      );
 
     if (!subCheck.recordset[0]) {
-      return res.status(404).json({ error: 'Submission not found' });
+      return res.status(404).json({ error: "Submission not found" });
     }
 
-    await pool.request().input('submission_id', sql.INT, sid).query('DELETE FROM Notifications WHERE related_submission_id = @submission_id');
-    await pool.request().input('submission_id', sql.INT, sid).query('DELETE FROM Post_Saves WHERE submission_id = @submission_id');
-    await pool.request().input('submission_id', sql.INT, sid).query('DELETE FROM Post_Shares WHERE submission_id = @submission_id');
-    await pool.request().input('submission_id', sql.INT, sid).query('DELETE FROM Post_Likes WHERE submission_id = @submission_id');
-    await pool.request().input('submission_id', sql.INT, sid).query('DELETE FROM Post_Comments WHERE submission_id = @submission_id');
-    await pool.request().input('submission_id', sql.INT, sid).query('DELETE FROM Peer_Reviews WHERE submission_id = @submission_id');
-    await pool.request().input('submission_id', sql.INT, sid).query('DELETE FROM AI_Evaluations WHERE submission_id = @submission_id');
-    await pool.request().input('submission_id', sql.INT, sid).query('DELETE FROM Sandbox_Executions WHERE submission_id = @submission_id');
+    await pool
+      .request()
+      .input("submission_id", sql.INT, sid)
+      .query(
+        "DELETE FROM Notifications WHERE related_submission_id = @submission_id",
+      );
+    await pool
+      .request()
+      .input("submission_id", sql.INT, sid)
+      .query("DELETE FROM Post_Saves WHERE submission_id = @submission_id");
+    await pool
+      .request()
+      .input("submission_id", sql.INT, sid)
+      .query("DELETE FROM Post_Shares WHERE submission_id = @submission_id");
+    await pool
+      .request()
+      .input("submission_id", sql.INT, sid)
+      .query("DELETE FROM Post_Likes WHERE submission_id = @submission_id");
+    await pool
+      .request()
+      .input("submission_id", sql.INT, sid)
+      .query("DELETE FROM Post_Comments WHERE submission_id = @submission_id");
+    await pool
+      .request()
+      .input("submission_id", sql.INT, sid)
+      .query("DELETE FROM Peer_Reviews WHERE submission_id = @submission_id");
+    await pool
+      .request()
+      .input("submission_id", sql.INT, sid)
+      .query("DELETE FROM AI_Evaluations WHERE submission_id = @submission_id");
+    await pool
+      .request()
+      .input("submission_id", sql.INT, sid)
+      .query(
+        "DELETE FROM Sandbox_Executions WHERE submission_id = @submission_id",
+      );
 
-    const deleted = await pool.request()
-      .input('submission_id', sql.INT, sid)
-      .query('DELETE FROM Analysis_Submissions OUTPUT DELETED.submission_id, DELETED.title WHERE submission_id = @submission_id');
+    const deleted = await pool
+      .request()
+      .input("submission_id", sql.INT, sid)
+      .query(
+        "DELETE FROM Analysis_Submissions OUTPUT DELETED.submission_id, DELETED.title WHERE submission_id = @submission_id",
+      );
+
+    invalidatePrefix("submissions:overview:" + sid);
+    invalidatePrefix("submissions:feed");
+    invalidatePrefix("admin:stats");
 
     console.log(`[Admin] Submission deleted: ${deleted.recordset[0]?.title}`);
-    res.json({ message: 'Submission permanently deleted', submission: deleted.recordset[0] });
+    res.json({
+      message: "Submission permanently deleted",
+      submission: deleted.recordset[0],
+    });
   } catch (err) {
-    console.error('[Admin] forceDeleteSubmission error:', err.message);
-    res.status(500).json({ error: 'Failed to delete submission' });
+    console.error("[Admin] forceDeleteSubmission error:", err.message);
+    res.status(500).json({ error: "Failed to delete submission" });
   }
 }
 
@@ -288,19 +439,21 @@ export async function getAllSubmissionsAdmin(req, res) {
 
     const request = pool.request();
 
-    if (status && status !== 'all') {
-      query += ' WHERE s.status = @status';
-      request.input('status', sql.NVARCHAR(20), status);
+    if (status && status !== "all") {
+      query += " WHERE s.status = @status";
+      request.input("status", sql.NVARCHAR(20), status);
     }
 
-    query += ' ORDER BY s.updated_at DESC';
+    query += " ORDER BY s.updated_at DESC";
 
     const result = await request.query(query);
-    console.log(`[Admin] Fetched ${result.recordset.length} submissions (filter: ${status || 'all'})`);
+    console.log(
+      `[Admin] Fetched ${result.recordset.length} submissions (filter: ${status || "all"})`,
+    );
     res.json(result.recordset);
   } catch (err) {
-    console.error('[Admin] getAllSubmissionsAdmin error:', err.message);
-    res.status(500).json({ error: 'Failed to fetch submissions' });
+    console.error("[Admin] getAllSubmissionsAdmin error:", err.message);
+    res.status(500).json({ error: "Failed to fetch submissions" });
   }
 }
 
@@ -317,17 +470,31 @@ export async function getRecentActivity(req, res) {
     console.log(`[Admin] Fetched ${result.recordset.length} activity items`);
     res.json(result.recordset);
   } catch (err) {
-    console.error('[Admin] getRecentActivity error:', err.message);
-    res.status(500).json({ error: 'Failed to fetch activity' });
+    console.error("[Admin] getRecentActivity error:", err.message);
+    res.status(500).json({ error: "Failed to fetch activity" });
   }
 }
 
 export async function getModerationStats(req, res) {
   try {
-    const pendingCount = await pool.request().query("SELECT COUNT(*) AS count FROM Analysis_Submissions WHERE status = 'Pending'");
-    const rejectedCount = await pool.request().query("SELECT COUNT(*) AS count FROM Analysis_Submissions WHERE status = 'Rejected'");
-    const publishedCount = await pool.request().query("SELECT COUNT(*) AS count FROM Analysis_Submissions WHERE status = 'Published'");
-    const totalComments = await pool.request().query('SELECT COUNT(*) AS count FROM Post_Comments');
+    const pendingCount = await pool
+      .request()
+      .query(
+        "SELECT COUNT(*) AS count FROM Analysis_Submissions WHERE status = 'Pending'",
+      );
+    const rejectedCount = await pool
+      .request()
+      .query(
+        "SELECT COUNT(*) AS count FROM Analysis_Submissions WHERE status = 'Rejected'",
+      );
+    const publishedCount = await pool
+      .request()
+      .query(
+        "SELECT COUNT(*) AS count FROM Analysis_Submissions WHERE status = 'Published'",
+      );
+    const totalComments = await pool
+      .request()
+      .query("SELECT COUNT(*) AS count FROM Post_Comments");
 
     res.json({
       pending_submissions: pendingCount.recordset[0].count,
@@ -336,8 +503,8 @@ export async function getModerationStats(req, res) {
       total_comments: totalComments.recordset[0].count,
     });
   } catch (err) {
-    console.error('[Admin] getModerationStats error:', err.message);
-    res.status(500).json({ error: 'Failed to fetch moderation statistics' });
+    console.error("[Admin] getModerationStats error:", err.message);
+    res.status(500).json({ error: "Failed to fetch moderation statistics" });
   }
 }
 
@@ -345,60 +512,79 @@ export async function updateUserProfile(req, res) {
   try {
     const { userId } = req.params;
     const { username, email, role } = req.body;
-    const validRoles = ['Analyst', 'Moderator', 'Administrator'];
+    const validRoles = ["Analyst", "Moderator", "Administrator"];
 
-    console.log(`[Admin] Updating profile for user ${userId}: username=${username}, email=${email}, role=${role}`);
+    console.log(
+      `[Admin] Updating profile for user ${userId}: username=${username}, email=${email}, role=${role}`,
+    );
 
     if (role && !validRoles.includes(role)) {
-      return res.status(400).json({ error: 'Invalid role. Must be Analyst, Moderator, or Administrator' });
+      return res.status(400).json({
+        error: "Invalid role. Must be Analyst, Moderator, or Administrator",
+      });
     }
 
     if (username) {
-      const existing = await pool.request()
-        .input('username', sql.NVARCHAR(50), username)
-        .input('user_id', sql.INT, parseInt(userId))
-        .query('SELECT user_id FROM Users WHERE username = @username AND user_id != @user_id');
+      const existing = await pool
+        .request()
+        .input("username", sql.NVARCHAR(50), username)
+        .input("user_id", sql.INT, parseInt(userId))
+        .query(
+          "SELECT user_id FROM Users WHERE username = @username AND user_id != @user_id",
+        );
       if (existing.recordset.length > 0) {
-        return res.status(400).json({ error: 'Username already taken' });
+        return res.status(400).json({ error: "Username already taken" });
       }
     }
 
     if (email) {
-      const existing = await pool.request()
-        .input('email', sql.NVARCHAR(150), email)
-        .input('user_id', sql.INT, parseInt(userId))
-        .query('SELECT user_id FROM Users WHERE email = @email AND user_id != @user_id');
+      const existing = await pool
+        .request()
+        .input("email", sql.NVARCHAR(150), email)
+        .input("user_id", sql.INT, parseInt(userId))
+        .query(
+          "SELECT user_id FROM Users WHERE email = @email AND user_id != @user_id",
+        );
       if (existing.recordset.length > 0) {
-        return res.status(400).json({ error: 'Email already taken' });
+        return res.status(400).json({ error: "Email already taken" });
       }
     }
 
     const fields = [];
     const request = pool.request();
-    request.input('user_id', sql.INT, parseInt(userId));
-    if (username) { fields.push('username = @username'); request.input('username', sql.NVARCHAR(50), username); }
-    if (email) { fields.push('email = @email'); request.input('email', sql.NVARCHAR(150), email); }
-    if (role) { fields.push('role = @role'); request.input('role', sql.NVARCHAR(50), role); }
+    request.input("user_id", sql.INT, parseInt(userId));
+    if (username) {
+      fields.push("username = @username");
+      request.input("username", sql.NVARCHAR(50), username);
+    }
+    if (email) {
+      fields.push("email = @email");
+      request.input("email", sql.NVARCHAR(150), email);
+    }
+    if (role) {
+      fields.push("role = @role");
+      request.input("role", sql.NVARCHAR(50), role);
+    }
 
     if (fields.length === 0) {
-      return res.status(400).json({ error: 'No fields to update' });
+      return res.status(400).json({ error: "No fields to update" });
     }
 
     const result = await request.query(`
-      UPDATE Users SET ${fields.join(', ')}
+      UPDATE Users SET ${fields.join(", ")}
       OUTPUT INSERTED.user_id, INSERTED.username, INSERTED.email, INSERTED.role
       WHERE user_id = @user_id
     `);
 
     if (!result.recordset[0]) {
-      return res.status(404).json({ error: 'User not found' });
+      return res.status(404).json({ error: "User not found" });
     }
 
     console.log(`[Admin] Profile updated: ${result.recordset[0].username}`);
-    res.json({ message: 'User profile updated', user: result.recordset[0] });
+    res.json({ message: "User profile updated", user: result.recordset[0] });
   } catch (err) {
-    console.error('[Admin] updateUserProfile error:', err.message);
-    res.status(500).json({ error: 'Failed to update user profile' });
+    console.error("[Admin] updateUserProfile error:", err.message);
+    res.status(500).json({ error: "Failed to update user profile" });
   }
 }
 
@@ -406,17 +592,23 @@ export async function deleteComment(req, res) {
   try {
     const { commentId } = req.params;
     console.log(`[Admin] Deleting comment ${commentId}`);
-    const result = await pool.request()
-      .input('comment_id', sql.INT, parseInt(commentId))
-      .query('DELETE FROM Post_Comments OUTPUT DELETED.comment_id WHERE comment_id = @comment_id');
+    const result = await pool
+      .request()
+      .input("comment_id", sql.INT, parseInt(commentId))
+      .query(
+        "DELETE FROM Post_Comments OUTPUT DELETED.comment_id WHERE comment_id = @comment_id",
+      );
     if (!result.recordset[0]) {
-      return res.status(404).json({ error: 'Comment not found' });
+      return res.status(404).json({ error: "Comment not found" });
     }
     console.log(`[Admin] Comment deleted: ${result.recordset[0].comment_id}`);
-    res.json({ message: 'Comment deleted', comment_id: result.recordset[0].comment_id });
+    res.json({
+      message: "Comment deleted",
+      comment_id: result.recordset[0].comment_id,
+    });
   } catch (err) {
-    console.error('[Admin] deleteComment error:', err.message);
-    res.status(500).json({ error: 'Failed to delete comment' });
+    console.error("[Admin] deleteComment error:", err.message);
+    res.status(500).json({ error: "Failed to delete comment" });
   }
 }
 
@@ -424,17 +616,25 @@ export async function deletePeerReview(req, res) {
   try {
     const { reviewId } = req.params;
     console.log(`[Admin] Deleting peer review ${reviewId}`);
-    const result = await pool.request()
-      .input('review_id', sql.INT, parseInt(reviewId))
-      .query('DELETE FROM Peer_Reviews OUTPUT DELETED.review_id WHERE review_id = @review_id');
+    const result = await pool
+      .request()
+      .input("review_id", sql.INT, parseInt(reviewId))
+      .query(
+        "DELETE FROM Peer_Reviews OUTPUT DELETED.review_id WHERE review_id = @review_id",
+      );
     if (!result.recordset[0]) {
-      return res.status(404).json({ error: 'Review not found' });
+      return res.status(404).json({ error: "Review not found" });
     }
-    console.log(`[Admin] Peer review deleted: ${result.recordset[0].review_id}`);
-    res.json({ message: 'Peer review deleted', review_id: result.recordset[0].review_id });
+    console.log(
+      `[Admin] Peer review deleted: ${result.recordset[0].review_id}`,
+    );
+    res.json({
+      message: "Peer review deleted",
+      review_id: result.recordset[0].review_id,
+    });
   } catch (err) {
-    console.error('[Admin] deletePeerReview error:', err.message);
-    res.status(500).json({ error: 'Failed to delete peer review' });
+    console.error("[Admin] deletePeerReview error:", err.message);
+    res.status(500).json({ error: "Failed to delete peer review" });
   }
 }
 
@@ -454,7 +654,7 @@ export async function getAllComments(req, res) {
     console.log(`[Admin] Fetched ${result.recordset.length} comments`);
     res.json(result.recordset);
   } catch (err) {
-    console.error('[Admin] getAllComments error:', err.message);
-    res.status(500).json({ error: 'Failed to fetch comments' });
+    console.error("[Admin] getAllComments error:", err.message);
+    res.status(500).json({ error: "Failed to fetch comments" });
   }
 }

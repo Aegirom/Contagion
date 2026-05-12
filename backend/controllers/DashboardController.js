@@ -1,5 +1,10 @@
 import pool from "../config/db.js";
 import sql from "mssql";
+import {
+  get as cacheGet,
+  set as cacheSet,
+  TTL,
+} from "../services/cacheService.js";
 
 // Get user's activity feed
 export const getActivityFeed = async (req, res) => {
@@ -8,6 +13,10 @@ export const getActivityFeed = async (req, res) => {
     if (!userId) {
       return res.status(401).json({ error: "Unauthorized" });
     }
+
+    const cacheKey = `dashboard:activity:${userId}`;
+    const cached = cacheGet(cacheKey);
+    if (cached) return res.json(cached);
 
     // Get user's recent submissions and specializations in parallel
     const [submissionsResult, specializationsResult] = await Promise.all([
@@ -96,7 +105,9 @@ export const getActivityFeed = async (req, res) => {
       );
     }
 
-    res.json({ items });
+    const response = { items };
+    cacheSet(cacheKey, response, TTL.ACTIVITY_FEED);
+    res.json(response);
   } catch (error) {
     console.error("Get activity feed error:", error);
     res.status(500).json({ error: "Server error" });
@@ -110,6 +121,10 @@ export const getAnalystReputation = async (req, res) => {
     if (!userId) {
       return res.status(401).json({ error: "Unauthorized" });
     }
+
+    const cacheKey = `dashboard:reputation:${userId}`;
+    const cached = cacheGet(cacheKey);
+    if (cached) return res.json(cached);
 
     const [userResult, rankResult, specsResult] = await Promise.all([
       pool.request().input("user_id", sql.INT, userId).query(`
@@ -162,7 +177,7 @@ export const getAnalystReputation = async (req, res) => {
       badges.push("Beginner Analyst", "New Member", "Learning");
     }
 
-    res.json({
+    const response = {
       reputation_score: currentScore,
       total_submissions: userStats.total_submissions || 0,
       published_submissions: userStats.published_submissions || 0,
@@ -172,7 +187,10 @@ export const getAnalystReputation = async (req, res) => {
       xp_until_next_rank: xpUntilNextRank,
       progress_percent: progressPercent,
       badges: badges.slice(0, 5),
-    });
+    };
+
+    cacheSet(cacheKey, response, TTL.ANALYST_REPUTATION);
+    res.json(response);
   } catch (error) {
     console.error("Get analyst reputation error:", error);
     res.status(500).json({ error: "Server error" });

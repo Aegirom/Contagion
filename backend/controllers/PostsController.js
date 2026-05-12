@@ -3,6 +3,7 @@ import pool from "../config/db.js";
 import { createNotification } from "../services/notificationService.js";
 import { awardCommentXp, awardLikeXp } from "../services/reputationService.js";
 import { convertR2ToHttpUrl } from "../services/r2Service.js";
+import { invalidatePrefix } from "../services/cacheService.js";
 
 const getPostOwnerId = async (submissionId) => {
   const result = await pool
@@ -100,6 +101,8 @@ export const addComment = async (req, res) => {
     }
 
     const xp = await awardCommentXp(userId);
+
+    invalidatePrefix(`submissions:overview:${submissionId}`);
 
     res.status(201).json({
       comment_id: result.recordset[0].comment_id,
@@ -233,6 +236,8 @@ export const toggleLike = async (req, res) => {
           "SELECT COUNT(*) as like_count FROM Post_Likes WHERE submission_id = @submissionId",
         );
 
+      invalidatePrefix(`submissions:overview:${submissionId}`);
+
       res.json({
         isLiked: false,
         like_count: countResult.recordset[0].like_count,
@@ -270,6 +275,8 @@ export const toggleLike = async (req, res) => {
       }
 
       await awardLikeXp(userId, postOwnerId);
+
+      invalidatePrefix(`submissions:overview:${submissionId}`);
 
       res.json({
         isLiked: true,
@@ -333,6 +340,8 @@ export const toggleShare = async (req, res) => {
           "SELECT COUNT(*) as share_count FROM Post_Shares WHERE submission_id = @submissionId",
         );
 
+      invalidatePrefix(`submissions:overview:${submissionId}`);
+
       res.json({
         isShared: false,
         share_count: countResult.recordset[0].share_count,
@@ -351,6 +360,8 @@ export const toggleShare = async (req, res) => {
         .query(
           "SELECT COUNT(*) as share_count FROM Post_Shares WHERE submission_id = @submissionId",
         );
+
+      invalidatePrefix(`submissions:overview:${submissionId}`);
 
       res.json({
         isShared: true,
@@ -430,6 +441,7 @@ export const toggleSave = async (req, res) => {
           WHERE submission_id = @submissionId AND user_id = @userId
         `);
 
+      invalidatePrefix(`submissions:overview:${submissionId}`);
       res.json({ isSaved: false });
     } else {
       await pool
@@ -439,6 +451,7 @@ export const toggleSave = async (req, res) => {
           INSERT INTO Post_Saves (submission_id, user_id) VALUES (@submissionId, @userId)
         `);
 
+      invalidatePrefix(`submissions:overview:${submissionId}`);
       res.json({ isSaved: true });
     }
   } catch (error) {

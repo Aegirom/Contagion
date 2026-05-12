@@ -1,8 +1,19 @@
 import sql from "mssql";
 import pool from "../config/db.js";
 import { awardSubmissionXp } from "../services/reputationService.js";
+import {
+  get as cacheGet,
+  set as cacheSet,
+  del as cacheDel,
+  invalidatePrefix,
+  TTL,
+} from "../services/cacheService.js";
 
 async function fetchAllSubmissions() {
+  const cacheKey = "submissions:feed";
+  const cached = cacheGet(cacheKey);
+  if (cached) return cached;
+
   try {
     const result = await pool.request().query(`
       SELECT TOP 50
@@ -35,7 +46,9 @@ async function fetchAllSubmissions() {
       WHERE s.status = 'Published'
       ORDER BY s.submitted_at DESC
     `);
-    return result.recordset;
+    const data = result.recordset;
+    cacheSet(cacheKey, data, TTL.SUBMISSIONS_FEED);
+    return data;
   } catch (err) {
     console.log("Failed to fetch Submissions: ", err);
     return [];
@@ -285,6 +298,10 @@ export const getPostOverview = async (req, res) => {
     const userId = req.user?.userId || req.user?.user_id;
     const isAuthenticated = !!userId;
 
+    const cacheKey = `submissions:overview:${submissionId}:${userId || "anon"}`;
+    const cached = cacheGet(cacheKey);
+    if (cached) return res.json(cached);
+
     const [
       submissionResult,
       logsResult,
@@ -395,7 +412,7 @@ export const getPostOverview = async (req, res) => {
 
     const aggRow = aggResult.recordset[0];
 
-    res.json({
+    const response = {
       ...submission,
       behavioral_logs: logsResult.recordset || [],
       like_count: likesResult.recordset[0]?.like_count || 0,
@@ -419,7 +436,10 @@ export const getPostOverview = async (req, res) => {
               },
             }
           : null,
-    });
+    };
+
+    cacheSet(cacheKey, response, TTL.SUBMISSION_OVERVIEW);
+    res.json(response);
   } catch (err) {
     console.log("Failed to load post overview:", err);
     res.status(500).json({ error: "Internal Server Error" });
@@ -481,6 +501,13 @@ export const updateSubmission = async (req, res) => {
       return res.status(404).json({ error: "Submission not found" });
     }
 
+    invalidatePrefix("submissions:feed");
+    invalidatePrefix(`submissions:overview:${submissionId}`);
+    if (req.user?.userId) {
+      cacheDel(`dashboard:activity:${req.user.userId}`);
+      cacheDel(`dashboard:reputation:${req.user.userId}`);
+    }
+
     res.json({
       message: "Submission updated",
       submission: result.recordset[0],
@@ -531,6 +558,12 @@ export const importSubmission = async (req, res) => {
         VALUES (@author_id, @artifact_id, @title, @content, @status, @version, @template_type)
       `);
 
+    invalidatePrefix("submissions:feed");
+    if (req.user?.userId) {
+      cacheDel(`dashboard:activity:${req.user.userId}`);
+      cacheDel(`dashboard:reputation:${req.user.userId}`);
+    }
+
     res.status(201).json({
       message: "Submission imported successfully",
       submission_id: result.recordset[0].submission_id,
@@ -566,6 +599,13 @@ export const deleteSubmission = async (req, res) => {
       return res
         .status(404)
         .json({ error: "Submission not found or already archived" });
+    }
+
+    invalidatePrefix("submissions:feed");
+    invalidatePrefix(`submissions:overview:${submissionId}`);
+    if (req.user?.userId) {
+      cacheDel(`dashboard:activity:${req.user.userId}`);
+      cacheDel(`dashboard:reputation:${req.user.userId}`);
     }
 
     res.json({
@@ -692,6 +732,13 @@ export const postSubmission = async (req, res) => {
         `);
 
       const xpGain = await awardSubmissionXp(authorId, finalStatus);
+
+      invalidatePrefix("submissions:feed");
+      invalidatePrefix("leaderboard");
+      if (req.user?.userId) {
+        cacheDel(`dashboard:activity:${req.user.userId}`);
+        cacheDel(`dashboard:reputation:${req.user.userId}`);
+      }
 
       res.status(201).json({
         message: "Submission Created",
