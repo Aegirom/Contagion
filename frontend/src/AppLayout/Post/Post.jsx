@@ -98,29 +98,27 @@ const Post = () => {
   const isAuthenticated = !!user;
 
   const loadPost = useCallback(async () => {
-    setActionError("");
-    setReviewError("");
     try {
       const postRes = await getSubmissionById(postId);
       setPost(postRes.data);
+      setActionError("");
 
       const [likesRes, sharesRes, commentsRes, aggRes, reviewsRes, ...authResults] = await Promise.all([
-        getPostLikes(postId).catch(e => { console.log("Likes not available"); return null }),
-        getPostShares(postId).catch(e => { console.log("Shares not available"); return null }),
-        getPostComments(postId).catch(e => { console.log("Comments not available"); return null }),
-        getAggregateScores(postId).catch(e => { console.log("Aggregate scores not available"); return null }),
-        getSubmissionReviews(postId).catch(e => { console.log("Reviews not available"); return null }),
+        getPostLikes(postId).catch(() => null),
+        getPostShares(postId).catch(() => null),
+        getPostComments(postId).catch(() => null),
+        getAggregateScores(postId).catch(() => null),
+        getSubmissionReviews(postId).catch(() => null),
         ...(isAuthenticated ? [
-          getUserPostLike(postId).catch(e => { console.log("User like check not available"); return null }),
-          getUserPostSave(postId).catch(e => { console.log("User save check not available"); return null }),
-          getUserReview(postId).catch(e => { console.log("User review check not available"); return null }),
+          getUserPostLike(postId).catch(() => null),
+          getUserPostSave(postId).catch(() => null),
+          getUserReview(postId).catch(() => null),
         ] : []),
       ]);
 
       setLikes(likesRes?.data?.like_count || 0);
       setShareCount(sharesRes?.data?.share_count || 0);
       setComments(commentsRes?.data || []);
-
       if (aggRes) setAggregate(aggRes.data);
       if (reviewsRes) setReviews(reviewsRes.data?.reviews || []);
 
@@ -133,13 +131,14 @@ const Post = () => {
         }
       }
     } catch (err) {
-      setActionError(
-        err.response?.data?.error || "Failed to load analysis report",
-      );
+      // Only set error if we haven't loaded the post yet
+      if (!post) {
+        setActionError(err.response?.data?.error || "Failed to load analysis report");
+      }
     } finally {
       setLoading(false);
     }
-  }, [postId, isAuthenticated]);
+  }, [postId, isAuthenticated, post]);
 
   useEffect(() => {
     loadPost();
