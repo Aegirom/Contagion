@@ -9,6 +9,7 @@ import { SeverityBadge } from "../Dashboard/Components/HooksAndBadges";
 import VerifiedBadge from "../Dashboard/Components/VerifiedBadge";
 import { useToast } from "../../context/ToastContext";
 import SavedPostSkeleton from "./Components/SavedPostSkeleton";
+import useDelayedLoading from "../../hooks/useDelayedLoading";
 
 const severityFromCategory = (category) => {
   if (["Ransomware", "APT", "Rootkit"].includes(category)) return "CRITICAL";
@@ -21,6 +22,7 @@ const SavedPostsPage = () => {
   const { addToast } = useToast();
   const [submissions, setSubmissions] = useState([]);
   const [loading, setLoading] = useState(true);
+  const showLoading = useDelayedLoading(loading);
   const [error, setError] = useState("");
   const [importingId, setImportingId] = useState(null);
 
@@ -93,25 +95,13 @@ const SavedPostsPage = () => {
         )}
 
         <div className="space-y-4">
-          {loading ? (
+          {showLoading ? (
             <div className="space-y-4">
               <SavedPostSkeleton />
               <SavedPostSkeleton />
               <SavedPostSkeleton />
             </div>
-          ) : submissions.length === 0 ? (
-            <div className="py-20 text-center border border-dashed border-phantom rounded-xl">
-              <p className="text-gray-600 font-mono text-sm uppercase">
-                Your saved archive is empty.
-              </p>
-              <button
-                onClick={() => navigate("/feed")}
-                className="mt-4 text-toxic font-code text-xs uppercase tracking-widest hover:underline"
-              >
-                Explore Feed
-              </button>
-            </div>
-          ) : (
+          ) : submissions.length > 0 ? (
             submissions.map((post) => (
               <div
                 key={post.submission_id}
@@ -201,7 +191,19 @@ const SavedPostsPage = () => {
                 </div>
               </div>
             ))
-          )}
+          ) : !loading ? (
+            <div className="py-20 text-center border border-dashed border-phantom rounded-xl">
+              <p className="text-gray-600 font-mono text-sm uppercase">
+                Your saved archive is empty.
+              </p>
+              <button
+                onClick={() => navigate("/feed")}
+                className="mt-4 text-toxic font-code text-xs uppercase tracking-widest hover:underline"
+              >
+                Explore Feed
+              </button>
+            </div>
+          ) : null}
         </div>
       </div>
     </main>

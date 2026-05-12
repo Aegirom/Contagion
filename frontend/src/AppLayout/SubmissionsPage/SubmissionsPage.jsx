@@ -2,6 +2,7 @@ import React, { useState, useEffect, useContext } from "react";
 import SearchBar from "./Components/SearchBar";
 import Submitted from "./Components/Submitted";
 import SubmittedSkeleton from "./Components/SubmittedSkeleton";
+import useDelayedLoading from "../../hooks/useDelayedLoading";
 import AiEvaluationModal from "./Components/AiEvaluationModal";
 import { useNavigate } from "react-router-dom";
 import PlusButton from "../Dashboard/Components/Buttons.jsx";
@@ -23,6 +24,7 @@ function SubmissionsPage() {
     family: "all",
   });
   const [dataLoading, setDataLoading] = useState(true);
+  const showLoading = useDelayedLoading(dataLoading);
   const [selectedSubmission, setSelectedSubmission] = useState(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [actionError, setActionError] = useState("");
@@ -220,7 +222,7 @@ function SubmissionsPage() {
             </div>
           )}
 
-          {dataLoading && filteredSubmissions.length === 0 && (
+          {showLoading && filteredSubmissions.length === 0 && (
             <>
               <SubmittedSkeleton />
               <SubmittedSkeleton />

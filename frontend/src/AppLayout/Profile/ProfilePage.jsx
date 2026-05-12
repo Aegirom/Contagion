@@ -10,6 +10,7 @@ import AvatarCropper from "./Components/AvatarCropper";
 import { getUserSubmissions, getUserStats } from "../../services/api";
 import VerifiedBadge from "../Dashboard/Components/VerifiedBadge";
 import ProfileSkeleton from "./Components/ProfileSkeleton";
+import useDelayedLoading from "../../hooks/useDelayedLoading";
 
 const ACCENT = "#22C55E";
 
@@ -17,6 +18,7 @@ const ProfilePage = () => {
   const { user, logout, updateUser } = useContext(AuthContext);
   const navigate = useNavigate();
   const [loading, setLoading] = useState(true);
+  const showLoading = useDelayedLoading(loading);
   const [saving, setSaving] = useState(false);
   const [success, setSuccess] = useState(false);
   const [error, setError] = useState(null);
@@ -193,7 +195,7 @@ const ProfilePage = () => {
         ? "rgba(59,130,246,0.25)"
         : "rgba(74,222,128,0.25)";
 
-  if (loading) {
+  if (showLoading) {
     return <ProfileSkeleton />;
   }
 

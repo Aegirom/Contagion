@@ -12,6 +12,7 @@ import SubmissionsTable from "./Components/SubmissionsTable";
 import RankPanel from "./Components/RankPanel";
 import PlusButton from "./Components/Buttons";
 import VerifiedBadge from "./Components/VerifiedBadge";
+import useDelayedLoading from "../../hooks/useDelayedLoading";
 
 const EMPTY_STATS = {
   total_submissions: 0,
@@ -63,6 +64,7 @@ const DashboardPage = () => {
   const [activityItems, setActivity] = useState([]);
   const [reputation, setReputation] = useState(null);
   const [loading, setLoading] = useState(true);
+  const showLoading = useDelayedLoading(loading);
   const [error, setError] = useState(null);
 
   useEffect(() => {
@@ -117,8 +119,8 @@ const DashboardPage = () => {
     const aiScore = s.ai_score_percentage
       ? parseInt(s.ai_score_percentage.replace("%", ""))
       : s.sandbox_status === "Completed"
-      ? 100
-      : 0;
+        ? 100
+        : 0;
 
     return {
       id: s.submission_id,
@@ -200,7 +202,7 @@ const DashboardPage = () => {
               </span>
             </div>
             <h1 className="font-display text-2xl font-bold tracking-tight text-gray-900">
-              {loading ? (
+              {showLoading ? (
                 <span className="inline-flex items-center gap-2">
                   <span
                     className="h-6 w-24 rounded animate-pulse"
@@ -247,7 +249,7 @@ const DashboardPage = () => {
             changePos
             color="#22C55E"
             delay={0}
-            loading={loading}
+            loading={showLoading}
             icon={
               <svg
                 width="16"
@@ -269,7 +271,7 @@ const DashboardPage = () => {
             changePos={sd.published_submissions > 0}
             color="#8B5CF6"
             delay={80}
-            loading={loading}
+            loading={showLoading}
             icon={
               <svg
                 width="16"
@@ -294,7 +296,7 @@ const DashboardPage = () => {
             changePos={reputationScore > 0}
             color="#F59E0B"
             delay={160}
-            loading={loading}
+            loading={showLoading}
             icon={
               <svg
                 width="16"
@@ -315,7 +317,7 @@ const DashboardPage = () => {
             changePos
             color="#22D3EE"
             delay={240}
-            loading={loading}
+            loading={showLoading}
             icon={
               <svg
                 width="16"
@@ -339,18 +341,18 @@ const DashboardPage = () => {
             {!loading && tableRows.length === 0 ? (
               <EmptySubmissions />
             ) : (
-              <SubmissionsTable submissions={tableRows} loading={loading} />
+              <SubmissionsTable submissions={tableRows} loading={showLoading} />
             )}
           </div>
 
           {/* Activity Feed — fills remaining space */}
           <div>
-            <ActivityFeed items={feedItems} loading={loading} />
+            <ActivityFeed items={feedItems} loading={showLoading} />
           </div>
         </div>
 
         {/* Rank Panel */}
-        <RankPanel loading={loading} reputation={reputation} />
+        <RankPanel loading={showLoading} reputation={reputation} />
       </div>
     </main>
   );

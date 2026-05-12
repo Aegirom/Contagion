@@ -2,11 +2,13 @@ import { useEffect, useState } from "react";
 import PositionCard from "./Components/PositionCard.jsx";
 import PositionCardSkeleton from "./Components/PositionCardSkeleton.jsx";
 import API from "../../services/api.js";
+import useDelayedLoading from "../../hooks/useDelayedLoading";
 
 function Leaderboard() {
   const [leaderboardData, setLeaderboardData] = useState([]);
   const [currentUser, setCurrentUser] = useState(null);
   const [loading, setLoading] = useState(true);
+  const showLoading = useDelayedLoading(loading);
 
   useEffect(() => {
     const getLeaderboard = async () => {
@@ -63,7 +65,7 @@ function Leaderboard() {
       </div>
 
       <div className="flex flex-col gap-2">
-        {loading ? (
+        {showLoading ? (
           <>
             <PositionCardSkeleton />
             <PositionCardSkeleton />
@@ -75,11 +77,11 @@ function Leaderboard() {
           leaderboardData.map((user) => (
             <PositionCard key={user.position} {...user} />
           ))
-        ) : (
+        ) : !loading ? (
           <p className="text-gray-600 font-mono text-sm uppercase text-center py-20">
             No leaderboard data available.
           </p>
-        )}
+        ) : null}
       </div>
 
       {currentUser && (

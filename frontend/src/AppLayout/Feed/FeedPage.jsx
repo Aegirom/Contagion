@@ -2,6 +2,7 @@ import React, { useEffect, useMemo, useState } from "react";
 import { getAllSubmissions } from "../../services/api";
 import FeedCard from "./components/FeedCard";
 import FeedCardSkeleton from "./components/FeedCardSkeleton";
+import useDelayedLoading from "../../hooks/useDelayedLoading";
 
 const severityFromCategory = (category) => {
   if (["Ransomware", "APT", "Rootkit"].includes(category)) return "CRITICAL";
@@ -42,6 +43,7 @@ const FeedPage = () => {
   const [sortBy, setSortBy] = useState("new");
   const [submissions, setSubmissions] = useState([]);
   const [loading, setLoading] = useState(true);
+  const showLoading = useDelayedLoading(loading);
   const [error, setError] = useState("");
   const [likedPosts, setLikedPosts] = useState(() =>
     JSON.parse(localStorage.getItem("likedPosts") || "{}"),
@@ -177,7 +179,7 @@ const FeedPage = () => {
         )}
 
         <div className="space-y-2">
-          {loading && (
+          {showLoading && (
             <div className="space-y-2">
               <FeedCardSkeleton />
               <FeedCardSkeleton />
@@ -185,7 +187,7 @@ const FeedPage = () => {
             </div>
           )}
 
-          {!loading &&
+          {!showLoading &&
             posts.map((post) => (
               <FeedCard
                 key={post.id}

@@ -28,6 +28,7 @@ import {
 import { AuthContext } from "../../context/AuthContext";
 import { useToast } from "../../context/ToastContext";
 import PostSkeleton from "./Components/PostSkeleton";
+import useDelayedLoading from "../../hooks/useDelayedLoading";
 
 const formatBytes = (bytes) => {
   if (!bytes) return "0 B";
@@ -98,6 +99,11 @@ const Post = () => {
   const [userReview, setUserReview] = useState(null);
   const [hasReviewed, setHasReviewed] = useState(false);
   const [reviewSubmitting, setReviewSubmitting] = useState(false);
+
+  const showLoading = useDelayedLoading(loading);
+  const showArtifactLoading = useDelayedLoading(artifactLoading);
+  const showCommentsLoading = useDelayedLoading(commentsLoading, 60);
+  const showReviewsLoading = useDelayedLoading(reviewsLoading, 60);
   const [reviewError, setReviewError] = useState("");
   const [reviewSuccess, setReviewSuccess] = useState(false);
 
@@ -386,7 +392,7 @@ const Post = () => {
   const isArchived = post?.status === "Archived";
   const isNonInteractive = isPending || isArchived;
 
-  if (loading) {
+  if (showLoading) {
     return <PostSkeleton />;
   }
 
@@ -665,9 +671,11 @@ const Post = () => {
                   </span>
                   <code
                     className="font-code text-xs break-all"
-                    style={{ color: artifactLoading ? "#9CA3AF" : "#22C55E" }}
+                    style={{
+                      color: showArtifactLoading ? "#9CA3AF" : "#22C55E",
+                    }}
                   >
-                    {artifactLoading ? (
+                    {showArtifactLoading ? (
                       <span className="inline-block h-4 w-64 bg-gray-200 rounded animate-pulse" />
                     ) : (
                       post.sha256_hash || "No artifact linked"
@@ -724,7 +732,7 @@ const Post = () => {
                         ? "This analysis is archived. Comments are disabled."
                         : "Comments will be available once this analysis is published."}
                     </p>
-                  ) : commentsLoading ? (
+                  ) : showCommentsLoading ? (
                     <div className="space-y-4">
                       {[1, 2, 3].map((i) => (
                         <div
@@ -851,7 +859,7 @@ const Post = () => {
               </div>
 
               {(isAuthor || !isNonInteractive) &&
-                (reviewsLoading ? (
+                (showReviewsLoading ? (
                   <div className="mt-8 pt-6 border-t border-[rgba(229,231,235,0.5)] animate-pulse">
                     <div className="mb-6">
                       <div className="h-5 w-32 bg-gray-200 rounded mb-4" />
@@ -966,15 +974,15 @@ const Post = () => {
                   Behavioral Indicators
                 </h3>
                 <span className="font-code text-[10px] text-gray-600">
-                  {artifactLoading ? (
-                    <span className="inline-block h-3 w-16 bg-gray-200 rounded animate-pulse" />
+                  {showArtifactLoading ? (
+                    <span className="inline-block h-4 w-24 bg-gray-200 rounded animate-pulse" />
                   ) : (
-                    `${logs.length} entries`
+                    logs?.length
                   )}
                 </span>
               </div>
               <div className="divide-y divide-[rgba(229,231,235,0.3)] max-h-[280px] overflow-y-auto">
-                {artifactLoading ? (
+                {showArtifactLoading ? (
                   Array.from({ length: 4 }).map((_, i) => (
                     <div key={i} className="px-6 py-3 animate-pulse">
                       <div className="h-3 w-24 bg-gray-200 rounded mb-1" />
@@ -1028,10 +1036,13 @@ const Post = () => {
               >
                 Sandbox Score
               </h3>
-              {artifactLoading ? (
-                <div className="flex flex-col items-center animate-pulse">
-                  <div className="w-32 h-32 rounded-full bg-gray-200 mb-4" />
-                  <div className="h-3 w-24 bg-gray-200 rounded" />
+              {showArtifactLoading ? (
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 rounded-full bg-gray-200 animate-pulse" />
+                  <div className="space-y-2 flex-1">
+                    <div className="h-4 w-32 bg-gray-200 rounded animate-pulse" />
+                    <div className="h-3 w-24 bg-gray-200 rounded animate-pulse" />
+                  </div>
                 </div>
               ) : (
                 <div className="flex flex-col items-center">
@@ -1100,8 +1111,8 @@ const Post = () => {
               >
                 Artifact Metadata
               </h3>
-              {artifactLoading ? (
-                <div className="space-y-3 animate-pulse">
+              {showArtifactLoading ? (
+                <div className="space-y-3">
                   {[1, 2, 3, 4, 5].map((i) => (
                     <div
                       key={i}

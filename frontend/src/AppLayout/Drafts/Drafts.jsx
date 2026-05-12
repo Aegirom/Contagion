@@ -8,11 +8,13 @@ import {
   getUserDrafts,
   updateSubmission,
 } from "../../services/api";
+import useDelayedLoading from "../../hooks/useDelayedLoading";
 
 function Drafts() {
   const navigate = useNavigate();
   const [drafts, setDrafts] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
+  const showLoading = useDelayedLoading(isLoading);
   const [error, setError] = useState("");
 
   const loadDrafts = async () => {
@@ -89,7 +91,7 @@ function Drafts() {
           <div className="h-[1px] flex-grow bg-phantom"></div>
         </div>
 
-        {isLoading && (
+        {showLoading && (
           <>
             <DraftCardSkeleton />
             <DraftCardSkeleton />
@@ -98,7 +100,7 @@ function Drafts() {
           </>
         )}
 
-        {!isLoading &&
+        {!showLoading &&
           drafts.map((draft) => (
             <DraftCard
               key={draft.submission_id}
