@@ -104,82 +104,34 @@ const Post = () => {
       const postRes = await getSubmissionById(postId);
       setPost(postRes.data);
 
-      let likesCount = 0;
-      let userLiked = false;
-      let sharesCount = 0;
-      let userSaved = false;
-      let commentsData = [];
+      const [likesRes, sharesRes, commentsRes, aggRes, reviewsRes, ...authResults] = await Promise.all([
+        getPostLikes(postId).catch(e => { console.log("Likes not available"); return null }),
+        getPostShares(postId).catch(e => { console.log("Shares not available"); return null }),
+        getPostComments(postId).catch(e => { console.log("Comments not available"); return null }),
+        getAggregateScores(postId).catch(e => { console.log("Aggregate scores not available"); return null }),
+        getSubmissionReviews(postId).catch(e => { console.log("Reviews not available"); return null }),
+        ...(isAuthenticated ? [
+          getUserPostLike(postId).catch(e => { console.log("User like check not available"); return null }),
+          getUserPostSave(postId).catch(e => { console.log("User save check not available"); return null }),
+          getUserReview(postId).catch(e => { console.log("User review check not available"); return null }),
+        ] : []),
+      ]);
 
-      try {
-        const likesRes = await getPostLikes(postId);
-        likesCount = likesRes.data?.like_count || 0;
-      } catch (e) {
-        console.log("Likes not available");
-      }
+      setLikes(likesRes?.data?.like_count || 0);
+      setShareCount(sharesRes?.data?.share_count || 0);
+      setComments(commentsRes?.data || []);
 
-      try {
-        if (isAuthenticated) {
-          const likedRes = await getUserPostLike(postId);
-          userLiked = likedRes.data?.isLiked || false;
-        }
-      } catch (e) {
-        console.log("User like check not available");
-      }
-
-      try {
-        const sharesRes = await getPostShares(postId);
-        sharesCount = sharesRes.data?.share_count || 0;
-      } catch (e) {
-        console.log("Shares not available");
-      }
-
-      try {
-        if (isAuthenticated) {
-          const savedRes = await getUserPostSave(postId);
-          userSaved = savedRes.data?.isSaved || false;
-        }
-      } catch (e) {
-        console.log("User save check not available");
-      }
-
-      try {
-        const commentsRes = await getPostComments(postId);
-        commentsData = commentsRes.data || [];
-      } catch (e) {
-        console.log("Comments not available");
-      }
-
-      // Load peer review data
-      try {
-        const aggRes = await getAggregateScores(postId);
-        setAggregate(aggRes.data);
-      } catch (e) {
-        console.log("Aggregate scores not available");
-      }
-
-      try {
-        const reviewsRes = await getSubmissionReviews(postId);
-        setReviews(reviewsRes.data?.reviews || []);
-      } catch (e) {
-        console.log("Reviews not available");
-      }
+      if (aggRes) setAggregate(aggRes.data);
+      if (reviewsRes) setReviews(reviewsRes.data?.reviews || []);
 
       if (isAuthenticated) {
-        try {
-          const userReviewRes = await getUserReview(postId);
-          setUserReview(userReviewRes.data?.review || null);
-          setHasReviewed(userReviewRes.data?.hasReviewed || false);
-        } catch (e) {
-          console.log("User review check not available");
+        setIsLiked(authResults[0]?.data?.isLiked || false);
+        setIsSaved(authResults[1]?.data?.isSaved || false);
+        if (authResults[2]?.data) {
+          setUserReview(authResults[2].data?.review || null);
+          setHasReviewed(authResults[2].data?.hasReviewed || false);
         }
       }
-
-      setLikes(likesCount);
-      setIsLiked(userLiked);
-      setShareCount(sharesCount);
-      setIsShared(false);
-      setIsSaved(userSaved);
-      setComments(commentsData);
     } catch (err) {
       setActionError(
         err.response?.data?.error || "Failed to load analysis report",

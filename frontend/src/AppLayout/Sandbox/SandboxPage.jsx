@@ -30,21 +30,66 @@ const CountTile = ({ label, value, accent = "text-slate-100" }) => (
   </div>
 );
 
-const BehaviorRow = ({ label, items, maxShow = 5 }) => {
+const formatItem = (item) => {
+  if (typeof item === "string") return item;
+  if (typeof item === "object" && item !== null) {
+    if (item.address) return item.address;
+    if (item.domain) return item.domain;
+    if (item.ip) return item.ip;
+    if (item.path) return item.path;
+    if (item.file_name) return item.file_name;
+    if (item.command_line) return item.command_line;
+    if (item.process_name) return item.process_name;
+    if (item.name) return item.name;
+    return Object.values(item).filter(v => typeof v === "string").join(" ") || JSON.stringify(item);
+  }
+  return String(item);
+};
+
+const getItemMeta = (item) => {
+  if (typeof item === "object" && item !== null) {
+    const meta = [];
+    if (item.method) meta.push(item.method);
+    if (item.protocol) meta.push(item.protocol);
+    if (item.port) meta.push(`:${item.port}`);
+    if (item.status) meta.push(item.status);
+    if (item.type) meta.push(item.type);
+    if (item.severity) meta.push(item.severity);
+    return meta.length ? meta.join(" · ") : null;
+  }
+  return null;
+};
+
+const BehaviorRow = ({ label, items, maxShow = 5, icon }) => {
   if (!items || items.length === 0) return null;
   return (
     <div className="rounded border border-phantom bg-obsidian/60 p-3">
-      <p className="font-code text-[10px] uppercase tracking-[0.18em] text-slate-500 mb-2">
-        {label}
-      </p>
-      <div className="max-h-28 overflow-y-auto space-y-1">
-        {items.slice(0, maxShow).map((item, i) => (
-          <p key={i} className="font-code text-[11px] text-slate-300 truncate">
-            {typeof item === "string" ? item : JSON.stringify(item)}
-          </p>
-        ))}
+      <div className="flex items-center gap-2 mb-2">
+        {icon && <span className="text-slate-500">{icon}</span>}
+        <p className="font-code text-[10px] uppercase tracking-[0.18em] text-slate-500">
+          {label}
+        </p>
+        <span className="ml-auto font-code text-[9px] text-slate-600">{items.length}</span>
+      </div>
+      <div className="max-h-32 overflow-y-auto space-y-1">
+        {items.slice(0, maxShow).map((item, i) => {
+          const primary = formatItem(item);
+          const meta = getItemMeta(item);
+          return (
+            <div key={i} className="flex items-center justify-between gap-2 py-1 px-2 rounded hover:bg-white/5">
+              <span className="font-code text-[11px] text-slate-300 truncate" title={primary}>
+                {primary}
+              </span>
+              {meta && (
+                <span className="flex-shrink-0 font-code text-[9px] text-slate-600 truncate max-w-[120px]">
+                  {meta}
+                </span>
+              )}
+            </div>
+          );
+        })}
         {items.length > maxShow && (
-          <p className="font-code text-[10px] text-slate-600">
+          <p className="font-code text-[10px] text-slate-600 pt-1 text-center">
             +{items.length - maxShow} more
           </p>
         )}
