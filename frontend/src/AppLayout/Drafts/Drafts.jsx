@@ -1,8 +1,13 @@
 import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import DraftCard from "./Components/DraftCard";
+import DraftCardSkeleton from "./Components/DraftCardSkeleton";
 import PlusButton from "../Dashboard/Components/Buttons.jsx";
-import { deleteSubmission, getUserDrafts, updateSubmission } from "../../services/api";
+import {
+  deleteSubmission,
+  getUserDrafts,
+  updateSubmission,
+} from "../../services/api";
 
 function Drafts() {
   const navigate = useNavigate();
@@ -30,7 +35,9 @@ function Drafts() {
     setError("");
     try {
       await updateSubmission(draft.submission_id, { status: "Pending" });
-      setDrafts((prev) => prev.filter((item) => item.submission_id !== draft.submission_id));
+      setDrafts((prev) =>
+        prev.filter((item) => item.submission_id !== draft.submission_id),
+      );
       navigate("/submissions");
     } catch (err) {
       setError(err.response?.data?.error || "Failed to publish draft");
@@ -38,7 +45,12 @@ function Drafts() {
   };
 
   const handleDelete = async (id) => {
-    if (!window.confirm("Delete this draft? This archives it and removes it from active lists.")) return;
+    if (
+      !window.confirm(
+        "Delete this draft? This archives it and removes it from active lists.",
+      )
+    )
+      return;
 
     setError("");
     try {
@@ -78,20 +90,23 @@ function Drafts() {
         </div>
 
         {isLoading && (
-          <div className="col-span-full py-20 text-center">
-            <div className="inline-block animate-spin rounded-full h-12 w-12 border-4 border-toxic border-t-transparent mb-4"></div>
-            <p className="text-gray-600 font-mono text-sm uppercase">Loading drafts...</p>
-          </div>
+          <>
+            <DraftCardSkeleton />
+            <DraftCardSkeleton />
+            <DraftCardSkeleton />
+            <DraftCardSkeleton />
+          </>
         )}
 
-        {!isLoading && drafts.map((draft) => (
-          <DraftCard
-            key={draft.submission_id}
-            draft={draft}
-            onPublish={handlePublish}
-            onDelete={handleDelete}
-          />
-        ))}
+        {!isLoading &&
+          drafts.map((draft) => (
+            <DraftCard
+              key={draft.submission_id}
+              draft={draft}
+              onPublish={handlePublish}
+              onDelete={handleDelete}
+            />
+          ))}
 
         {!isLoading && drafts.length === 0 && (
           <div className="col-span-full py-20 text-center border border-dashed border-phantom rounded-xl">

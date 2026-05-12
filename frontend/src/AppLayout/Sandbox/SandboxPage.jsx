@@ -42,7 +42,11 @@ const formatItem = (item) => {
     if (item.command_line) return item.command_line;
     if (item.process_name) return item.process_name;
     if (item.name) return item.name;
-    return Object.values(item).filter(v => typeof v === "string").join(" ") || JSON.stringify(item);
+    return (
+      Object.values(item)
+        .filter((v) => typeof v === "string")
+        .join(" ") || JSON.stringify(item)
+    );
   }
   return String(item);
 };
@@ -70,15 +74,23 @@ const BehaviorRow = ({ label, items, maxShow = 5, icon }) => {
         <p className="font-code text-[10px] uppercase tracking-[0.18em] text-gray-600">
           {label}
         </p>
-        <span className="ml-auto font-code text-[9px] text-gray-500">{items.length}</span>
+        <span className="ml-auto font-code text-[9px] text-gray-500">
+          {items.length}
+        </span>
       </div>
       <div className="max-h-32 overflow-y-auto space-y-1">
         {items.slice(0, maxShow).map((item, i) => {
           const primary = formatItem(item);
           const meta = getItemMeta(item);
           return (
-            <div key={i} className="flex items-center justify-between gap-2 py-1 px-2 rounded hover:bg-gray-100">
-              <span className="font-code text-[11px] text-gray-600 truncate" title={primary}>
+            <div
+              key={i}
+              className="flex items-center justify-between gap-2 py-1 px-2 rounded hover:bg-gray-100"
+            >
+              <span
+                className="font-code text-[11px] text-gray-600 truncate"
+                title={primary}
+              >
                 {primary}
               </span>
               {meta && (
@@ -102,7 +114,19 @@ const BehaviorRow = ({ label, items, maxShow = 5, icon }) => {
 const DetectionList = ({ stats }) => {
   if (!stats) return null;
   const engines = Object.entries(stats)
-    .filter(([key]) => !["malicious", "suspicious", "harmless", "undetected", "timeout", "confirmed-timeout", "failure", "type-unsupported"].includes(key))
+    .filter(
+      ([key]) =>
+        ![
+          "malicious",
+          "suspicious",
+          "harmless",
+          "undetected",
+          "timeout",
+          "confirmed-timeout",
+          "failure",
+          "type-unsupported",
+        ].includes(key),
+    )
     .map(([engine, verdict]) => ({ engine, verdict }));
 
   if (engines.length === 0) return null;
@@ -114,7 +138,10 @@ const DetectionList = ({ stats }) => {
       </p>
       <div className="max-h-32 overflow-y-auto grid grid-cols-1 sm:grid-cols-2 gap-x-4 gap-y-1">
         {engines.map(({ engine, verdict }) => (
-          <div key={engine} className="flex items-center justify-between py-0.5">
+          <div
+            key={engine}
+            className="flex items-center justify-between py-0.5"
+          >
             <span className="font-code text-[11px] text-gray-600 truncate">
               {engine}
             </span>
@@ -123,8 +150,8 @@ const DetectionList = ({ stats }) => {
                 verdict === "malicious"
                   ? "text-red-400"
                   : verdict === "suspicious"
-                  ? "text-amber-400"
-                  : "text-gray-600"
+                    ? "text-amber-400"
+                    : "text-gray-600"
               }`}
             >
               {verdict}
@@ -141,7 +168,9 @@ function SandboxPage() {
   const targetSubmissionId = searchParams.get("submission");
   const [submissions, setSubmissions] = useState([]);
   const [executions, setExecutions] = useState([]);
-  const [selectedSubmissionId, setSelectedSubmissionId] = useState(targetSubmissionId || "");
+  const [selectedSubmissionId, setSelectedSubmissionId] = useState(
+    targetSubmissionId || "",
+  );
   const [fileHash, setFileHash] = useState("");
   const [networkEnabled, setNetworkEnabled] = useState(false);
   const [osProfile, setOsProfile] = useState("Windows10");
@@ -228,20 +257,26 @@ function SandboxPage() {
 
   const handleRun = async (event) => {
     event.preventDefault();
-    if (!turnstileToken) { setError("Please complete the security verification"); return; }
+    if (!turnstileToken) {
+      setError("Please complete the security verification");
+      return;
+    }
     setRunning(true);
     setError("");
     setLatestResult(null);
 
     try {
-      const response = await evaluateSandboxFile({
-        submission_id: Number(selectedSubmissionId),
-        file_hash: fileHash.trim() || undefined,
-        environment,
-        os_profile: osProfile,
-        network_enabled: networkEnabled,
-        timeout_seconds: Number(timeoutSeconds),
-      }, turnstileToken);
+      const response = await evaluateSandboxFile(
+        {
+          submission_id: Number(selectedSubmissionId),
+          file_hash: fileHash.trim() || undefined,
+          environment,
+          os_profile: osProfile,
+          network_enabled: networkEnabled,
+          timeout_seconds: Number(timeoutSeconds),
+        },
+        turnstileToken,
+      );
 
       setLatestResult(response.data);
       await loadData();
@@ -279,459 +314,468 @@ function SandboxPage() {
         </div>
       </div>
 
-      {error && (
-        <div className="mb-6 rounded border border-red-500/40 bg-red-500/10 px-4 py-3 font-code text-xs text-red-300">
-          {error}
-        </div>
-      )}
-
-      <div className="grid grid-cols-1 gap-6 xl:grid-cols-[minmax(340px,420px)_1fr]">
-        <form
-          onSubmit={handleRun}
-          className="glass-panel rounded-lg p-5 shadow-card"
-        >
-          <div className="mb-5 flex items-center justify-between">
-            <h2 className="font-display text-sm font-bold uppercase tracking-[0.22em] text-gray-800">
-              Execution Parameters
-            </h2>
+      <div className="animate-fade-up">
+        {error && (
+          <div className="mb-6 rounded border border-red-500/40 bg-red-500/10 px-4 py-3 font-code text-xs text-red-300">
+            {error}
           </div>
+        )}
 
-          <label className="mb-4 block">
-            <span className="mb-2 block font-code text-[10px] uppercase tracking-[0.2em] text-gray-600">
-              Submission
-            </span>
-            <select
-              value={selectedSubmissionId}
-              onChange={(event) => setSelectedSubmissionId(event.target.value)}
-              className="w-full rounded border border-phantom bg-void px-3 py-3 text-sm text-gray-900 outline-none transition focus:border-toxic"
-              required
-            >
-              {submissions.map((submission) => (
-                <option
-                  key={submission.submission_id}
-                  value={submission.submission_id}
-                >
-                  #{submission.submission_id} - {submission.title}
-                </option>
-              ))}
-            </select>
-          </label>
-
-          <label className="mb-4 block">
-            <span className="mb-2 block font-code text-[10px] uppercase tracking-[0.2em] text-gray-600">
-              File Hash {selectedHasHash ? "(optional)" : "(required)"}
-            </span>
-            <input
-              value={fileHash}
-              onChange={(event) => setFileHash(event.target.value)}
-              placeholder={
-                selectedHasHash
-                  ? selectedSubmission.sha256_hash
-                  : "MD5, SHA-1, or SHA-256"
-              }
-              className="w-full rounded border border-phantom bg-void px-3 py-3 font-code text-xs text-gray-900 outline-none transition focus:border-toxic"
-              required={!selectedHasHash}
-            />
-          </label>
-
-          <div className="mb-4 grid grid-cols-1 gap-4 sm:grid-cols-2">
-            <label>
-              <span className="mb-2 block font-code text-[10px] uppercase tracking-[0.2em] text-gray-600">
-                Environment
-              </span>
-              <select
-                value={environment}
-                onChange={(event) => setEnvironment(event.target.value)}
-                className="w-full rounded border border-phantom bg-void px-3 py-3 text-sm text-gray-900 outline-none focus:border-toxic"
-              >
-                <option>Docker</option>
-                <option>VirtualBox</option>
-                <option>KVM</option>
-              </select>
-            </label>
-
-            <label>
-              <span className="mb-2 block font-code text-[10px] uppercase tracking-[0.2em] text-gray-600">
-                OS Profile
-              </span>
-              <select
-                value={osProfile}
-                onChange={(event) => setOsProfile(event.target.value)}
-                className="w-full rounded border border-phantom bg-void px-3 py-3 text-sm text-gray-900 outline-none focus:border-toxic"
-              >
-                <option>Windows10</option>
-                <option>Windows11</option>
-                <option>Ubuntu22</option>
-              </select>
-            </label>
-          </div>
-
-          <label className="mb-5 block">
-            <span className="mb-2 block font-code text-[10px] uppercase tracking-[0.2em] text-gray-600">
-              Timeout Seconds
-            </span>
-            <input
-              type="number"
-              min="30"
-              max="600"
-              value={timeoutSeconds}
-              onChange={(event) => setTimeoutSeconds(event.target.value)}
-              className="w-full rounded border border-phantom bg-void px-3 py-3 font-code text-sm text-gray-900 outline-none focus:border-toxic"
-            />
-          </label>
-
-          <label className="mb-6 flex cursor-pointer items-center justify-between rounded border border-phantom bg-void px-4 py-3">
-            <span>
-              <span className="block font-code text-[10px] uppercase tracking-[0.2em] text-gray-600">
-                Network Enabled
-              </span>
-              <span className="text-xs text-gray-500">
-                Stored with the execution metadata
-              </span>
-            </span>
-            <input
-              type="checkbox"
-              checked={networkEnabled}
-              onChange={(event) => setNetworkEnabled(event.target.checked)}
-              className="h-5 w-5 accent-toxic"
-            />
-          </label>
-
-          <TurnstileWidget onToken={handleTurnstileToken} />
-
-          <button
-            type="submit"
-            disabled={running || loading || submissions.length === 0 || !turnstileToken}
-            className="w-full rounded-lg bg-toxic px-5 py-3 font-display text-xs font-bold uppercase tracking-[0.22em] text-black transition hover:bg-green-300 disabled:cursor-not-allowed disabled:opacity-50"
+        <div className="grid grid-cols-1 gap-6 xl:grid-cols-[minmax(340px,420px)_1fr]">
+          <form
+            onSubmit={handleRun}
+            className="glass-panel rounded-lg p-5 shadow-card"
           >
-            {running ? "Evaluating..." : "Run Sandbox Evaluation"}
-          </button>
-        </form>
-
-        <section className="min-w-0 space-y-6">
-          {selectedSubmission?.file_name && (
-            <div className="glass-panel rounded-lg p-5 shadow-card">
-              <h2 className="mb-4 font-display text-sm font-bold uppercase tracking-[0.22em] text-gray-800">
-                Artifact Metadata
+            <div className="mb-5 flex items-center justify-between">
+              <h2 className="font-display text-sm font-bold uppercase tracking-[0.22em] text-gray-800">
+                Execution Parameters
               </h2>
-              <div className="rounded border border-phantom bg-void p-4">
-                <p className="text-sm font-semibold text-gray-900">
-                  {selectedSubmission.file_name}
-                </p>
-                <div className="mt-4 grid grid-cols-1 gap-4 sm:grid-cols-2">
-                  <div>
-                    <p className="font-code text-[10px] uppercase tracking-[0.18em] text-gray-600">
-                      SHA-256
-                    </p>
-                    <p className="mt-1 break-all font-code text-[11px] text-gray-600">
-                      {selectedSubmission.sha256_hash || "—"}
-                    </p>
-                  </div>
-                  <div>
-                    <p className="font-code text-[10px] uppercase tracking-[0.18em] text-gray-600">
-                      MD5
-                    </p>
-                    <p className="mt-1 break-all font-code text-[11px] text-gray-600">
-                      {selectedSubmission.md5_hash || "—"}
-                    </p>
-                  </div>
-                  <div>
-                    <p className="font-code text-[10px] uppercase tracking-[0.18em] text-gray-600">
-                      SHA-1
-                    </p>
-                    <p className="mt-1 break-all font-code text-[11px] text-gray-600">
-                      {selectedSubmission.sha1_hash || "—"}
-                    </p>
-                  </div>
-                  <div>
-                    <p className="font-code text-[10px] uppercase tracking-[0.18em] text-gray-600">
-                      Size
-                    </p>
-                    <p className="mt-1 font-code text-[11px] text-gray-600">
-                      {selectedSubmission.file_size
-                        ? `${Number(selectedSubmission.file_size).toLocaleString()} bytes`
-                        : "—"}
-                    </p>
-                  </div>
-                  <div>
-                    <p className="font-code text-[10px] uppercase tracking-[0.18em] text-gray-600">
-                      Type
-                    </p>
-                    <p className="mt-1 text-sm text-gray-600">
-                      {selectedSubmission.file_type || "—"}
-                    </p>
-                  </div>
-                  <div>
-                    <p className="font-code text-[10px] uppercase tracking-[0.18em] text-gray-600">
-                      Storage Path
-                    </p>
-                    <p className="mt-1 break-all font-code text-[11px] text-gray-600">
-                      {selectedSubmission.storage_path || "—"}
-                    </p>
-                  </div>
-                  <div>
-                    <p className="font-code text-[10px] uppercase tracking-[0.18em] text-gray-600">
-                      Malware Family
-                    </p>
-                    <p className="mt-1 text-sm text-gray-600">
-                      {selectedSubmission.malware_family || "—"}
-                    </p>
-                  </div>
-                  <div>
-                    <p className="font-code text-[10px] uppercase tracking-[0.18em] text-gray-600">
-                      Category
-                    </p>
-                    <p className="mt-1 text-sm text-gray-600">
-                      {selectedSubmission.malware_category || "—"}
-                    </p>
-                  </div>
-                  <div>
-                    <p className="font-code text-[10px] uppercase tracking-[0.18em] text-gray-600">
-                      Uploaded
-                    </p>
-                    <p className="mt-1 font-code text-[11px] text-gray-600">
-                      {selectedSubmission.upload_time
-                        ? toDateTime(selectedSubmission.upload_time)
-                        : "—"}
-                    </p>
-                  </div>
-                  <div>
-                    <p className="font-code text-[10px] uppercase tracking-[0.18em] text-gray-600">
-                      Quarantined
-                    </p>
-                    <p className="mt-1 text-sm text-gray-600">
-                      {selectedSubmission.is_quarantined ? "Yes" : "No"}
-                    </p>
+            </div>
+
+            <label className="mb-4 block">
+              <span className="mb-2 block font-code text-[10px] uppercase tracking-[0.2em] text-gray-600">
+                Submission
+              </span>
+              <select
+                value={selectedSubmissionId}
+                onChange={(event) =>
+                  setSelectedSubmissionId(event.target.value)
+                }
+                className="w-full rounded border border-phantom bg-void px-3 py-3 text-sm text-gray-900 outline-none transition focus:border-toxic"
+                required
+              >
+                {submissions.map((submission) => (
+                  <option
+                    key={submission.submission_id}
+                    value={submission.submission_id}
+                  >
+                    #{submission.submission_id} - {submission.title}
+                  </option>
+                ))}
+              </select>
+            </label>
+
+            <label className="mb-4 block">
+              <span className="mb-2 block font-code text-[10px] uppercase tracking-[0.2em] text-gray-600">
+                File Hash {selectedHasHash ? "(optional)" : "(required)"}
+              </span>
+              <input
+                value={fileHash}
+                onChange={(event) => setFileHash(event.target.value)}
+                placeholder={
+                  selectedHasHash
+                    ? selectedSubmission.sha256_hash
+                    : "MD5, SHA-1, or SHA-256"
+                }
+                className="w-full rounded border border-phantom bg-void px-3 py-3 font-code text-xs text-gray-900 outline-none transition focus:border-toxic"
+                required={!selectedHasHash}
+              />
+            </label>
+
+            <div className="mb-4 grid grid-cols-1 gap-4 sm:grid-cols-2">
+              <label>
+                <span className="mb-2 block font-code text-[10px] uppercase tracking-[0.2em] text-gray-600">
+                  Environment
+                </span>
+                <select
+                  value={environment}
+                  onChange={(event) => setEnvironment(event.target.value)}
+                  className="w-full rounded border border-phantom bg-void px-3 py-3 text-sm text-gray-900 outline-none focus:border-toxic"
+                >
+                  <option>Docker</option>
+                  <option>VirtualBox</option>
+                  <option>KVM</option>
+                </select>
+              </label>
+
+              <label>
+                <span className="mb-2 block font-code text-[10px] uppercase tracking-[0.2em] text-gray-600">
+                  OS Profile
+                </span>
+                <select
+                  value={osProfile}
+                  onChange={(event) => setOsProfile(event.target.value)}
+                  className="w-full rounded border border-phantom bg-void px-3 py-3 text-sm text-gray-900 outline-none focus:border-toxic"
+                >
+                  <option>Windows10</option>
+                  <option>Windows11</option>
+                  <option>Ubuntu22</option>
+                </select>
+              </label>
+            </div>
+
+            <label className="mb-5 block">
+              <span className="mb-2 block font-code text-[10px] uppercase tracking-[0.2em] text-gray-600">
+                Timeout Seconds
+              </span>
+              <input
+                type="number"
+                min="30"
+                max="600"
+                value={timeoutSeconds}
+                onChange={(event) => setTimeoutSeconds(event.target.value)}
+                className="w-full rounded border border-phantom bg-void px-3 py-3 font-code text-sm text-gray-900 outline-none focus:border-toxic"
+              />
+            </label>
+
+            <label className="mb-6 flex cursor-pointer items-center justify-between rounded border border-phantom bg-void px-4 py-3">
+              <span>
+                <span className="block font-code text-[10px] uppercase tracking-[0.2em] text-gray-600">
+                  Network Enabled
+                </span>
+                <span className="text-xs text-gray-500">
+                  Stored with the execution metadata
+                </span>
+              </span>
+              <input
+                type="checkbox"
+                checked={networkEnabled}
+                onChange={(event) => setNetworkEnabled(event.target.checked)}
+                className="h-5 w-5 accent-toxic"
+              />
+            </label>
+
+            <TurnstileWidget onToken={handleTurnstileToken} />
+
+            <button
+              type="submit"
+              disabled={
+                running ||
+                loading ||
+                submissions.length === 0 ||
+                !turnstileToken
+              }
+              className="w-full rounded-lg bg-toxic px-5 py-3 font-display text-xs font-bold uppercase tracking-[0.22em] text-black transition hover:bg-green-300 disabled:cursor-not-allowed disabled:opacity-50"
+            >
+              {running ? "Evaluating..." : "Run Sandbox Evaluation"}
+            </button>
+          </form>
+
+          <section className="min-w-0 space-y-6">
+            {selectedSubmission?.file_name && (
+              <div className="glass-panel rounded-lg p-5 shadow-card">
+                <h2 className="mb-4 font-display text-sm font-bold uppercase tracking-[0.22em] text-gray-800">
+                  Artifact Metadata
+                </h2>
+                <div className="rounded border border-phantom bg-void p-4">
+                  <p className="text-sm font-semibold text-gray-900">
+                    {selectedSubmission.file_name}
+                  </p>
+                  <div className="mt-4 grid grid-cols-1 gap-4 sm:grid-cols-2">
+                    <div>
+                      <p className="font-code text-[10px] uppercase tracking-[0.18em] text-gray-600">
+                        SHA-256
+                      </p>
+                      <p className="mt-1 break-all font-code text-[11px] text-gray-600">
+                        {selectedSubmission.sha256_hash || "—"}
+                      </p>
+                    </div>
+                    <div>
+                      <p className="font-code text-[10px] uppercase tracking-[0.18em] text-gray-600">
+                        MD5
+                      </p>
+                      <p className="mt-1 break-all font-code text-[11px] text-gray-600">
+                        {selectedSubmission.md5_hash || "—"}
+                      </p>
+                    </div>
+                    <div>
+                      <p className="font-code text-[10px] uppercase tracking-[0.18em] text-gray-600">
+                        SHA-1
+                      </p>
+                      <p className="mt-1 break-all font-code text-[11px] text-gray-600">
+                        {selectedSubmission.sha1_hash || "—"}
+                      </p>
+                    </div>
+                    <div>
+                      <p className="font-code text-[10px] uppercase tracking-[0.18em] text-gray-600">
+                        Size
+                      </p>
+                      <p className="mt-1 font-code text-[11px] text-gray-600">
+                        {selectedSubmission.file_size
+                          ? `${Number(selectedSubmission.file_size).toLocaleString()} bytes`
+                          : "—"}
+                      </p>
+                    </div>
+                    <div>
+                      <p className="font-code text-[10px] uppercase tracking-[0.18em] text-gray-600">
+                        Type
+                      </p>
+                      <p className="mt-1 text-sm text-gray-600">
+                        {selectedSubmission.file_type || "—"}
+                      </p>
+                    </div>
+                    <div>
+                      <p className="font-code text-[10px] uppercase tracking-[0.18em] text-gray-600">
+                        Storage Path
+                      </p>
+                      <p className="mt-1 break-all font-code text-[11px] text-gray-600">
+                        {selectedSubmission.storage_path || "—"}
+                      </p>
+                    </div>
+                    <div>
+                      <p className="font-code text-[10px] uppercase tracking-[0.18em] text-gray-600">
+                        Malware Family
+                      </p>
+                      <p className="mt-1 text-sm text-gray-600">
+                        {selectedSubmission.malware_family || "—"}
+                      </p>
+                    </div>
+                    <div>
+                      <p className="font-code text-[10px] uppercase tracking-[0.18em] text-gray-600">
+                        Category
+                      </p>
+                      <p className="mt-1 text-sm text-gray-600">
+                        {selectedSubmission.malware_category || "—"}
+                      </p>
+                    </div>
+                    <div>
+                      <p className="font-code text-[10px] uppercase tracking-[0.18em] text-gray-600">
+                        Uploaded
+                      </p>
+                      <p className="mt-1 font-code text-[11px] text-gray-600">
+                        {selectedSubmission.upload_time
+                          ? toDateTime(selectedSubmission.upload_time)
+                          : "—"}
+                      </p>
+                    </div>
+                    <div>
+                      <p className="font-code text-[10px] uppercase tracking-[0.18em] text-gray-600">
+                        Quarantined
+                      </p>
+                      <p className="mt-1 text-sm text-gray-600">
+                        {selectedSubmission.is_quarantined ? "Yes" : "No"}
+                      </p>
+                    </div>
                   </div>
                 </div>
               </div>
+            )}
+
+            <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">
+              <CountTile
+                label="Malicious"
+                value={latestStats?.malicious}
+                accent="text-red-400"
+              />
+              <CountTile
+                label="Suspicious"
+                value={latestStats?.suspicious}
+                accent="text-amber-400"
+              />
+              <CountTile
+                label="Harmless"
+                value={latestStats?.harmless}
+                accent="text-green-400"
+              />
+              <CountTile
+                label="Undetected"
+                value={latestStats?.undetected}
+                accent="text-gray-600"
+              />
             </div>
-          )}
 
-          <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">
-            <CountTile
-              label="Malicious"
-              value={latestStats?.malicious}
-              accent="text-red-400"
-            />
-            <CountTile
-              label="Suspicious"
-              value={latestStats?.suspicious}
-              accent="text-amber-400"
-            />
-            <CountTile
-              label="Harmless"
-              value={latestStats?.harmless}
-              accent="text-green-400"
-            />
-            <CountTile
-              label="Undetected"
-              value={latestStats?.undetected}
-              accent="text-gray-600"
-            />
-          </div>
+            <div className="glass-panel rounded-lg p-5 shadow-card">
+              <div className="mb-4 flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+                <h2 className="font-display text-sm font-bold uppercase tracking-[0.22em] text-gray-800">
+                  Latest Evaluation
+                </h2>
+                {latestSeverity && (
+                  <span
+                    className={`w-fit rounded border px-3 py-1 font-code text-[10px] uppercase tracking-widest ${severityStyles[latestSeverity]}`}
+                  >
+                    {latestSeverity}
+                  </span>
+                )}
+              </div>
 
-          <div className="glass-panel rounded-lg p-5 shadow-card">
-            <div className="mb-4 flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
-              <h2 className="font-display text-sm font-bold uppercase tracking-[0.22em] text-gray-800">
-                Latest Evaluation
-              </h2>
-              {latestSeverity && (
-                <span
-                  className={`w-fit rounded border px-3 py-1 font-code text-[10px] uppercase tracking-widest ${severityStyles[latestSeverity]}`}
-                >
-                  {latestSeverity}
-                </span>
+              {latestResult ? (
+                <div className="grid gap-5 lg:grid-cols-[280px_1fr]">
+                  <div className="rounded border border-phantom bg-void p-4">
+                    <p className="font-code text-[10px] uppercase tracking-[0.2em] text-gray-600">
+                      Artifact
+                    </p>
+                    <p className="mt-2 text-sm font-semibold text-gray-900">
+                      {latestResult.file?.name || "Unnamed sample"}
+                    </p>
+                    <p className="mt-3 break-all font-code text-[11px] text-gray-600">
+                      {latestResult.file?.sha256}
+                    </p>
+                    <div className="mt-4 grid grid-cols-2 gap-3 text-xs">
+                      <div>
+                        <p className="font-code uppercase tracking-widest text-gray-500">
+                          Type
+                        </p>
+                        <p className="mt-1 text-gray-600">
+                          {latestResult.file?.type || "Unknown"}
+                        </p>
+                      </div>
+                      <div>
+                        <p className="font-code uppercase tracking-widest text-gray-500">
+                          Size
+                        </p>
+                        <p className="mt-1 text-gray-600">
+                          {latestResult.file?.size || 0} bytes
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="min-w-0 rounded border border-phantom bg-void p-4">
+                    <p className="font-code text-[10px] uppercase tracking-[0.2em] text-gray-600">
+                      Behavior Summary
+                    </p>
+                    <div className="mt-4 grid grid-cols-1 gap-3 md:grid-cols-3">
+                      <CountTile
+                        label="Domains"
+                        value={latestResult.behavior?.contacted_domains?.length}
+                        accent="text-cyan-300"
+                      />
+                      <CountTile
+                        label="Processes"
+                        value={latestResult.behavior?.processes_created?.length}
+                        accent="text-gray-800"
+                      />
+                      <CountTile
+                        label="Files Written"
+                        value={latestResult.behavior?.files_written?.length}
+                        accent="text-gray-800"
+                      />
+                    </div>
+                    <div className="mt-4 space-y-3 max-h-[320px] overflow-y-auto pr-1">
+                      <BehaviorRow
+                        label="Contacted Domains"
+                        items={latestResult.behavior?.contacted_domains}
+                      />
+                      <BehaviorRow
+                        label="Processes Created"
+                        items={latestResult.behavior?.processes_created}
+                      />
+                      <BehaviorRow
+                        label="Files Opened"
+                        items={latestResult.behavior?.files_opened}
+                      />
+                      <BehaviorRow
+                        label="Files Written"
+                        items={latestResult.behavior?.files_written}
+                      />
+                      <BehaviorRow
+                        label="Files Deleted"
+                        items={latestResult.behavior?.files_deleted}
+                      />
+                      <BehaviorRow
+                        label="Registry Keys Set"
+                        items={latestResult.behavior?.registry_keys_set}
+                      />
+                      <BehaviorRow
+                        label="HTTP Conversations"
+                        items={latestResult.behavior?.http_conversations}
+                      />
+                      <BehaviorRow
+                        label="Command Executions"
+                        items={latestResult.behavior?.command_executions}
+                      />
+                      <BehaviorRow
+                        label="Processes Terminated"
+                        items={latestResult.behavior?.processes_terminated}
+                      />
+                      <BehaviorRow
+                        label="IP Traffic"
+                        items={latestResult.behavior?.ip_traffic}
+                      />
+                      <BehaviorRow
+                        label="DNS Lookups"
+                        items={latestResult.behavior?.dns_lookups}
+                      />
+                      <BehaviorRow
+                        label="Tags"
+                        items={latestResult.behavior?.tags}
+                      />
+                      <DetectionList stats={latestResult.verdict?.stats} />
+                      {latestResult.verdict?.suggestedThreatLabel && (
+                        <div className="rounded border border-red-500/30 bg-red-500/10 p-3">
+                          <p className="font-code text-[10px] uppercase tracking-[0.18em] text-red-400 mb-1">
+                            Threat Label
+                          </p>
+                          <p className="font-code text-[11px] text-red-300">
+                            {latestResult.verdict.suggestedThreatLabel}
+                          </p>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                </div>
+              ) : (
+                <div className="rounded border border-dashed border-phantom py-16 text-center">
+                  <p className="font-code text-xs uppercase tracking-[0.2em] text-gray-600">
+                    Run an evaluation to populate the active report panel.
+                  </p>
+                </div>
               )}
             </div>
 
-            {latestResult ? (
-              <div className="grid gap-5 lg:grid-cols-[280px_1fr]">
-                <div className="rounded border border-phantom bg-void p-4">
-                  <p className="font-code text-[10px] uppercase tracking-[0.2em] text-gray-600">
-                    Artifact
-                  </p>
-                  <p className="mt-2 text-sm font-semibold text-gray-900">
-                    {latestResult.file?.name || "Unnamed sample"}
-                  </p>
-                  <p className="mt-3 break-all font-code text-[11px] text-gray-600">
-                    {latestResult.file?.sha256}
-                  </p>
-                  <div className="mt-4 grid grid-cols-2 gap-3 text-xs">
-                    <div>
-                      <p className="font-code uppercase tracking-widest text-gray-500">
-                        Type
-                      </p>
-                      <p className="mt-1 text-gray-600">
-                        {latestResult.file?.type || "Unknown"}
-                      </p>
-                    </div>
-                    <div>
-                      <p className="font-code uppercase tracking-widest text-gray-500">
-                        Size
-                      </p>
-                      <p className="mt-1 text-gray-600">
-                        {latestResult.file?.size || 0} bytes
-                      </p>
-                    </div>
-                  </div>
-                </div>
-
-                <div className="min-w-0 rounded border border-phantom bg-void p-4">
-                  <p className="font-code text-[10px] uppercase tracking-[0.2em] text-gray-600">
-                    Behavior Summary
-                  </p>
-                  <div className="mt-4 grid grid-cols-1 gap-3 md:grid-cols-3">
-                    <CountTile
-                      label="Domains"
-                      value={latestResult.behavior?.contacted_domains?.length}
-                      accent="text-cyan-300"
-                    />
-                    <CountTile
-                      label="Processes"
-                      value={latestResult.behavior?.processes_created?.length}
-                      accent="text-gray-800"
-                    />
-                    <CountTile
-                      label="Files Written"
-                      value={latestResult.behavior?.files_written?.length}
-                      accent="text-gray-800"
-                    />
-                  </div>
-                  <div className="mt-4 space-y-3 max-h-[320px] overflow-y-auto pr-1">
-                    <BehaviorRow
-                      label="Contacted Domains"
-                      items={latestResult.behavior?.contacted_domains}
-                    />
-                    <BehaviorRow
-                      label="Processes Created"
-                      items={latestResult.behavior?.processes_created}
-                    />
-                    <BehaviorRow
-                      label="Files Opened"
-                      items={latestResult.behavior?.files_opened}
-                    />
-                    <BehaviorRow
-                      label="Files Written"
-                      items={latestResult.behavior?.files_written}
-                    />
-                    <BehaviorRow
-                      label="Files Deleted"
-                      items={latestResult.behavior?.files_deleted}
-                    />
-                    <BehaviorRow
-                      label="Registry Keys Set"
-                      items={latestResult.behavior?.registry_keys_set}
-                    />
-                    <BehaviorRow
-                      label="HTTP Conversations"
-                      items={latestResult.behavior?.http_conversations}
-                    />
-                    <BehaviorRow
-                      label="Command Executions"
-                      items={latestResult.behavior?.command_executions}
-                    />
-                    <BehaviorRow
-                      label="Processes Terminated"
-                      items={latestResult.behavior?.processes_terminated}
-                    />
-                    <BehaviorRow
-                      label="IP Traffic"
-                      items={latestResult.behavior?.ip_traffic}
-                    />
-                    <BehaviorRow
-                      label="DNS Lookups"
-                      items={latestResult.behavior?.dns_lookups}
-                    />
-                    <BehaviorRow
-                      label="Tags"
-                      items={latestResult.behavior?.tags}
-                    />
-                    <DetectionList stats={latestResult.verdict?.stats} />
-                    {latestResult.verdict?.suggestedThreatLabel && (
-                      <div className="rounded border border-red-500/30 bg-red-500/10 p-3">
-                        <p className="font-code text-[10px] uppercase tracking-[0.18em] text-red-400 mb-1">
-                          Threat Label
-                        </p>
-                        <p className="font-code text-[11px] text-red-300">
-                          {latestResult.verdict.suggestedThreatLabel}
-                        </p>
-                      </div>
-                    )}
-                  </div>
-                </div>
+            <div className="glass-panel rounded-lg p-5 shadow-card">
+              <div className="mb-4 flex items-center justify-between">
+                <h2 className="font-display text-sm font-bold uppercase tracking-[0.22em] text-gray-800">
+                  Execution History
+                </h2>
+                <span className="font-code text-[10px] uppercase tracking-[0.2em] text-gray-500">
+                  {executions.length} records
+                </span>
               </div>
-            ) : (
-              <div className="rounded border border-dashed border-phantom py-16 text-center">
-                <p className="font-code text-xs uppercase tracking-[0.2em] text-gray-600">
-                  Run an evaluation to populate the active report panel.
-                </p>
-              </div>
-            )}
-          </div>
 
-          <div className="glass-panel rounded-lg p-5 shadow-card">
-            <div className="mb-4 flex items-center justify-between">
-              <h2 className="font-display text-sm font-bold uppercase tracking-[0.22em] text-gray-800">
-                Execution History
-              </h2>
-              <span className="font-code text-[10px] uppercase tracking-[0.2em] text-gray-500">
-                {executions.length} records
-              </span>
-            </div>
-
-            <div className="overflow-x-auto">
-              <table className="w-full min-w-[760px] text-left">
-                <thead>
-                  <tr className="border-b border-phantom font-code text-[10px] uppercase tracking-[0.18em] text-gray-600">
-                    <th className="pb-3">ID</th>
-                    <th className="pb-3">Submission</th>
-                    <th className="pb-3">Status</th>
-                    <th className="pb-3">Artifact</th>
-                    <th className="pb-3">Finished</th>
-                    <th className="pb-3">Logs</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {executions.map((execution) => (
-                    <tr
-                      key={execution.execution_id}
-                      className="border-b border-phantom/70 text-sm text-gray-600"
-                    >
-                      <td className="py-4 font-code text-gray-600">
-                        #{execution.execution_id}
-                      </td>
-                      <td className="py-4">{execution.submission_title}</td>
-                      <td className="py-4">
-                        <span className="rounded border border-toxic/30 bg-toxic/10 px-2 py-1 font-code text-[10px] uppercase tracking-widest text-toxic">
-                          {execution.status}
-                        </span>
-                      </td>
-                      <td className="py-4">
-                        <p>{execution.file_name}</p>
-                        <p className="mt-1 max-w-[220px] truncate font-code text-[10px] text-gray-500">
-                          {execution.sha256_hash}
-                        </p>
-                      </td>
-                      <td className="py-4 font-code text-xs text-gray-600">
-                        {toDateTime(execution.finished_at)}
-                      </td>
-                      <td className="py-4 font-code text-xs text-gray-600">
-                        {(execution.logs || []).length}
-                      </td>
+              <div className="overflow-x-auto">
+                <table className="w-full min-w-[760px] text-left">
+                  <thead>
+                    <tr className="border-b border-phantom font-code text-[10px] uppercase tracking-[0.18em] text-gray-600">
+                      <th className="pb-3">ID</th>
+                      <th className="pb-3">Submission</th>
+                      <th className="pb-3">Status</th>
+                      <th className="pb-3">Artifact</th>
+                      <th className="pb-3">Finished</th>
+                      <th className="pb-3">Logs</th>
                     </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-
-            {!loading && executions.length === 0 && (
-              <div className="py-12 text-center font-code text-xs uppercase tracking-[0.2em] text-gray-500">
-                No sandbox executions stored yet.
+                  </thead>
+                  <tbody>
+                    {executions.map((execution) => (
+                      <tr
+                        key={execution.execution_id}
+                        className="border-b border-phantom/70 text-sm text-gray-600"
+                      >
+                        <td className="py-4 font-code text-gray-600">
+                          #{execution.execution_id}
+                        </td>
+                        <td className="py-4">{execution.submission_title}</td>
+                        <td className="py-4">
+                          <span className="rounded border border-toxic/30 bg-toxic/10 px-2 py-1 font-code text-[10px] uppercase tracking-widest text-toxic">
+                            {execution.status}
+                          </span>
+                        </td>
+                        <td className="py-4">
+                          <p>{execution.file_name}</p>
+                          <p className="mt-1 max-w-[220px] truncate font-code text-[10px] text-gray-500">
+                            {execution.sha256_hash}
+                          </p>
+                        </td>
+                        <td className="py-4 font-code text-xs text-gray-600">
+                          {toDateTime(execution.finished_at)}
+                        </td>
+                        <td className="py-4 font-code text-xs text-gray-600">
+                          {(execution.logs || []).length}
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
               </div>
-            )}
-          </div>
-        </section>
+
+              {!loading && executions.length === 0 && (
+                <div className="py-12 text-center font-code text-xs uppercase tracking-[0.2em] text-gray-500">
+                  No sandbox executions stored yet.
+                </div>
+              )}
+            </div>
+          </section>
+        </div>
       </div>
     </main>
   );

@@ -4,7 +4,7 @@ import {
   markAsRead,
   markAllAsRead,
 } from "../controllers/NotificationController.js";
-import { protect } from "./Auth.js";
+import { protect } from "../middleware/auth.js";
 
 const router = express.Router();
 

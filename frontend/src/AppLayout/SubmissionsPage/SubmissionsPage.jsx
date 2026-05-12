@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useContext } from "react";
 import SearchBar from "./Components/SearchBar";
 import Submitted from "./Components/Submitted";
+import SubmittedSkeleton from "./Components/SubmittedSkeleton";
 import AiEvaluationModal from "./Components/AiEvaluationModal";
 import { useNavigate } from "react-router-dom";
 import PlusButton from "../Dashboard/Components/Buttons.jsx";
@@ -18,7 +19,7 @@ function SubmissionsPage() {
   const [submissions, setSubmissions] = useState([]);
   const [filters, setFilters] = useState({
     query: "",
-    status: "all",
+    status: "Published",
     family: "all",
   });
   const [dataLoading, setDataLoading] = useState(true);
@@ -151,7 +152,9 @@ function SubmissionsPage() {
   const filteredSubmissions = transformedSubmissions.filter((item) => {
     const matchesQuery =
       item.name.toLowerCase().includes(filters.query.toLowerCase()) ||
-      (item.description || "").toLowerCase().includes(filters.query.toLowerCase());
+      (item.description || "")
+        .toLowerCase()
+        .includes(filters.query.toLowerCase());
 
     const matchesStatus =
       filters.status === "all" || item.status === filters.status;
@@ -218,12 +221,12 @@ function SubmissionsPage() {
           )}
 
           {dataLoading && filteredSubmissions.length === 0 && (
-            <div className="col-span-full py-20 text-center">
-              <div className="inline-block animate-spin rounded-full h-12 w-12 border-4 border-toxic border-t-transparent mb-4"></div>
-              <p className="text-gray-600 font-mono text-sm uppercase">
-                Loading submissions...
-              </p>
-            </div>
+            <>
+              <SubmittedSkeleton />
+              <SubmittedSkeleton />
+              <SubmittedSkeleton />
+              <SubmittedSkeleton />
+            </>
           )}
         </div>
       </div>

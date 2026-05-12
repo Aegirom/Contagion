@@ -14,7 +14,6 @@ import adminRoutes from "./routes/Admin.js";
 import aiEvaluationRoutes from "./routes/AiEvaluation.js";
 import path from "path";
 import { fileURLToPath } from "url";
-import { protect } from "./routes/Auth.js";
 import { recreatePool } from "./config/db.js";
 import logger from "./config/logger.js";
 import errorHandler from "./middleware/errorHandler.js";

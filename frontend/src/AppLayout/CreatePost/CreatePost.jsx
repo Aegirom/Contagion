@@ -76,7 +76,10 @@ const CreatePost = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    if (!turnstileToken) { setSubmitError("Please complete the security verification"); return; }
+    if (!turnstileToken) {
+      setSubmitError("Please complete the security verification");
+      return;
+    }
     const submitStatus = e.nativeEvent.submitter?.value || formData.status;
     setIsSubmitting(true);
     setSubmitError("");
@@ -108,7 +111,10 @@ const CreatePost = () => {
         draftId;
 
       if (response.data.xp_gained) {
-        addToast(`+${response.data.xp_gained} XP for submitting analysis`, "xp");
+        addToast(
+          `+${response.data.xp_gained} XP for submitting analysis`,
+          "xp",
+        );
       }
 
       if (
@@ -118,14 +124,17 @@ const CreatePost = () => {
         submissionId
       ) {
         try {
-          await evaluateSandboxFile({
-            submission_id: Number(submissionId),
-            file_hash: artifact.sha256_hash,
-            environment: "Docker",
-            os_profile: "Windows10",
-            network_enabled: false,
-            timeout_seconds: 120,
-          }, turnstileToken);
+          await evaluateSandboxFile(
+            {
+              submission_id: Number(submissionId),
+              file_hash: artifact.sha256_hash,
+              environment: "Docker",
+              os_profile: "Windows10",
+              network_enabled: false,
+              timeout_seconds: 120,
+            },
+            turnstileToken,
+          );
         } catch (sandboxError) {
           console.warn("Sandbox evaluation did not complete:", sandboxError);
         }
@@ -159,115 +168,117 @@ const CreatePost = () => {
           </div>
         </div>
 
-        {isLoadingDraft ? (
-          <div className="py-20 text-center font-code text-xs uppercase tracking-widest text-gray-600">
-            Loading draft...
-          </div>
-        ) : (
-          <form onSubmit={handleSubmit} className="space-y-6">
-            <div className="rounded-xl p-8 border space-y-6 glass-panel shadow-card">
-              {/* Title Field (Maps to title in DB) */}
-              <div className="space-y-2">
-                <label className="font-code text-[10px] uppercase tracking-widest block text-gray-600">
-                  Report Title (Malware Family)
-                </label>
-                <input
-                  type="text"
-                  name="title"
-                  value={formData.title}
-                  onChange={handleChange}
-                  placeholder="e.g. LockBit 3.0 Analysis"
-                  className="w-full px-4 py-3 rounded-lg bg-void border border-phantom text-sm text-gray-900 focus:outline-none focus:border-toxic/40 transition-colors"
-                  required
-                />
-              </div>
-
-              <ArtifactUploader />
-
-              <div className="space-y-2">
-                <label className="font-code text-[10px] uppercase tracking-widest block text-gray-600">
-                  Malware Category
-                </label>
-                <select
-                  name="malware_category"
-                  value={formData.malware_category}
-                  onChange={handleChange}
-                  className="w-full px-4 py-3 rounded-lg bg-void border border-phantom text-sm text-gray-900 focus:outline-none focus:border-toxic/40 transition-colors"
-                >
-                  <option>Ransomware</option>
-                  <option>Trojan</option>
-                  <option>Worm</option>
-                  <option>APT</option>
-                  <option>Rootkit</option>
-                  <option>Spyware</option>
-                  <option>Other</option>
-                </select>
-              </div>
-
-              {/* Analysis Summary (Maps to content in DB) */}
-              <div className="space-y-2">
-                <label className="font-code text-[10px] uppercase tracking-widest block text-gray-600">
-                  Analysis Summary (Content)
-                </label>
-                <textarea
-                  name="content"
-                  value={formData.content}
-                  onChange={handleChange}
-                  placeholder="Describe your findings..."
-                  rows="6"
-                  className="w-full px-4 py-3 rounded-lg bg-void border border-phantom text-sm text-gray-900 focus:outline-none focus:border-toxic/40 transition-colors resize-none"
-                  required
-                />
-              </div>
-
-              <label className="flex items-center justify-between rounded-lg border border-phantom bg-void px-4 py-3">
-                <span>
-                  <span className="block font-code text-[10px] uppercase tracking-widest text-gray-600">
-                    Run sandbox after submit
-                  </span>
-                  <span className="text-xs text-gray-500">
-                    Uses the uploaded artifact hash for automated evaluation.
-                  </span>
-                </span>
-                <input
-                  type="checkbox"
-                  checked={runSandbox}
-                  onChange={(event) => setRunSandbox(event.target.checked)}
-                  className="h-5 w-5 accent-toxic"
-                />
-              </label>
-
-              {submitError && (
-                <div className="rounded border border-red-900/40 bg-red-900/10 p-3 font-code text-xs text-red-300">
-                  {submitError}
-                </div>
-              )}
-
-              <TurnstileWidget onToken={handleTurnstileToken} />
-
-              {/* Buttons */}
-              <div className="flex gap-3">
-                <button
-                  type="submit"
-                  name="status"
-                  value="Draft"
-                  className="flex-1 flex items-center justify-center gap-2 px-6 py-3 text-xs font-mono uppercase tracking-wider border border-phantom bg-transparent text-gray-900 rounded-lg transition-colors duration-200 hover:bg-phantom/50"
-                >
-                  Save Draft
-                </button>
-                <button
-                  type="submit"
-                  name="status"
-                  value="Pending"
-                  disabled={isSubmitting || !user || !turnstileToken}
-                  className="flex-1 flex items-center justify-center gap-2 px-6 py-3 text-xs font-mono uppercase tracking-wider bg-toxic text-void border border-phantom rounded-lg transition-colors duration-200 hover:bg-green-300 disabled:opacity-50 disabled:cursor-not-allowed"
-                >
-                  {isSubmitting ? "Submitting..." : "Submit Analysis"}
-                </button>
-              </div>
+        <div className="animate-fade-up">
+          {isLoadingDraft ? (
+            <div className="py-20 text-center font-code text-xs uppercase tracking-widest text-gray-600">
+              Loading draft...
             </div>
-          </form>
-        )}
+          ) : (
+            <form onSubmit={handleSubmit} className="space-y-6">
+              <div className="rounded-xl p-8 border space-y-6 glass-panel shadow-card">
+                {/* Title Field (Maps to title in DB) */}
+                <div className="space-y-2">
+                  <label className="font-code text-[10px] uppercase tracking-widest block text-gray-600">
+                    Report Title (Malware Family)
+                  </label>
+                  <input
+                    type="text"
+                    name="title"
+                    value={formData.title}
+                    onChange={handleChange}
+                    placeholder="e.g. LockBit 3.0 Analysis"
+                    className="w-full px-4 py-3 rounded-lg bg-void border border-phantom text-sm text-gray-900 focus:outline-none focus:border-toxic/40 transition-colors"
+                    required
+                  />
+                </div>
+
+                <ArtifactUploader />
+
+                <div className="space-y-2">
+                  <label className="font-code text-[10px] uppercase tracking-widest block text-gray-600">
+                    Malware Category
+                  </label>
+                  <select
+                    name="malware_category"
+                    value={formData.malware_category}
+                    onChange={handleChange}
+                    className="w-full px-4 py-3 rounded-lg bg-void border border-phantom text-sm text-gray-900 focus:outline-none focus:border-toxic/40 transition-colors"
+                  >
+                    <option>Ransomware</option>
+                    <option>Trojan</option>
+                    <option>Worm</option>
+                    <option>APT</option>
+                    <option>Rootkit</option>
+                    <option>Spyware</option>
+                    <option>Other</option>
+                  </select>
+                </div>
+
+                {/* Analysis Summary (Maps to content in DB) */}
+                <div className="space-y-2">
+                  <label className="font-code text-[10px] uppercase tracking-widest block text-gray-600">
+                    Analysis Summary (Content)
+                  </label>
+                  <textarea
+                    name="content"
+                    value={formData.content}
+                    onChange={handleChange}
+                    placeholder="Describe your findings..."
+                    rows="6"
+                    className="w-full px-4 py-3 rounded-lg bg-void border border-phantom text-sm text-gray-900 focus:outline-none focus:border-toxic/40 transition-colors resize-none"
+                    required
+                  />
+                </div>
+
+                <label className="flex items-center justify-between rounded-lg border border-phantom bg-void px-4 py-3">
+                  <span>
+                    <span className="block font-code text-[10px] uppercase tracking-widest text-gray-600">
+                      Run sandbox after submit
+                    </span>
+                    <span className="text-xs text-gray-500">
+                      Uses the uploaded artifact hash for automated evaluation.
+                    </span>
+                  </span>
+                  <input
+                    type="checkbox"
+                    checked={runSandbox}
+                    onChange={(event) => setRunSandbox(event.target.checked)}
+                    className="h-5 w-5 accent-toxic"
+                  />
+                </label>
+
+                {submitError && (
+                  <div className="rounded border border-red-900/40 bg-red-900/10 p-3 font-code text-xs text-red-300">
+                    {submitError}
+                  </div>
+                )}
+
+                <TurnstileWidget onToken={handleTurnstileToken} />
+
+                {/* Buttons */}
+                <div className="flex gap-3">
+                  <button
+                    type="submit"
+                    name="status"
+                    value="Draft"
+                    className="flex-1 flex items-center justify-center gap-2 px-6 py-3 text-xs font-mono uppercase tracking-wider border border-phantom bg-transparent text-gray-900 rounded-lg transition-colors duration-200 hover:bg-phantom/50"
+                  >
+                    Save Draft
+                  </button>
+                  <button
+                    type="submit"
+                    name="status"
+                    value="Pending"
+                    disabled={isSubmitting || !user || !turnstileToken}
+                    className="flex-1 flex items-center justify-center gap-2 px-6 py-3 text-xs font-mono uppercase tracking-wider bg-toxic text-void border border-phantom rounded-lg transition-colors duration-200 hover:bg-green-300 disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
+                    {isSubmitting ? "Submitting..." : "Submit Analysis"}
+                  </button>
+                </div>
+              </div>
+            </form>
+          )}
+        </div>
       </div>
     </main>
   );

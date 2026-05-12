@@ -8,6 +8,7 @@ import {
 import VerifiedBadge from "../Dashboard/Components/VerifiedBadge";
 import {
   getSubmissionById,
+  getSubmissionArtifact,
   getPostComments,
   addPostComment,
   deletePostComment,
@@ -16,7 +17,7 @@ import {
   togglePostLike,
   getPostShares,
   togglePostShare,
-  getPostSaves,
+  getUserPostSave,
   togglePostSave,
   getSubmissionReviews,
   getUserReview,
@@ -26,6 +27,7 @@ import {
 } from "../../services/api";
 import { AuthContext } from "../../context/AuthContext";
 import { useToast } from "../../context/ToastContext";
+import PostSkeleton from "./Components/PostSkeleton";
 
 const formatBytes = (bytes) => {
   if (!bytes) return "0 B";
@@ -72,6 +74,7 @@ const Post = () => {
   const { addToast } = useToast();
   const [post, setPost] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [artifactLoading, setArtifactLoading] = useState(true);
   const [publishing, setPublishing] = useState(false);
   const [archiving, setArchiving] = useState(false);
   const [actionError, setActionError] = useState("");
@@ -81,11 +84,16 @@ const Post = () => {
   const [isShared, setIsShared] = useState(false);
   const [isSaved, setIsSaved] = useState(false);
   const [shareCount, setShareCount] = useState(0);
+  const [animKey, setAnimKey] = useState(0);
+  const [isSaving, setIsSaving] = useState(false);
   const [comments, setComments] = useState([]);
+  const [commentsLoading, setCommentsLoading] = useState(true);
+  const [deletingCommentId, setDeletingCommentId] = useState(null);
   const [newComment, setNewComment] = useState("");
 
   // Peer review state
   const [reviews, setReviews] = useState([]);
+  const [reviewsLoading, setReviewsLoading] = useState(true);
   const [aggregate, setAggregate] = useState(null);
   const [userReview, setUserReview] = useState(null);
   const [hasReviewed, setHasReviewed] = useState(false);
@@ -95,106 +103,77 @@ const Post = () => {
 
   const isAuthenticated = !!user;
 
-  const loadPost = useCallback(async () => {
-    try {
-      setActionError("");
-      setReviewError("");
+  const loadPost = useCallback(() => {
+    setActionError("");
+    setReviewError("");
+    setArtifactLoading(true);
+    setCommentsLoading(true);
+    setReviewsLoading(true);
 
-      const postRes = await getSubmissionById(postId);
-      setPost(postRes.data);
+    getSubmissionById(postId)
+      .then((res) => setPost(res.data))
+      .catch((err) =>
+        setActionError(
+          err.response?.data?.error || "Failed to load analysis report",
+        ),
+      )
+      .finally(() => setLoading(false));
 
-      let likesCount = 0;
-      let userLiked = false;
-      let sharesCount = 0;
-      let userSaved = false;
-      let commentsData = [];
+    getSubmissionArtifact(postId)
+      .then((res) => setPost((prev) => ({ ...prev, ...res.data })))
+      .catch(() => {})
+      .finally(() => setArtifactLoading(false));
 
-      try {
-        const likesRes = await getPostLikes(postId);
-        likesCount = likesRes.data?.like_count || 0;
-      } catch (e) {
-        console.log("Likes not available");
-      }
+    getPostLikes(postId)
+      .then((res) => setLikes(res.data?.like_count || 0))
+      .catch(() => {});
 
-      try {
-        if (isAuthenticated) {
-          const likedRes = await getUserPostLike(postId);
-          userLiked = likedRes.data?.isLiked || false;
-        }
-      } catch (e) {
-        console.log("User like check not available");
-      }
+    getPostShares(postId)
+      .then((res) => setShareCount(res.data?.share_count || 0))
+      .catch(() => {});
 
-      try {
-        const sharesRes = await getPostShares(postId);
-        sharesCount = sharesRes.data?.share_count || 0;
-      } catch (e) {
-        console.log("Shares not available");
-      }
-
-      try {
-        if (isAuthenticated) {
-          const savedRes = await getUserPostSave(postId);
-          userSaved = savedRes.data?.isSaved || false;
-        }
-      } catch (e) {
-        console.log("User save check not available");
-      }
-
-      try {
-        const commentsRes = await getPostComments(postId);
-        commentsData = commentsRes.data || [];
-      } catch (e) {
-        console.log("Comments not available");
-      }
-
-      // Load peer review data
-      try {
-        const aggRes = await getAggregateScores(postId);
-        setAggregate(aggRes.data);
-      } catch (e) {
-        console.log("Aggregate scores not available");
-      }
-
-      try {
-        const reviewsRes = await getSubmissionReviews(postId);
-        setReviews(reviewsRes.data?.reviews || []);
-      } catch (e) {
-        console.log("Reviews not available");
-      }
-
-      if (isAuthenticated) {
-        try {
-          const userReviewRes = await getUserReview(postId);
-          setUserReview(userReviewRes.data?.review || null);
-          setHasReviewed(userReviewRes.data?.hasReviewed || false);
-        } catch (e) {
-          console.log("User review check not available");
-        }
-      }
-
-      setLikes(likesCount);
-      setIsLiked(userLiked);
-      setShareCount(sharesCount);
-      setIsShared(false);
-      setIsSaved(userSaved);
-      setComments(commentsData);
-    } catch (err) {
-      if (!post) {
-        setActionError(err.response?.data?.error || "Failed to load analysis report");
-      }
-    } finally {
-      setLoading(false);
+    if (isAuthenticated) {
+      getUserPostLike(postId)
+        .then((res) => setIsLiked(res.data?.isLiked || false))
+        .catch(() => {});
+      getUserPostSave(postId)
+        .then((res) => setIsSaved(res.data?.isSaved || false))
+        .catch(() => {});
     }
-  }, [postId, isAuthenticated, post]);
+
+    getPostComments(postId)
+      .then((res) => setComments(res.data || []))
+      .catch(() => {})
+      .finally(() => setCommentsLoading(false));
+
+    Promise.all([
+      getSubmissionReviews(postId).catch(() => ({ data: { reviews: [] } })),
+      getAggregateScores(postId).catch(() => ({ data: null })),
+      isAuthenticated
+        ? getUserReview(postId).catch(() => ({
+            data: { review: null, hasReviewed: false },
+          }))
+        : Promise.resolve({ data: { review: null, hasReviewed: false } }),
+    ])
+      .then(([reviewsRes, aggRes, userReviewRes]) => {
+        setReviews(reviewsRes.data?.reviews || []);
+        setAggregate(aggRes.data);
+        setUserReview(userReviewRes.data?.review || null);
+        setHasReviewed(userReviewRes.data?.hasReviewed || false);
+      })
+      .catch(() => {})
+      .finally(() => setReviewsLoading(false));
+  }, [postId, isAuthenticated]);
 
   useEffect(() => {
     loadPost();
   }, [loadPost]);
 
   const logs = useMemo(() => post?.behavioral_logs || [], [post]);
-  const score =
-    post?.sandbox_status === "Completed" ? 100 : logs.length ? 65 : 0;
+  const score = useMemo(() => {
+    if (artifactLoading) return 0;
+    return post?.sandbox_status === "Completed" ? 100 : logs.length ? 65 : 0;
+  }, [post, artifactLoading, logs]);
   const threat = severityFromCategory(post?.malware_category);
 
   const handleRunSandbox = () => {
@@ -209,6 +188,14 @@ const Post = () => {
   const handleLike = async () => {
     if (!isAuthenticated) return showLoginPrompt();
     if (isNonInteractive) return;
+    const prevIsLiked = isLiked;
+    const prevLikes = likes;
+    const newIsLiked = !isLiked;
+    const newLikes = newIsLiked ? likes + 1 : likes - 1;
+    setIsLiked(newIsLiked);
+    setLikes(newLikes);
+    setAnimKey((k) => k + 1);
+
     try {
       const response = await togglePostLike(postId);
       setIsLiked(response.data.isLiked);
@@ -226,6 +213,8 @@ const Post = () => {
       }
       localStorage.setItem("likedPosts", JSON.stringify(likedPosts));
     } catch (err) {
+      setIsLiked(prevIsLiked);
+      setLikes(prevLikes);
       if (err.response?.status === 401) {
         navigate("/login", { state: { from: `/post/${postId}` } });
       } else {
@@ -253,15 +242,23 @@ const Post = () => {
   const handleSave = async () => {
     if (!isAuthenticated) return showLoginPrompt();
     if (isNonInteractive) return;
+    setIsSaving(true);
+    const prevIsSaved = isSaved;
+    const newIsSaved = !isSaved;
+    setIsSaved(newIsSaved);
+
     try {
       const response = await togglePostSave(postId);
       setIsSaved(response.data.isSaved);
     } catch (err) {
+      setIsSaved(prevIsSaved);
       if (err.response?.status === 401) {
         navigate("/login", { state: { from: `/post/${postId}` } });
       } else {
         console.error("Failed to toggle save:", err);
       }
+    } finally {
+      setIsSaving(false);
     }
   };
 
@@ -288,11 +285,14 @@ const Post = () => {
   };
 
   const handleDeleteComment = async (commentId) => {
+    setDeletingCommentId(commentId);
     try {
       await deletePostComment(commentId);
       setComments((prev) => prev.filter((c) => c.comment_id !== commentId));
     } catch (err) {
       console.error("Failed to delete comment:", err);
+    } finally {
+      setDeletingCommentId(null);
     }
   };
 
@@ -317,7 +317,7 @@ const Post = () => {
         reviewer_expertise: user?.expertise_level,
       };
       setUserReview(newReview);
-      setReviews(prev => [...prev, newReview]);
+      setReviews((prev) => [...prev, newReview]);
       if (response.data.xp_gained) {
         addToast(`+${response.data.xp_gained} XP for peer review`, "xp");
       }
@@ -387,13 +387,7 @@ const Post = () => {
   const isNonInteractive = isPending || isArchived;
 
   if (loading) {
-    return (
-      <main className="flex-1 overflow-auto relative z-10">
-        <div className="max-w-4xl mx-auto py-20 px-4 text-center font-code text-xs uppercase tracking-widest text-gray-600">
-          Loading analysis report...
-        </div>
-      </main>
-    );
+    return <PostSkeleton />;
   }
 
   if (!post) {
@@ -553,13 +547,14 @@ const Post = () => {
                       style={{ color: isLiked ? "#EF4444" : "#4B5563" }}
                     >
                       <svg
+                        key={animKey}
                         width="16"
                         height="16"
                         viewBox="0 0 24 24"
                         fill={isLiked ? "#EF4444" : "none"}
                         stroke="currentColor"
                         strokeWidth="2"
-                        className="transition-transform hover:rotate-12"
+                        className="animate-heart-pop"
                       >
                         <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z" />
                       </svg>
@@ -602,21 +597,45 @@ const Post = () => {
                     </button>
                     <button
                       onClick={handleSave}
-                      disabled={isNonInteractive}
+                      disabled={isNonInteractive || isSaving}
                       className="flex items-center gap-2 font-code text-xs transition-all hover:scale-105 disabled:opacity-30 disabled:cursor-not-allowed disabled:hover:scale-100"
                       style={{ color: isSaved ? "#F59E0B" : "#4B5563" }}
                     >
-                      <svg
-                        width="16"
-                        height="16"
-                        viewBox="0 0 24 24"
-                        fill={isSaved ? "#F59E0B" : "none"}
-                        stroke="currentColor"
-                        strokeWidth="2"
-                      >
-                        <path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z" />
-                      </svg>
-                      <span>{isSaved ? "Saved" : "Save"}</span>
+                      {isSaving ? (
+                        <svg
+                          className="animate-spin h-4 w-4"
+                          viewBox="0 0 24 24"
+                        >
+                          <circle
+                            className="opacity-25"
+                            cx="12"
+                            cy="12"
+                            r="10"
+                            stroke="currentColor"
+                            strokeWidth="4"
+                            fill="none"
+                          />
+                          <path
+                            className="opacity-75"
+                            fill="currentColor"
+                            d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"
+                          />
+                        </svg>
+                      ) : (
+                        <svg
+                          width="16"
+                          height="16"
+                          viewBox="0 0 24 24"
+                          fill={isSaved ? "#F59E0B" : "none"}
+                          stroke="currentColor"
+                          strokeWidth="2"
+                        >
+                          <path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z" />
+                        </svg>
+                      )}
+                      <span>
+                        {isSaving ? "Saving..." : isSaved ? "Saved" : "Save"}
+                      </span>
                     </button>
                   </div>
                 </div>
@@ -646,9 +665,13 @@ const Post = () => {
                   </span>
                   <code
                     className="font-code text-xs break-all"
-                    style={{ color: "#22C55E" }}
+                    style={{ color: artifactLoading ? "#9CA3AF" : "#22C55E" }}
                   >
-                    {post.sha256_hash || "No artifact linked"}
+                    {artifactLoading ? (
+                      <span className="inline-block h-4 w-64 bg-gray-200 rounded animate-pulse" />
+                    ) : (
+                      post.sha256_hash || "No artifact linked"
+                    )}
                   </code>
                 </div>
                 <p
@@ -701,6 +724,29 @@ const Post = () => {
                         ? "This analysis is archived. Comments are disabled."
                         : "Comments will be available once this analysis is published."}
                     </p>
+                  ) : commentsLoading ? (
+                    <div className="space-y-4">
+                      {[1, 2, 3].map((i) => (
+                        <div
+                          key={i}
+                          className="p-4 rounded-lg animate-pulse"
+                          style={{
+                            background: "rgba(249,250,251,0.6)",
+                            border: "1px solid rgba(229,231,235,0.6)",
+                          }}
+                        >
+                          <div className="flex items-center gap-2 mb-2">
+                            <div className="w-6 h-6 rounded-full bg-gray-200" />
+                            <div className="h-3 w-24 bg-gray-200 rounded" />
+                            <div className="h-2 w-16 bg-gray-200 rounded" />
+                          </div>
+                          <div className="pl-8 space-y-1.5">
+                            <div className="h-3 w-full bg-gray-200 rounded" />
+                            <div className="h-3 w-3/4 bg-gray-200 rounded" />
+                          </div>
+                        </div>
+                      ))}
+                    </div>
                   ) : (
                     <div className="space-y-4">
                       {comments.map((comment) => (
@@ -713,15 +759,14 @@ const Post = () => {
                           }}
                         >
                           <div className="flex items-center gap-2 mb-2">
-                            <div
-                              className="w-6 h-6 rounded-full flex items-center justify-center font-display text-[10px] font-bold"
-                              style={{
-                                background: "rgba(34,197,94,0.2)",
-                                color: "#22C55E",
-                              }}
-                            >
-                              {comment.username?.charAt(0).toUpperCase()}
-                            </div>
+                            <img
+                              src={
+                                comment.avatar_url ||
+                                `https://ui-avatars.com/api/?name=${encodeURIComponent(comment.username)}&background=10b981&color=fff&size=32`
+                              }
+                              alt=""
+                              className="w-6 h-6 rounded-full object-cover"
+                            />
                             <span
                               className="font-body text-sm font-semibold"
                               style={{ color: "#111827" }}
@@ -740,9 +785,46 @@ const Post = () => {
                                 onClick={() =>
                                   handleDeleteComment(comment.comment_id)
                                 }
-                                className="ml-auto font-code text-[10px] text-red-400 hover:text-red-300"
+                                disabled={
+                                  deletingCommentId === comment.comment_id
+                                }
+                                className="ml-auto font-code text-[10px] text-red-400 hover:text-red-600 disabled:opacity-50 flex items-center gap-1"
                               >
-                                Delete
+                                {deletingCommentId === comment.comment_id ? (
+                                  <svg
+                                    className="animate-spin h-3 w-3"
+                                    viewBox="0 0 24 24"
+                                    fill="none"
+                                  >
+                                    <circle
+                                      className="opacity-25"
+                                      cx="12"
+                                      cy="12"
+                                      r="10"
+                                      stroke="currentColor"
+                                      strokeWidth="4"
+                                    />
+                                    <path
+                                      className="opacity-75"
+                                      fill="currentColor"
+                                      d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"
+                                    />
+                                  </svg>
+                                ) : (
+                                  <svg
+                                    width="14"
+                                    height="14"
+                                    viewBox="0 0 24 24"
+                                    fill="none"
+                                    stroke="currentColor"
+                                    strokeWidth="2"
+                                    strokeLinecap="round"
+                                    strokeLinejoin="round"
+                                  >
+                                    <polyline points="3 6 5 6 21 6" />
+                                    <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" />
+                                  </svg>
+                                )}
                               </button>
                             )}
                           </div>
@@ -768,20 +850,45 @@ const Post = () => {
                 </div>
               </div>
 
-              {(isAuthor || !isNonInteractive) && (
-                <PeerReviewSection
-                  reviews={reviews}
-                  aggregate={aggregate}
-                  hasReviewed={hasReviewed}
-                  userReview={userReview}
-                  isAuthor={isAuthor}
-                  isAuthenticated={isAuthenticated}
-                  onSubmit={handleReviewSubmit}
-                  submitting={reviewSubmitting}
-                  success={reviewSuccess}
-                  error={reviewError}
-                />
-              )}
+              {(isAuthor || !isNonInteractive) &&
+                (reviewsLoading ? (
+                  <div className="mt-8 pt-6 border-t border-[rgba(229,231,235,0.5)] animate-pulse">
+                    <div className="mb-6">
+                      <div className="h-5 w-32 bg-gray-200 rounded mb-4" />
+                      <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 mb-6">
+                        {[1, 2, 3, 4].map((i) => (
+                          <div key={i} className="p-4 rounded-lg bg-gray-100">
+                            <div className="h-3 w-16 bg-gray-200 rounded mb-2" />
+                            <div className="h-6 w-8 bg-gray-200 rounded" />
+                          </div>
+                        ))}
+                      </div>
+                      {[1, 2].map((i) => (
+                        <div key={i} className="p-4 rounded-lg bg-gray-50 mb-3">
+                          <div className="flex items-center gap-2 mb-2">
+                            <div className="w-6 h-6 rounded-full bg-gray-200" />
+                            <div className="h-3 w-24 bg-gray-200 rounded" />
+                          </div>
+                          <div className="h-3 w-full bg-gray-200 rounded mb-1" />
+                          <div className="h-3 w-2/3 bg-gray-200 rounded" />
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                ) : (
+                  <PeerReviewSection
+                    reviews={reviews}
+                    aggregate={aggregate}
+                    hasReviewed={hasReviewed}
+                    userReview={userReview}
+                    isAuthor={isAuthor}
+                    isAuthenticated={isAuthenticated}
+                    onSubmit={handleReviewSubmit}
+                    submitting={reviewSubmitting}
+                    success={reviewSuccess}
+                    error={reviewError}
+                  />
+                ))}
 
               <div className="mt-6 flex flex-wrap items-center gap-3">
                 {post.sha256_hash && (
@@ -795,7 +902,9 @@ const Post = () => {
                 )}
                 {post.sha256_hash && (
                   <button
-                    onClick={() => navigate(`/submissions/${postId}/ai-evaluation`)}
+                    onClick={() =>
+                      navigate(`/submissions/${postId}/ai-evaluation`)
+                    }
                     className="rounded-lg border border-toxic bg-toxic/5 px-5 py-3 font-display text-xs font-bold uppercase tracking-[0.2em] text-toxic hover:bg-toxic/10 transition-all"
                   >
                     Neural Report
@@ -857,36 +966,47 @@ const Post = () => {
                   Behavioral Indicators
                 </h3>
                 <span className="font-code text-[10px] text-gray-600">
-                  {logs.length} entries
+                  {artifactLoading ? (
+                    <span className="inline-block h-3 w-16 bg-gray-200 rounded animate-pulse" />
+                  ) : (
+                    `${logs.length} entries`
+                  )}
                 </span>
               </div>
               <div className="divide-y divide-[rgba(229,231,235,0.3)] max-h-[280px] overflow-y-auto">
-                {logs.map((log) => (
-                  <div
-                    key={log.log_id}
-                    className="px-6 py-3 flex items-center justify-between gap-4 hover:bg-gray-100 transition-colors"
-                  >
-                    <div className="min-w-0 flex-1">
-                      <span className="font-code text-[10px] text-[#22C55E] uppercase tracking-widest block mb-0.5">
-                        {log.log_type}
-                      </span>
-                      <p
-                        className="font-body text-xs truncate"
-                        style={{ color: "#374151" }}
-                      >
-                        {summarizeLog(log)}
-                      </p>
+                {artifactLoading ? (
+                  Array.from({ length: 4 }).map((_, i) => (
+                    <div key={i} className="px-6 py-3 animate-pulse">
+                      <div className="h-3 w-24 bg-gray-200 rounded mb-1" />
+                      <div className="h-3 w-3/4 bg-gray-200 rounded" />
                     </div>
-                    <span className="flex-shrink-0 px-2 py-0.5 rounded font-code text-[8px] tracking-widest border border-red-500/20 bg-red-500/10 text-red-400">
-                      CAPTURED
-                    </span>
-                  </div>
-                ))}
-
-                {logs.length === 0 && (
+                  ))
+                ) : logs.length === 0 ? (
                   <div className="px-6 py-10 text-center font-code text-xs uppercase tracking-widest text-gray-500">
                     No behavioral logs captured yet.
                   </div>
+                ) : (
+                  logs.map((log) => (
+                    <div
+                      key={log.log_id}
+                      className="px-6 py-3 flex items-center justify-between gap-4 hover:bg-gray-100 transition-colors"
+                    >
+                      <div className="min-w-0 flex-1">
+                        <span className="font-code text-[10px] text-[#22C55E] uppercase tracking-widest block mb-0.5">
+                          {log.log_type}
+                        </span>
+                        <p
+                          className="font-body text-xs truncate"
+                          style={{ color: "#374151" }}
+                        >
+                          {summarizeLog(log)}
+                        </p>
+                      </div>
+                      <span className="flex-shrink-0 px-2 py-0.5 rounded font-code text-[8px] tracking-widest border border-red-500/20 bg-red-500/10 text-red-400">
+                        CAPTURED
+                      </span>
+                    </div>
+                  ))
                 )}
               </div>
             </div>
@@ -908,54 +1028,61 @@ const Post = () => {
               >
                 Sandbox Score
               </h3>
-              <div className="flex flex-col items-center">
-                <div className="relative w-32 h-32 flex items-center justify-center">
-                  <svg className="w-full h-full transform -rotate-90">
-                    <circle
-                      cx="64"
-                      cy="64"
-                      r="58"
-                      stroke="currentColor"
-                      strokeWidth="8"
-                      fill="transparent"
-                      className="text-gray-200"
-                    />
-                    <circle
-                      cx="64"
-                      cy="64"
-                      r="58"
-                      stroke="currentColor"
-                      strokeWidth="8"
-                      fill="transparent"
-                      strokeDasharray={364.42}
-                      strokeDashoffset={364.42 - (364.42 * score) / 100}
-                      className={
-                        score >= 80 ? "text-[#EF4444]" : "text-[#22C55E]"
-                      }
-                      style={{
-                        filter: "drop-shadow(0 0 8px rgba(34,197,94,0.4))",
-                      }}
-                    />
-                  </svg>
-                  <div className="absolute flex flex-col items-center">
-                    <span
-                      className="font-display text-3xl font-bold"
-                      style={{ color: "#111827" }}
-                    >
-                      {score}
-                    </span>
-                    <span className="font-code text-[10px] text-[#4B5563]">
-                      / 100
-                    </span>
-                  </div>
+              {artifactLoading ? (
+                <div className="flex flex-col items-center animate-pulse">
+                  <div className="w-32 h-32 rounded-full bg-gray-200 mb-4" />
+                  <div className="h-3 w-24 bg-gray-200 rounded" />
                 </div>
-                <p
-                  className="mt-4 font-code text-[10px] text-center"
-                  style={{ color: "#22C55E" }}
-                >
-                  {post.sandbox_status || "NOT QUEUED"}
-                </p>
-              </div>
+              ) : (
+                <div className="flex flex-col items-center">
+                  <div className="relative w-32 h-32 flex items-center justify-center">
+                    <svg className="w-full h-full transform -rotate-90">
+                      <circle
+                        cx="64"
+                        cy="64"
+                        r="58"
+                        stroke="currentColor"
+                        strokeWidth="8"
+                        fill="transparent"
+                        className="text-gray-200"
+                      />
+                      <circle
+                        cx="64"
+                        cy="64"
+                        r="58"
+                        stroke="currentColor"
+                        strokeWidth="8"
+                        fill="transparent"
+                        strokeDasharray={364.42}
+                        strokeDashoffset={364.42 - (364.42 * score) / 100}
+                        className={
+                          score >= 80 ? "text-[#EF4444]" : "text-[#22C55E]"
+                        }
+                        style={{
+                          filter: "drop-shadow(0 0 8px rgba(34,197,94,0.4))",
+                        }}
+                      />
+                    </svg>
+                    <div className="absolute flex flex-col items-center">
+                      <span
+                        className="font-display text-3xl font-bold"
+                        style={{ color: "#111827" }}
+                      >
+                        {score}
+                      </span>
+                      <span className="font-code text-[10px] text-[#4B5563]">
+                        / 100
+                      </span>
+                    </div>
+                  </div>
+                  <p
+                    className="mt-4 font-code text-[10px] text-center"
+                    style={{ color: "#22C55E" }}
+                  >
+                    {post.sandbox_status || "NOT QUEUED"}
+                  </p>
+                </div>
+              )}
             </div>
 
             <div
@@ -973,39 +1100,53 @@ const Post = () => {
               >
                 Artifact Metadata
               </h3>
-              <div className="space-y-3">
-                {[
-                  { label: "File Name", value: post.file_name || "None" },
-                  { label: "File Type", value: post.file_type || "Unknown" },
-                  { label: "File Size", value: formatBytes(post.file_size) },
-                  {
-                    label: "Category",
-                    value: post.malware_category || "Other",
-                  },
-                  {
-                    label: "Quarantined",
-                    value: post.is_quarantined ? "Yes" : "No",
-                  },
-                ].map((item) => (
-                  <div
-                    key={item.label}
-                    className="flex justify-between items-center gap-4"
-                  >
-                    <span
-                      className="font-code text-[10px]"
-                      style={{ color: "#4B5563" }}
+              {artifactLoading ? (
+                <div className="space-y-3 animate-pulse">
+                  {[1, 2, 3, 4, 5].map((i) => (
+                    <div
+                      key={i}
+                      className="flex justify-between items-center gap-4"
                     >
-                      {item.label}
-                    </span>
-                    <span
-                      className="font-code text-xs text-right break-all"
-                      style={{ color: "#111827" }}
+                      <div className="h-3 w-20 bg-gray-200 rounded" />
+                      <div className="h-3 w-28 bg-gray-200 rounded" />
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <div className="space-y-3">
+                  {[
+                    { label: "File Name", value: post.file_name || "None" },
+                    { label: "File Type", value: post.file_type || "Unknown" },
+                    { label: "File Size", value: formatBytes(post.file_size) },
+                    {
+                      label: "Category",
+                      value: post.malware_category || "Other",
+                    },
+                    {
+                      label: "Quarantined",
+                      value: post.is_quarantined ? "Yes" : "No",
+                    },
+                  ].map((item) => (
+                    <div
+                      key={item.label}
+                      className="flex justify-between items-center gap-4"
                     >
-                      {item.value}
-                    </span>
-                  </div>
-                ))}
-              </div>
+                      <span
+                        className="font-code text-[10px]"
+                        style={{ color: "#4B5563" }}
+                      >
+                        {item.label}
+                      </span>
+                      <span
+                        className="font-code text-xs text-right break-all"
+                        style={{ color: "#111827" }}
+                      >
+                        {item.value}
+                      </span>
+                    </div>
+                  ))}
+                </div>
+              )}
             </div>
           </div>
         </div>

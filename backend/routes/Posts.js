@@ -18,7 +18,7 @@ import {
   getUserReview,
   getAggregateScores
 } from "../controllers/PeerReviewsController.js";
-import { protect } from "./Auth.js";
+import { protect } from "../middleware/auth.js";
 import validate from "../middleware/validate.js";
 import { addCommentSchema } from "../validation/posts.js";
 import { submitReviewSchema } from "../validation/peerReviews.js";

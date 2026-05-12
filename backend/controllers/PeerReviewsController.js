@@ -1,26 +1,8 @@
 import sql from "mssql";
 import pool from "../config/db.js";
+import { createNotification } from "../services/notificationService.js";
+import { awardReviewXp } from "../services/reputationService.js";
 
-// Internal notification helper (same pattern as PostsController)
-const createNotification = async ({ userId, type, message, actorUsername, relatedSubmissionId, relatedReviewId }) => {
-  try {
-    await pool.request()
-      .input("userId", sql.Int, Number(userId))
-      .input("type", sql.NVarChar(50), type)
-      .input("message", sql.NVarChar(500), message)
-      .input("actorUsername", sql.NVarChar(100), actorUsername)
-      .input("relatedSubmissionId", sql.Int, relatedSubmissionId ? Number(relatedSubmissionId) : null)
-      .input("relatedReviewId", sql.Int, relatedReviewId ? Number(relatedReviewId) : null)
-      .query(`
-        INSERT INTO Notifications (user_id, type, message, actor_username, related_submission_id, related_review_id, is_read)
-        VALUES (@userId, @type, @message, @actorUsername, @relatedSubmissionId, @relatedReviewId, 0)
-      `);
-  } catch (error) {
-    console.error("[PeerReview] Failed to create notification:", error.message);
-  }
-};
-
-// POST /:submissionId/reviews — Submit a peer review
 export const submitReview = async (req, res) => {
   try {
     const { submissionId } = req.params;
@@ -42,7 +24,6 @@ export const submitReview = async (req, res) => {
       return res.status(400).json({ error: "Comments must be at least 10 characters" });
     }
 
-    // Check submission exists and get author info
     const submissionCheck = await pool.request()
       .input("submissionId", sql.Int, Number(submissionId))
       .query(`
@@ -58,12 +39,10 @@ export const submitReview = async (req, res) => {
 
     const submission = submissionCheck.recordset[0];
 
-    // Can't review your own submission
     if (submission.author_id === reviewerId) {
       return res.status(403).json({ error: "You cannot review your own submission" });
     }
 
-    // Check if user already reviewed this submission
     const existingReview = await pool.request()
       .input("submissionId", sql.Int, Number(submissionId))
       .input("reviewerId", sql.Int, Number(reviewerId))
@@ -73,14 +52,12 @@ export const submitReview = async (req, res) => {
       return res.status(409).json({ error: "You have already reviewed this submission" });
     }
 
-    // Get reviewer's username for notification
     const reviewerInfo = await pool.request()
       .input("reviewerId", sql.Int, Number(reviewerId))
       .query("SELECT username FROM Users WHERE user_id = @reviewerId");
 
     const reviewerUsername = reviewerInfo.recordset[0]?.username || "Unknown";
 
-    // Insert the review
     const result = await pool.request()
       .input("submissionId", sql.Int, Number(submissionId))
       .input("reviewerId", sql.Int, Number(reviewerId))
@@ -98,7 +75,6 @@ export const submitReview = async (req, res) => {
 
     const review = result.recordset[0];
 
-    // Notify the submission author
     await createNotification({
       userId: submission.author_id,
       type: "peer_review",
@@ -108,15 +84,7 @@ export const submitReview = async (req, res) => {
       relatedReviewId: review.review_id,
     });
 
-    // Small reputation boost for the author (receiving a review)
-    await pool.request()
-      .input("authorId", sql.Int, submission.author_id)
-      .query("UPDATE Users SET reputation_score = reputation_score + 2 WHERE user_id = @authorId");
-
-    // XP gain: +5 XP for submitting a peer review
-    await pool.request()
-      .input("reviewerId", sql.Int, Number(reviewerId))
-      .query("UPDATE Users SET reputation_score = reputation_score + 5 WHERE user_id = @reviewerId");
+    await awardReviewXp(submission.author_id, Number(reviewerId));
 
     res.status(201).json({
       review_id: review.review_id,
@@ -133,7 +101,6 @@ export const submitReview = async (req, res) => {
   }
 };
 
-// GET /:submissionId/reviews — Get all reviews for a submission
 export const getSubmissionReviews = async (req, res) => {
   try {
     const { submissionId } = req.params;
@@ -167,7 +134,6 @@ export const getSubmissionReviews = async (req, res) => {
   }
 };
 
-// GET /:submissionId/reviews/me — Get current user's review for this submission
 export const getUserReview = async (req, res) => {
   try {
     const { submissionId } = req.params;
@@ -201,7 +167,6 @@ export const getUserReview = async (req, res) => {
   }
 };
 
-// GET /:submissionId/reviews/aggregate — Get average scores for a submission
 export const getAggregateScores = async (req, res) => {
   try {
     const { submissionId } = req.params;

@@ -25,19 +25,40 @@ const notificationIcon = (type) => {
   switch (type) {
     case "like":
       return (
-        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#EF4444" strokeWidth="2">
+        <svg
+          width="14"
+          height="14"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="#EF4444"
+          strokeWidth="2"
+        >
           <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z" />
         </svg>
       );
     case "comment":
       return (
-        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#3B82F6" strokeWidth="2">
+        <svg
+          width="14"
+          height="14"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="#3B82F6"
+          strokeWidth="2"
+        >
           <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" />
         </svg>
       );
     case "peer_review":
       return (
-        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#A78BFA" strokeWidth="2">
+        <svg
+          width="14"
+          height="14"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="#A78BFA"
+          strokeWidth="2"
+        >
           <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" />
           <circle cx="9" cy="7" r="4" />
           <path d="M23 21v-2a4 4 0 0 0-3-3.87" />
@@ -46,7 +67,14 @@ const notificationIcon = (type) => {
       );
     case "sandbox":
       return (
-        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#22C55E" strokeWidth="2">
+        <svg
+          width="14"
+          height="14"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="#22C55E"
+          strokeWidth="2"
+        >
           <rect x="2" y="3" width="20" height="14" rx="2" />
           <line x1="8" y1="21" x2="16" y2="21" />
           <line x1="12" y1="17" x2="12" y2="21" />
@@ -54,7 +82,14 @@ const notificationIcon = (type) => {
       );
     default:
       return (
-        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#6B7280" strokeWidth="2">
+        <svg
+          width="14"
+          height="14"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="#6B7280"
+          strokeWidth="2"
+        >
           <circle cx="12" cy="12" r="10" />
           <line x1="12" y1="8" x2="12" y2="12" />
           <line x1="12" y1="16" x2="12.01" y2="16" />
@@ -65,12 +100,17 @@ const notificationIcon = (type) => {
 
 const TopBar = ({ pageName }) => {
   const { user, logout: authLogout } = useContext(AuthContext);
-  const { notifications, unreadCount, markAsRead, markAllAsRead, fetchNotifications } = useContext(NotificationContext);
+  const {
+    notifications,
+    unreadCount,
+    markAsRead,
+    markAllAsRead,
+    fetchNotifications,
+  } = useContext(NotificationContext);
   const navigate = useNavigate();
   const [currentTime, setCurrentTime] = useState(new Date());
   const [profileOpen, setProfileOpen] = useState(false);
   const [notifOpen, setNotifOpen] = useState(false);
-  const [avatarError, setAvatarError] = useState(false);
   const profileRef = useRef(null);
   const notifRef = useRef(null);
 
@@ -78,10 +118,6 @@ const TopBar = ({ pageName }) => {
     const t = setInterval(() => setCurrentTime(new Date()), 1000);
     return () => clearInterval(t);
   }, []);
-
-  useEffect(() => {
-    setAvatarError(false);
-  }, [user?.profile?.avatar_url]);
 
   useEffect(() => {
     const handler = (e) => {
@@ -177,7 +213,9 @@ const TopBar = ({ pageName }) => {
             }}
             className="relative w-9 h-9 rounded-lg flex items-center justify-center transition-all duration-200"
             style={{
-              background: notifOpen ? "rgba(34,197,94,0.08)" : "rgba(243,244,246,0.6)",
+              background: notifOpen
+                ? "rgba(34,197,94,0.08)"
+                : "rgba(243,244,246,0.6)",
               border: `1px solid ${notifOpen ? "rgba(34,197,94,0.25)" : "rgba(229,231,235,0.7)"}`,
               color: notifOpen ? "#22C55E" : "#6B7280",
             }}
@@ -221,7 +259,10 @@ const TopBar = ({ pageName }) => {
                 className="flex items-center justify-between px-4 py-3"
                 style={{ borderBottom: "1px solid rgba(229,231,235,0.6)" }}
               >
-                <span className="font-body text-sm font-semibold" style={{ color: "#111827" }}>
+                <span
+                  className="font-body text-sm font-semibold"
+                  style={{ color: "#111827" }}
+                >
                   Notifications
                 </span>
                 {unreadCount > 0 && (
@@ -229,8 +270,12 @@ const TopBar = ({ pageName }) => {
                     onClick={markAllAsRead}
                     className="font-code text-[10px] uppercase tracking-wider transition-colors duration-150"
                     style={{ color: "#22C55E" }}
-                    onMouseEnter={(e) => (e.currentTarget.style.color = "#4ADE80")}
-                    onMouseLeave={(e) => (e.currentTarget.style.color = "#22C55E")}
+                    onMouseEnter={(e) =>
+                      (e.currentTarget.style.color = "#4ADE80")
+                    }
+                    onMouseLeave={(e) =>
+                      (e.currentTarget.style.color = "#22C55E")
+                    }
                   >
                     Mark all read
                   </button>
@@ -251,7 +296,10 @@ const TopBar = ({ pageName }) => {
                       <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9" />
                       <path d="M13.73 21a2 2 0 0 1-3.46 0" />
                     </svg>
-                    <p className="font-body text-xs" style={{ color: "#9CA3AF" }}>
+                    <p
+                      className="font-body text-xs"
+                      style={{ color: "#9CA3AF" }}
+                    >
                       No notifications
                     </p>
                   </div>
@@ -262,10 +310,14 @@ const TopBar = ({ pageName }) => {
                       onClick={() => handleNotifClick(notif)}
                       className="w-full flex items-start gap-3 px-4 py-3 text-left transition-colors duration-150"
                       style={{
-                        background: notif.is_read ? "transparent" : "rgba(34,197,94,0.03)",
+                        background: notif.is_read
+                          ? "transparent"
+                          : "rgba(34,197,94,0.03)",
                         borderBottom: "1px solid rgba(229,231,235,0.4)",
                       }}
-                      onMouseEnter={(e) => (e.currentTarget.style.background = "rgba(0,0,0,0.02)")}
+                      onMouseEnter={(e) =>
+                        (e.currentTarget.style.background = "rgba(0,0,0,0.02)")
+                      }
                       onMouseLeave={(e) =>
                         (e.currentTarget.style.background = notif.is_read
                           ? "transparent"
@@ -279,13 +331,22 @@ const TopBar = ({ pageName }) => {
                         {notificationIcon(notif.type)}
                       </div>
                       <div className="min-w-0 flex-1">
-                        <p className="font-body text-xs" style={{ color: "#6B7280" }}>
-                          <span className="font-semibold" style={{ color: "#111827" }}>
+                        <p
+                          className="font-body text-xs"
+                          style={{ color: "#6B7280" }}
+                        >
+                          <span
+                            className="font-semibold"
+                            style={{ color: "#111827" }}
+                          >
                             {notif.actor_username}
                           </span>{" "}
                           {notif.message}
                         </p>
-                        <p className="font-code text-[10px] mt-1" style={{ color: "#9CA3AF" }}>
+                        <p
+                          className="font-code text-[10px] mt-1"
+                          style={{ color: "#9CA3AF" }}
+                        >
                           {timeAgo(notif.created_at)}
                         </p>
                       </div>
@@ -322,12 +383,12 @@ const TopBar = ({ pageName }) => {
                 color: "#22C55E",
               }}
             >
-              {resolveAvatarUrl(user?.profile?.avatar_url) && !avatarError ? (
+              {resolveAvatarUrl(user?.profile?.avatar_url) ? (
                 <img
+                  key={user?.profile?.avatar_url}
                   src={resolveAvatarUrl(user.profile.avatar_url)}
                   alt={user?.username || "A"}
                   className="w-full h-full object-cover"
-                  onError={() => setAvatarError(true)}
                 />
               ) : (
                 <span className="flex items-center justify-center w-full h-full">
@@ -374,6 +435,7 @@ const TopBar = ({ pageName }) => {
                 <div className="w-10 h-10 rounded-full overflow-hidden flex-shrink-0">
                   {user?.profile?.avatar_url ? (
                     <img
+                      key={user?.profile?.avatar_url}
                       src={resolveAvatarUrl(user.profile.avatar_url)}
                       alt={user?.username || "Analyst"}
                       className="w-full h-full object-cover"
