@@ -7,7 +7,6 @@ import {
 } from "../Dashboard/Components/HooksAndBadges";
 import VerifiedBadge from "../Dashboard/Components/VerifiedBadge";
 import {
-  evaluateSandboxFile,
   getSubmissionById,
   getPostComments,
   addPostComment,
@@ -73,7 +72,6 @@ const Post = () => {
   const { addToast } = useToast();
   const [post, setPost] = useState(null);
   const [loading, setLoading] = useState(true);
-  const [running, setRunning] = useState(false);
   const [publishing, setPublishing] = useState(false);
   const [archiving, setArchiving] = useState(false);
   const [actionError, setActionError] = useState("");
@@ -99,39 +97,89 @@ const Post = () => {
 
   const loadPost = useCallback(async () => {
     try {
+      setActionError("");
+      setReviewError("");
+
       const postRes = await getSubmissionById(postId);
       setPost(postRes.data);
-      setActionError("");
 
-      const [likesRes, sharesRes, commentsRes, aggRes, reviewsRes, ...authResults] = await Promise.all([
-        getPostLikes(postId).catch(() => null),
-        getPostShares(postId).catch(() => null),
-        getPostComments(postId).catch(() => null),
-        getAggregateScores(postId).catch(() => null),
-        getSubmissionReviews(postId).catch(() => null),
-        ...(isAuthenticated ? [
-          getUserPostLike(postId).catch(() => null),
-          getUserPostSave(postId).catch(() => null),
-          getUserReview(postId).catch(() => null),
-        ] : []),
-      ]);
+      let likesCount = 0;
+      let userLiked = false;
+      let sharesCount = 0;
+      let userSaved = false;
+      let commentsData = [];
 
-      setLikes(likesRes?.data?.like_count || 0);
-      setShareCount(sharesRes?.data?.share_count || 0);
-      setComments(commentsRes?.data || []);
-      if (aggRes) setAggregate(aggRes.data);
-      if (reviewsRes) setReviews(reviewsRes.data?.reviews || []);
+      try {
+        const likesRes = await getPostLikes(postId);
+        likesCount = likesRes.data?.like_count || 0;
+      } catch (e) {
+        console.log("Likes not available");
+      }
+
+      try {
+        if (isAuthenticated) {
+          const likedRes = await getUserPostLike(postId);
+          userLiked = likedRes.data?.isLiked || false;
+        }
+      } catch (e) {
+        console.log("User like check not available");
+      }
+
+      try {
+        const sharesRes = await getPostShares(postId);
+        sharesCount = sharesRes.data?.share_count || 0;
+      } catch (e) {
+        console.log("Shares not available");
+      }
+
+      try {
+        if (isAuthenticated) {
+          const savedRes = await getUserPostSave(postId);
+          userSaved = savedRes.data?.isSaved || false;
+        }
+      } catch (e) {
+        console.log("User save check not available");
+      }
+
+      try {
+        const commentsRes = await getPostComments(postId);
+        commentsData = commentsRes.data || [];
+      } catch (e) {
+        console.log("Comments not available");
+      }
+
+      // Load peer review data
+      try {
+        const aggRes = await getAggregateScores(postId);
+        setAggregate(aggRes.data);
+      } catch (e) {
+        console.log("Aggregate scores not available");
+      }
+
+      try {
+        const reviewsRes = await getSubmissionReviews(postId);
+        setReviews(reviewsRes.data?.reviews || []);
+      } catch (e) {
+        console.log("Reviews not available");
+      }
 
       if (isAuthenticated) {
-        setIsLiked(authResults[0]?.data?.isLiked || false);
-        setIsSaved(authResults[1]?.data?.isSaved || false);
-        if (authResults[2]?.data) {
-          setUserReview(authResults[2].data?.review || null);
-          setHasReviewed(authResults[2].data?.hasReviewed || false);
+        try {
+          const userReviewRes = await getUserReview(postId);
+          setUserReview(userReviewRes.data?.review || null);
+          setHasReviewed(userReviewRes.data?.hasReviewed || false);
+        } catch (e) {
+          console.log("User review check not available");
         }
       }
+
+      setLikes(likesCount);
+      setIsLiked(userLiked);
+      setShareCount(sharesCount);
+      setIsShared(false);
+      setIsSaved(userSaved);
+      setComments(commentsData);
     } catch (err) {
-      // Only set error if we haven't loaded the post yet
       if (!post) {
         setActionError(err.response?.data?.error || "Failed to load analysis report");
       }
@@ -149,25 +197,9 @@ const Post = () => {
     post?.sandbox_status === "Completed" ? 100 : logs.length ? 65 : 0;
   const threat = severityFromCategory(post?.malware_category);
 
-  const handleRunSandbox = async () => {
-    if (!post?.sha256_hash) return;
-    setRunning(true);
-    setActionError("");
-    try {
-      await evaluateSandboxFile({
-        submission_id: post.submission_id,
-        file_hash: post.sha256_hash,
-        environment: "Docker",
-        os_profile: "Windows10",
-        network_enabled: false,
-        timeout_seconds: 120,
-      });
-      await loadPost();
-    } catch (err) {
-      setActionError(err.response?.data?.error || "Sandbox evaluation failed");
-    } finally {
-      setRunning(false);
-    }
+  const handleRunSandbox = () => {
+    if (!post?.submission_id) return;
+    navigate(`/sandbox?submission=${post.submission_id}`);
   };
 
   const showLoginPrompt = () => {
@@ -270,6 +302,22 @@ const Post = () => {
     try {
       const response = await submitPeerReview(postId, reviewData);
       setReviewSuccess(true);
+      setHasReviewed(true);
+      const newReview = {
+        technical_score: reviewData.technical_score,
+        methodology_score: reviewData.methodology_score,
+        documentation_score: reviewData.documentation_score,
+        insights_score: reviewData.insights_score,
+        comments: reviewData.comments,
+        reviewed_at: response.data.reviewed_at,
+        review_id: response.data.review_id,
+        reviewer_id: user?.user_id || user?.id,
+        reviewer_username: user?.username,
+        reviewer_role: user?.role,
+        reviewer_expertise: user?.expertise_level,
+      };
+      setUserReview(newReview);
+      setReviews(prev => [...prev, newReview]);
       if (response.data.xp_gained) {
         addToast(`+${response.data.xp_gained} XP for peer review`, "xp");
       }
@@ -739,10 +787,10 @@ const Post = () => {
                 {post.sha256_hash && (
                   <button
                     onClick={handleRunSandbox}
-                    disabled={running || isArchived}
+                    disabled={isArchived}
                     className="rounded-lg bg-[#22C55E] px-5 py-3 font-display text-xs font-bold uppercase tracking-[0.2em] text-[#F9FAFB] disabled:opacity-50 disabled:cursor-not-allowed"
                   >
-                    {running ? "Running Sandbox..." : "Run Sandbox"}
+                    Run Sandbox
                   </button>
                 )}
                 {isAuthor && !isArchived && (

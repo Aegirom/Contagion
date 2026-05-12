@@ -19,12 +19,15 @@ import {
   getAggregateScores
 } from "../controllers/PeerReviewsController.js";
 import { protect } from "./Auth.js";
+import validate from "../middleware/validate.js";
+import { addCommentSchema } from "../validation/posts.js";
+import { submitReviewSchema } from "../validation/peerReviews.js";
 
 const router = express.Router();
 
 // Comments
 router.get("/:submissionId/comments", getComments);
-router.post("/:submissionId/comments", protect, addComment);
+router.post("/:submissionId/comments", protect, validate(addCommentSchema), addComment);
 router.delete("/comments/:commentId", protect, deleteComment);
 
 // Likes
@@ -45,6 +48,6 @@ router.post("/:submissionId/saves", protect, toggleSave);
 router.get("/:submissionId/reviews", getSubmissionReviews);
 router.get("/:submissionId/reviews/me", protect, getUserReview);
 router.get("/:submissionId/reviews/aggregate", getAggregateScores);
-router.post("/:submissionId/reviews", protect, submitReview);
+router.post("/:submissionId/reviews", protect, validate(submitReviewSchema), submitReview);
 
 export default router;

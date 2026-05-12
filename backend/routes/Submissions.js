@@ -14,6 +14,8 @@ import {
   importSubmission
 } from '../controllers/SubmissionsController.js';
 import { protect } from './Auth.js';
+import validate from '../middleware/validate.js';
+import { postSubmissionSchema, updateSubmissionSchema } from '../validation/submissions.js';
 const router = express.Router();
 
 const verifyTurnstile = async (req, res, next) => {
@@ -47,9 +49,9 @@ router.get("/saved", protect, getUserSavedSubmissions);
 router.get("/stats", protect, getUserStats);
 router.get("/drafts", protect, getUserDrafts);
 router.get("/:id", optionalAuth, getSubmissionByIdPublic);
-router.post("/post", protect, verifyTurnstile, postSubmission);
+router.post("/post", protect, verifyTurnstile, validate(postSubmissionSchema), postSubmission);
 router.post("/:id/import", protect, importSubmission);
-router.patch("/:id", protect, updateSubmission);
+router.patch("/:id", protect, validate(updateSubmissionSchema), updateSubmission);
 router.delete("/:id", protect, deleteSubmission);
 
 export default router;

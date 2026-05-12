@@ -4,6 +4,7 @@ import {
   evaluateSandboxFile,
   getSandboxExecutions,
   getSandboxSubmissions,
+  getSubmissionById,
 } from "../../services/api";
 import TurnstileWidget from "../../components/TurnstileWidget";
 
@@ -137,9 +138,10 @@ const DetectionList = ({ stats }) => {
 
 function SandboxPage() {
   const [searchParams] = useSearchParams();
+  const targetSubmissionId = searchParams.get("submission");
   const [submissions, setSubmissions] = useState([]);
   const [executions, setExecutions] = useState([]);
-  const [selectedSubmissionId, setSelectedSubmissionId] = useState(searchParams.get("submission") || "");
+  const [selectedSubmissionId, setSelectedSubmissionId] = useState(targetSubmissionId || "");
   const [fileHash, setFileHash] = useState("");
   const [networkEnabled, setNetworkEnabled] = useState(false);
   const [osProfile, setOsProfile] = useState("Windows10");
@@ -173,15 +175,44 @@ function SandboxPage() {
         getSandboxExecutions(),
       ]);
 
-      const submissionRows = Array.isArray(submissionsRes.data)
+      let submissionRows = Array.isArray(submissionsRes.data)
         ? submissionsRes.data
         : [];
+
+      if (targetSubmissionId) {
+        const alreadyInList = submissionRows.some(
+          (s) => String(s.submission_id) === targetSubmissionId,
+        );
+        if (!alreadyInList) {
+          try {
+            const targetRes = await getSubmissionById(targetSubmissionId);
+            const target = targetRes.data;
+            if (target && target.submission_id) {
+              submissionRows = [target, ...submissionRows];
+              if (target.sha256_hash) {
+                setFileHash(target.sha256_hash);
+              }
+            }
+          } catch {
+            // target submission not accessible, fall through
+          }
+        } else {
+          const found = submissionRows.find(
+            (s) => String(s.submission_id) === targetSubmissionId,
+          );
+          if (found?.sha256_hash) {
+            setFileHash(found.sha256_hash);
+          }
+        }
+        setSelectedSubmissionId(targetSubmissionId);
+      }
+
       setSubmissions(submissionRows);
       setExecutions(
         Array.isArray(executionsRes.data) ? executionsRes.data : [],
       );
 
-      if (!selectedSubmissionId && submissionRows[0]) {
+      if (!targetSubmissionId && submissionRows[0]) {
         setSelectedSubmissionId(String(submissionRows[0].submission_id));
       }
     } catch (err) {
@@ -189,7 +220,7 @@ function SandboxPage() {
     } finally {
       setLoading(false);
     }
-  }, [selectedSubmissionId]);
+  }, [targetSubmissionId]);
 
   useEffect(() => {
     loadData();
@@ -235,8 +266,8 @@ function SandboxPage() {
             </h1>
           </div>
           <p className="max-w-3xl text-sm text-gray-600">
-            Submit a known file hash for sandbox intelligence and persist the
-            result against a Contagion submission.
+            Evaluate a file hash against threat intelligence sources and persist
+            the analysis against a Contagion submission.
           </p>
         </div>
 
@@ -263,9 +294,6 @@ function SandboxPage() {
             <h2 className="font-display text-sm font-bold uppercase tracking-[0.22em] text-gray-800">
               Execution Parameters
             </h2>
-            <span className="rounded border border-cyan-400/30 bg-cyan-400/10 px-2 py-1 font-code text-[10px] uppercase tracking-widest text-cyan-300">
-              Hash Lookup
-            </span>
           </div>
 
           <label className="mb-4 block">

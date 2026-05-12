@@ -1,5 +1,6 @@
 import crypto from 'crypto';
 import multer from 'multer';
+import { fileTypeFromBuffer } from 'file-type';
 import sql from 'mssql';
 import pool from '../config/db.js';
 import { createSignedR2DownloadUrl, uploadBufferToR2 } from '../services/r2Service.js';
@@ -50,11 +51,17 @@ export const uploadArtifact = async (req, res) => {
       return res.status(400).json({ error: 'Artifact file is required' });
     }
 
+    const detectedType = await fileTypeFromBuffer(req.file.buffer);
+    const claimedMime = (req.file.mimetype || 'application/octet-stream').slice(0, 50);
+    if (detectedType && detectedType.mime !== claimedMime && claimedMime !== 'application/octet-stream') {
+      return res.status(400).json({ error: `File type mismatch: detected ${detectedType.mime}, claimed ${claimedMime}` });
+    }
+
     const md5 = sha('md5', req.file.buffer);
     const sha1 = sha('sha1', req.file.buffer);
     const sha256 = sha('sha256', req.file.buffer);
     const fileName = cleanFileName(req.file.originalname);
-    const fileType = (req.file.mimetype || 'application/octet-stream').slice(0, 50);
+    const fileType = (detectedType?.mime || claimedMime).slice(0, 50);
     const malwareFamily = req.body.malware_family?.slice(0, 100) || null;
     const malwareCategory = toCategory(req.body.malware_category);
 
@@ -137,8 +144,7 @@ export const uploadArtifact = async (req, res) => {
   } catch (error) {
     console.error('Artifact upload failed:', error);
     res.status(error.statusCode || 500).json({
-      error: error.message || 'Artifact upload failed',
-      details: error.details,
+      error: 'Artifact upload failed',
     });
   }
 };

@@ -186,7 +186,12 @@ export const sendVerificationEmail = async (email, userId, username) => {
   const token = jwt.sign(
     { userId, email, type: 'verification' },
     process.env.JWT_SECRET,
-    { expiresIn: process.env.EMAIL_VERIFICATION_EXPIRES_IN || '24h' }
+    {
+      algorithm: 'HS256',
+      issuer: 'contagion',
+      audience: 'contagion-email',
+      expiresIn: process.env.EMAIL_VERIFICATION_EXPIRES_IN || '24h',
+    }
   );
 
   const verifyUrl = `${frontendUrl}/verify-email?token=${token}`;
@@ -221,7 +226,12 @@ export const sendPasswordResetEmail = async (email, userId, username) => {
   const token = jwt.sign(
     { userId, email, type: 'password-reset' },
     process.env.JWT_SECRET,
-    { expiresIn: process.env.PASSWORD_RESET_EXPIRES_IN || '15m' }
+    {
+      algorithm: 'HS256',
+      issuer: 'contagion',
+      audience: 'contagion-email',
+      expiresIn: process.env.PASSWORD_RESET_EXPIRES_IN || '15m',
+    }
   );
 
   const resetUrl = `${frontendUrl}/reset-password?token=${token}`;

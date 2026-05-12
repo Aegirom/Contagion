@@ -133,20 +133,17 @@ const dbProxy = new Proxy({}, {
       return (strings, ...values) => {
         return requestWithRecovery(async () => {
           const req = pool.request();
-          values.forEach((v, i) => {
+          let query = strings[0];
+          for (let i = 0; i < values.length; i++) {
+            const v = values[i];
             if (v !== undefined && v !== null) {
               req.input(`p${i}`, v);
-            }
-          });
-          let query = strings[0];
-          values.forEach((v, i) => {
-            if (v !== undefined && v !== null) {
-              query = query.replace(`\${${i}}`, `@p${i}`);
+              query += `@p${i}`;
             } else {
-              query = query.replace(`\${${i}}`, 'NULL');
+              query += 'NULL';
             }
-          });
-          query += strings[values.length] || '';
+            query += strings[i + 1] || '';
+          }
           return req.query(query);
         });
       };

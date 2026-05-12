@@ -1,6 +1,8 @@
 import sql from 'mssql';
 import pool from '../config/db.js';
 import { getBehaviorSummary, getFileReport, normalizeVerdict } from '../services/virusTotalService.js';
+import { lookupHash } from '../services/abuseChService.js';
+import { analyzeLocally, getStaticWarnings } from '../services/localAnalysisService.js';
 
 const HASH_PATTERN = /^[a-fA-F0-9]{32}$|^[a-fA-F0-9]{40}$|^[a-fA-F0-9]{64}$/;
 const ALLOWED_ENVIRONMENTS = new Set(['Docker', 'VirtualBox', 'KVM']);
@@ -69,14 +71,15 @@ const getSubmissionHash = async (artifactId) => {
   return result.recordset[0]?.sha256_hash || result.recordset[0]?.md5_hash || null;
 };
 
-const getOrCreateArtifact = async (fileReport, uploaderId) => {
-  const attributes = fileReport?.data?.attributes || {};
-  const sha256 = attributes.sha256 || fileReport?.data?.id;
-  const sha1 = attributes.sha1;
-  const md5 = attributes.md5;
+const getOrCreateArtifact = async (fileReport, uploaderId, abuseData, localArtifact) => {
+  // Prefer local artifact if it exists
+  if (localArtifact) return localArtifact.artifact_id;
 
-  if (!sha256 || !sha1 || !md5) {
-    const error = new Error('VirusTotal report did not include complete file hashes');
+  // Check for existing artifact by hash
+  const attributes = fileReport?.data?.attributes || {};
+  const sha256 = attributes.sha256 || fileReport?.data?.id || abuseData?.sha256_hash;
+  if (!sha256) {
+    const error = new Error('File report did not include a valid SHA-256 hash');
     error.statusCode = 422;
     throw error;
   }
@@ -89,52 +92,43 @@ const getOrCreateArtifact = async (fileReport, uploaderId) => {
     return existing.recordset[0].artifact_id;
   }
 
+  // Build from best available source
+  const sha1 = attributes.sha1 || abuseData?.sha1_hash;
+  const md5 = attributes.md5 || abuseData?.md5_hash;
+  const fileName = attributes.meaningful_name || attributes.names?.[0] || abuseData?.file_name || `${sha256.slice(0, 12)}.bin`;
+  const fileType = attributes.type_extension || attributes.type_description || abuseData?.file_type || 'unknown';
+  const fileSize = attributes.size || abuseData?.file_size || 0;
+  const family = attributes.popular_threat_classification?.suggested_threat_label || abuseData?.malware_family || null;
+  const category = abuseData?.malware_category || 'Other';
+
   const sha1Column = await getSha1Column();
-  const fileName = attributes.meaningful_name || attributes.names?.[0] || `${sha256.slice(0, 12)}.bin`;
-  const fileType = attributes.type_extension || attributes.type_description || 'unknown';
-  const storagePath = `virustotal://${sha256}`;
-  const threatLabel = attributes.popular_threat_classification?.suggested_threat_label || null;
-  const threatCategory = threatLabel ? 'Other' : null;
+  const storagePath = abuseData ? `abuse://${sha256}` : `cache://${sha256}`;
 
   const insertQuery = `
     INSERT INTO Malware_Artifacts (
-      uploader_id,
-      file_name,
-      file_size,
-      file_type,
-      md5_hash,
-      ${sha1Column},
-      sha256_hash,
-      storage_path,
-      malware_family,
-      malware_category
+      uploader_id, file_name, file_size, file_type,
+      md5_hash, ${sha1Column}, sha256_hash, storage_path,
+      malware_family, malware_category
     )
     OUTPUT INSERTED.artifact_id
     VALUES (
-      @uploader_id,
-      @file_name,
-      @file_size,
-      @file_type,
-      @md5_hash,
-      @sha1_hash,
-      @sha256_hash,
-      @storage_path,
-      @malware_family,
-      @malware_category
+      @uploader_id, @file_name, @file_size, @file_type,
+      @md5_hash, @sha1_hash, @sha256_hash, @storage_path,
+      @malware_family, @malware_category
     )
   `;
 
   const result = await pool.request()
     .input('uploader_id', sql.INT, uploaderId)
-    .input('file_name', sql.NVARCHAR(255), fileName)
-    .input('file_size', sql.BIGINT, attributes.size || 0)
+    .input('file_name', sql.NVARCHAR(255), String(fileName).slice(0, 255))
+    .input('file_size', sql.BIGINT, fileSize)
     .input('file_type', sql.NVARCHAR(50), String(fileType).slice(0, 50))
-    .input('md5_hash', sql.CHAR(32), md5)
-    .input('sha1_hash', sql.CHAR(40), sha1)
+    .input('md5_hash', sql.CHAR(32), md5 || sha256.slice(0, 32))
+    .input('sha1_hash', sql.CHAR(40), sha1 || sha256.slice(0, 40))
     .input('sha256_hash', sql.CHAR(64), sha256)
     .input('storage_path', sql.NVARCHAR(500), storagePath)
-    .input('malware_family', sql.NVARCHAR(100), threatLabel?.slice(0, 100) || null)
-    .input('malware_category', sql.NVARCHAR(50), threatCategory)
+    .input('malware_family', sql.NVARCHAR(100), family?.slice(0, 100) || null)
+    .input('malware_category', sql.NVARCHAR(50), category)
     .query(insertQuery);
 
   return result.recordset[0].artifact_id;
@@ -227,6 +221,39 @@ const shapeExecutionRow = (row) => ({
   ...row,
   logs: row.logs ? JSON.parse(row.logs) : [],
 });
+
+const storeLocalLogs = async (executionId, abuseData, verdict, warnings) => {
+  await insertLog(executionId, 'Memory', {
+    verdict,
+    hashes: abuseData ? {
+      md5: abuseData.md5_hash,
+      sha1: abuseData.sha1_hash,
+      sha256: abuseData.sha256_hash,
+    } : null,
+    type: abuseData?.file_type || null,
+    source: verdict?.source || 'static-analysis',
+  });
+
+  await insertLog(executionId, 'File_System', {
+    risk_factors: warnings,
+    tags: verdict?.tags || [],
+    analysis_depth: 'static',
+  });
+
+  if (abuseData?.signatures?.length) {
+    await insertLog(executionId, 'API_Call', {
+      signatures: abuseData.signatures,
+      delivery_method: abuseData.delivery_method,
+    });
+  }
+
+  if (abuseData?.tags?.length) {
+    await insertLog(executionId, 'Network', {
+      threat_tags: abuseData.tags,
+      first_seen: abuseData.first_seen,
+    });
+  }
+};
 
 export const getSandboxSubmissions = async (req, res) => {
   try {
@@ -342,10 +369,54 @@ export const evaluateFile = async (req, res) => {
       return res.status(400).json({ error: 'A valid MD5, SHA-1, or SHA-256 hash is required' });
     }
 
-    const fileReport = await getFileReport(hash);
-    const artifactId = await getOrCreateArtifact(fileReport, req.user.userId);
+    // Resolve artifact: use existing local one or try external sources
+    let artifactId = submission.artifact_id;
+    let localArtifact = null;
 
-    if (!submission.artifact_id) {
+    if (artifactId) {
+      const artResult = await pool.request()
+        .input('artifact_id', sql.INT, artifactId)
+        .query('SELECT * FROM Malware_Artifacts WHERE artifact_id = @artifact_id');
+      localArtifact = artResult.recordset[0];
+    }
+
+    // Query external sources in parallel
+    let fileReport = null;
+    let abuseData = null;
+    let vtData = false;
+    let abuseFound = false;
+
+    const results = await Promise.allSettled([
+      getFileReport(hash).catch(err => err.statusCode === 404 ? null : Promise.reject(err)),
+      lookupHash(hash),
+    ]);
+
+    if (results[0].status === 'fulfilled' && results[0].value) {
+      fileReport = results[0].value;
+      vtData = true;
+    }
+    if (results[1].status === 'fulfilled' && results[1].value) {
+      abuseData = results[1].value;
+      abuseFound = true;
+    }
+
+    // Run local static analysis
+    const localVerdict = analyzeLocally(localArtifact || { file_name: abuseData?.file_name, file_type: abuseData?.file_type, malware_family: abuseData?.malware_family, malware_category: abuseData?.malware_category, file_hash: hash });
+
+    // Create artifact from best available source
+    if (!artifactId) {
+      artifactId = await getOrCreateArtifact(fileReport, req.user.userId, abuseData, localArtifact);
+    }
+
+    if (!abuseFound && !vtData && !localArtifact) {
+      return res.status(404).json({
+        error: 'File hash not found in any threat intelligence source',
+        code: 'HASH_NOT_FOUND',
+      });
+    }
+
+    // Link artifact to submission if not already linked
+    if (artifactId && !submission.artifact_id) {
       await pool.request()
         .input('submission_id', sql.INT, submission.submission_id)
         .input('artifact_id', sql.INT, artifactId)
@@ -358,18 +429,61 @@ export const evaluateFile = async (req, res) => {
 
     executionId = await createExecution({
       submissionId: submission.submission_id,
-      artifactId,
+      artifactId: artifactId || localArtifact?.artifact_id,
       environment,
       osProfile,
       networkEnabled: Boolean(networkEnabled),
       timeoutSeconds: Number(timeoutSeconds) || 120,
     });
 
-    const behaviorSummary = await getBehaviorSummary(fileReport.data.attributes.sha256 || fileReport.data.id);
-    const verdict = normalizeVerdict(fileReport);
+    let verdict = null;
+    let behaviorSummary = null;
+    let warnings = [];
 
-    await storeBehaviorLogs(executionId, fileReport, behaviorSummary, verdict);
-    await updateExecution(executionId, 'Completed');
+    if (vtData && fileReport?.data?.attributes) {
+      // Full external analysis available
+      behaviorSummary = await getBehaviorSummary(
+        fileReport.data.attributes.sha256 || fileReport.data.id
+      );
+      verdict = normalizeVerdict(fileReport);
+      await storeBehaviorLogs(executionId, fileReport, behaviorSummary, verdict);
+      await updateExecution(executionId, 'Completed');
+    } else if (abuseData) {
+      // abuse.ch data with local analysis
+      verdict = {
+        stats: {
+          malicious: localVerdict?.stats?.malicious || 1,
+          suspicious: localVerdict?.stats?.suspicious || 0,
+          harmless: 0,
+          undetected: 0,
+        },
+        severity: localVerdict?.severity || 'Medium',
+        detectionRatio: `${localVerdict?.stats?.malicious || 1}/1`,
+        reputation: null,
+        suggestedThreatLabel: abuseData.malware_family || localVerdict?.suggestedThreatLabel || null,
+        tags: abuseData.tags || localVerdict?.tags || [],
+        lastAnalysisDate: abuseData.first_seen || null,
+        source: 'abuse.ch',
+      };
+      warnings = localVerdict?.riskFactors || [];
+      await storeLocalLogs(executionId, abuseData, verdict, warnings);
+      await updateExecution(executionId, 'Completed', 'Analyzed via threat intelligence feed');
+    } else if (localArtifact) {
+      // Local static analysis only
+      verdict = {
+        stats: localVerdict?.stats || { malicious: 0, suspicious: 0, harmless: 0, undetected: 1 },
+        severity: localVerdict?.severity || 'Low',
+        detectionRatio: localVerdict?.detectionRatio || '0/1',
+        reputation: null,
+        suggestedThreatLabel: localArtifact.malware_family || localVerdict?.suggestedThreatLabel || null,
+        tags: localVerdict?.tags || [],
+        lastAnalysisDate: localArtifact.upload_time || null,
+        source: 'static-analysis',
+      };
+      warnings = localVerdict?.riskFactors || [];
+      await storeLocalLogs(executionId, null, verdict, warnings);
+      await updateExecution(executionId, 'Completed', 'Static analysis only');
+    }
 
     const notifierResult = await pool.request()
       .input('userId', sql.INT, req.user.userId)
@@ -386,15 +500,26 @@ export const evaluateFile = async (req, res) => {
     res.status(201).json({
       execution_id: executionId,
       submission_id: submission.submission_id,
-      artifact_id: artifactId,
+      artifact_id: artifactId || localArtifact?.artifact_id,
       status: 'Completed',
       verdict,
-      file: {
+      warnings,
+      file: localArtifact ? {
+        name: localArtifact.file_name,
+        sha256: localArtifact.sha256_hash,
+        type: localArtifact.file_type,
+        size: localArtifact.file_size,
+      } : fileReport ? {
         name: fileReport.data.attributes.meaningful_name || fileReport.data.attributes.names?.[0] || null,
         sha256: fileReport.data.attributes.sha256 || fileReport.data.id,
         type: fileReport.data.attributes.type_description || null,
         size: fileReport.data.attributes.size || 0,
-      },
+      } : abuseData ? {
+        name: abuseData.file_name,
+        sha256: abuseData.sha256_hash,
+        type: abuseData.file_type,
+        size: abuseData.file_size,
+      } : null,
       behavior: behaviorSummary?.data || null,
     });
   } catch (error) {

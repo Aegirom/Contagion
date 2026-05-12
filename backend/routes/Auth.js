@@ -22,6 +22,16 @@ import {
   uploadAvatar,
 } from "../controllers/ProfileController.js";
 import { convertR2ToHttpUrl } from "../services/r2Service.js";
+import validate from "../middleware/validate.js";
+import {
+  registerSchema,
+  loginSchema,
+  forgotPasswordSchema,
+  resetPasswordSchema,
+  verifyEmailSchema,
+  refreshTokenSchema,
+  updateProfileSchema,
+} from "../validation/auth.js";
 
 // Middleware to protect routes - verifies JWT and sets req.user
 export const protect = (req, res, next) => {
@@ -33,7 +43,10 @@ export const protect = (req, res, next) => {
   ) {
     try {
       token = req.headers.authorization.split(" ")[1];
-      const decoded = jwt.verify(token, process.env.JWT_SECRET);
+      const decoded = jwt.verify(token, process.env.JWT_SECRET, {
+        algorithms: ['HS256'],
+        issuer: 'contagion',
+      });
       req.user = decoded;
       next();
     } catch (error) {
@@ -48,17 +61,25 @@ export const protect = (req, res, next) => {
 
 const router = express.Router();
 
+const JWT_SIGN_OPTIONS = {
+  algorithm: 'HS256',
+  issuer: 'contagion',
+  audience: 'contagion-api',
+};
+
 export const generateTokens = (userId, email, role) => {
   const accessToken = jwt.sign({ userId, email, role }, process.env.JWT_SECRET, {
+    ...JWT_SIGN_OPTIONS,
     expiresIn: process.env.JWT_ACCESS_EXPIRES_IN,
   });
   const refreshToken = jwt.sign({ userId, email, role }, process.env.JWT_SECRET, {
+    ...JWT_SIGN_OPTIONS,
     expiresIn: process.env.JWT_REFRESH_EXPIRES_IN,
   });
   return { accessToken, refreshToken };
 };
 
-router.post("/register", async (req, res) => {
+router.post("/register", validate(registerSchema), async (req, res) => {
   try {
     const { username, email, password } = req.body;
 
@@ -133,7 +154,7 @@ const verifyTurnstile = async (req, res, next) => {
   }
 };
 
-router.post("/login", verifyTurnstile, async (req, res) => {
+router.post("/login", verifyTurnstile, validate(loginSchema), async (req, res) => {
   try {
     const { email, password } = req.body;
 
@@ -195,7 +216,7 @@ router.post("/login", verifyTurnstile, async (req, res) => {
   }
 });
 
-router.post("/forgot-password", async (req, res) => {
+router.post("/forgot-password", validate(forgotPasswordSchema), async (req, res) => {
   try {
     const { email } = req.body;
 
@@ -224,15 +245,15 @@ router.post("/forgot-password", async (req, res) => {
   }
 });
 
-router.post("/refresh-token", async (req, res) => {
+router.post("/refresh-token", validate(refreshTokenSchema), async (req, res) => {
   try {
     const { refreshToken } = req.body;
 
-    if (!refreshToken) {
-      return res.status(400).json({ error: "Refresh token is required" });
-    }
-
-    jwt.verify(refreshToken, process.env.JWT_SECRET, (err, decoded) => {
+    jwt.verify(refreshToken, process.env.JWT_SECRET, {
+      algorithms: ['HS256'],
+      issuer: 'contagion',
+      audience: 'contagion-api',
+    }, (err, decoded) => {
       if (err) {
         const status = err.name === "TokenExpiredError" ? 401 : 403;
         const message =
@@ -260,15 +281,15 @@ router.post("/refresh-token", async (req, res) => {
 });
 
 // Verify email endpoint
-router.post("/verify-email", async (req, res) => {
+router.post("/verify-email", validate(verifyEmailSchema), async (req, res) => {
   try {
     const { token } = req.body;
 
-    if (!token) {
-      return res.status(400).json({ error: "Verification token is required" });
-    }
-
-    const decoded = jwt.verify(token, process.env.JWT_SECRET);
+    const decoded = jwt.verify(token, process.env.JWT_SECRET, {
+      algorithms: ['HS256'],
+      issuer: 'contagion',
+      audience: 'contagion-email',
+    });
 
     if (decoded.type !== "verification") {
       return res.status(400).json({ error: "Invalid token type" });
@@ -292,17 +313,15 @@ router.post("/verify-email", async (req, res) => {
 });
 
 // Reset password endpoint
-router.post("/reset-password", async (req, res) => {
+router.post("/reset-password", validate(resetPasswordSchema), async (req, res) => {
   try {
     const { token, newPassword } = req.body;
 
-    if (!token || !newPassword) {
-      return res
-        .status(400)
-        .json({ error: "Token and new password are required" });
-    }
-
-    const decoded = jwt.verify(token, process.env.JWT_SECRET);
+    const decoded = jwt.verify(token, process.env.JWT_SECRET, {
+      algorithms: ['HS256'],
+      issuer: 'contagion',
+      audience: 'contagion-email',
+    });
 
     if (decoded.type !== "password-reset") {
       return res.status(400).json({ error: "Invalid token type" });
@@ -382,7 +401,7 @@ router.get("/me", protect, async (req, res) => {
 });
 
 // PUT /auth/profile - Update user profile (protected)
-router.put("/profile", protect, async (req, res) => {
+router.put("/profile", protect, validate(updateProfileSchema), async (req, res) => {
   try {
     const { full_name, bio, avatar_url } = req.body;
     const userId = req.user.userId;

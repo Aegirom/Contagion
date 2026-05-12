@@ -1,6 +1,8 @@
 import express from 'express';
 import { protect } from './Auth.js';
 import { evaluateFile, getSandboxSubmissions, listExecutions } from '../controllers/SandboxController.js';
+import validate from '../middleware/validate.js';
+import { evaluateFileSchema } from '../validation/sandbox.js';
 
 const router = express.Router();
 
@@ -31,6 +33,6 @@ const verifyTurnstile = async (req, res, next) => {
 
 router.get('/submissions', protect, getSandboxSubmissions);
 router.get('/executions', protect, listExecutions);
-router.post('/evaluate', protect, verifyTurnstile, evaluateFile);
+router.post('/evaluate', protect, verifyTurnstile, validate(evaluateFileSchema), evaluateFile);
 
 export default router;
