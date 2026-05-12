@@ -50,6 +50,8 @@ function AiEvaluationPage() {
     }
   }, [submissionId]);
 
+  const [activeTab, setActiveTab] = useState('Overview');
+
    if (loading || retrying) {
      return (
        <div className="min-h-screen bg-gray-50 text-gray-900 px-6 py-12 md:px-12 lg:px-20">
@@ -126,8 +128,15 @@ function AiEvaluationPage() {
         </div>
       </div>
 
-      <EvaluationTabs evaluation={evaluation} />
-      <EvaluationDisplay evaluation={evaluation} />
+      <EvaluationTabs 
+        evaluation={evaluation} 
+        activeTab={activeTab} 
+        setActiveTab={setActiveTab} 
+      />
+      <EvaluationDisplay 
+        evaluation={evaluation} 
+        activeTab={activeTab} 
+      />
     </div>
   );
 }

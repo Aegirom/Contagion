@@ -783,14 +783,22 @@ const Post = () => {
                 />
               )}
 
-              <div className="mt-6 flex items-center gap-3">
+              <div className="mt-6 flex flex-wrap items-center gap-3">
                 {post.sha256_hash && (
                   <button
                     onClick={handleRunSandbox}
                     disabled={isArchived}
-                    className="rounded-lg bg-[#22C55E] px-5 py-3 font-display text-xs font-bold uppercase tracking-[0.2em] text-[#F9FAFB] disabled:opacity-50 disabled:cursor-not-allowed"
+                    className="rounded-lg bg-[#22C55E] px-5 py-3 font-display text-xs font-bold uppercase tracking-[0.2em] text-[#F9FAFB] disabled:opacity-50 disabled:cursor-not-allowed hover:bg-[#4ADE80] transition-all"
                   >
                     Run Sandbox
+                  </button>
+                )}
+                {post.sha256_hash && (
+                  <button
+                    onClick={() => navigate(`/submissions/${postId}/ai-evaluation`)}
+                    className="rounded-lg border border-toxic bg-toxic/5 px-5 py-3 font-display text-xs font-bold uppercase tracking-[0.2em] text-toxic hover:bg-toxic/10 transition-all"
+                  >
+                    Neural Report
                   </button>
                 )}
                 {isAuthor && !isArchived && (

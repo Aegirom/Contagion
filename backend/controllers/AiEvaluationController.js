@@ -33,13 +33,17 @@ const ensureTableExists = async () => {
 export const getAiEvaluation = async (req, res) => {
     try {
         const { submissionId } = req.params;
+        const userId = req.user.userId;
+        const isAdminOrMod = ['Administrator', 'Moderator'].includes(req.user.role);
 
         const result = await pool.request()
             .input('submission_id', sql.INT, submissionId)
             .query(`
-                SELECT TOP 1 * FROM AI_Evaluations 
-                WHERE submission_id = @submission_id 
-                ORDER BY evaluation_date DESC
+                SELECT TOP 1 e.*, s.title as submission_title, s.author_id, s.status
+                FROM AI_Evaluations e
+                JOIN Analysis_Submissions s ON s.submission_id = e.submission_id
+                WHERE e.submission_id = @submission_id 
+                ORDER BY e.evaluation_date DESC
             `);
 
         if (result.recordset.length === 0) {
@@ -47,9 +51,18 @@ export const getAiEvaluation = async (req, res) => {
         }
 
         const evalData = result.recordset[0];
+
+        const isAuthor = evalData.author_id === userId;
+        const isPublished = evalData.status === 'Published';
+
+        if (!isAuthor && !isPublished && !isAdminOrMod) {
+            return res.status(403).json({ error: 'Unauthorized: This submission is private' });
+        }
+
         res.json({
             id: evalData.evaluation_id,
             submissionId: evalData.submission_id,
+            submissionName: evalData.submission_title,
             aiScorePercentage: evalData.ai_score_percentage,
             evasionScore: evalData.evasion_score,
             impactScore: evalData.impact_score,
@@ -67,12 +80,13 @@ export const getAiEvaluation = async (req, res) => {
 export const triggerAiEvaluation = async (req, res) => {
     try {
         const { submissionId } = req.params;
+        const userId = req.user.userId;
 
         // 1. Get submission and its hash
         const subResult = await pool.request()
             .input('submission_id', sql.INT, submissionId)
             .query(`
-                SELECT s.submission_id, a.sha256_hash, a.md5_hash
+                SELECT s.submission_id, s.author_id, s.status, s.title, a.sha256_hash, a.md5_hash
                 FROM Analysis_Submissions s
                 LEFT JOIN Malware_Artifacts a ON a.artifact_id = s.artifact_id
                 WHERE s.submission_id = @submission_id
@@ -83,6 +97,14 @@ export const triggerAiEvaluation = async (req, res) => {
             return res.status(404).json({ error: 'Submission not found' });
         }
 
+        const isAuthor = submission.author_id === userId;
+        const isPublished = submission.status === 'Published';
+        const isAdminOrMod = ['Administrator', 'Moderator'].includes(req.user.role);
+
+        if (!isAuthor && !isPublished && !isAdminOrMod) {
+            return res.status(403).json({ error: 'Unauthorized: This submission is private' });
+        }
+
         const hash = submission.sha256_hash || submission.md5_hash;
         if (!hash) {
             return res.status(400).json({ error: 'Submission has no associated artifact or hash' });
@@ -90,6 +112,9 @@ export const triggerAiEvaluation = async (req, res) => {
 
         // 2. Perform AI Evaluation
         const evalResult = await performAiEvaluation(hash);
+        
+        // Add submission info for the frontend
+        evalResult.submissionName = submission.title;
 
         // 3. Store result in DB
         await ensureTableExists();

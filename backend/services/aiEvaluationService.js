@@ -45,7 +45,7 @@ const extractFeatures = (fileReport, behaviorSummary) => {
 /**
  * Calls the Python inference script.
  */
-const runInference = (features) => {
+export const runInference = (features) => {
     return new Promise((resolve, reject) => {
         const pythonProcess = spawn('python', [
             path.join(__dirname, 'aiInference.py'),
@@ -90,22 +90,26 @@ const runInference = (features) => {
  */
 export const performAiEvaluation = async (hash) => {
     try {
-        const fileReport = await getFileReport(hash);
+        let fileReport;
+        try {
+            fileReport = await getFileReport(hash);
+        } catch (error) {
+            if (error.statusCode === 404) {
+                throw new Error(`File hash ${hash} not found in VirusTotal. Please ensure the sample has been scanned on VirusTotal first to provide behavioral data for analysis.`);
+            }
+            throw error;
+        }
+
         const behaviorSummary = await getBehaviorSummary(hash);
 
         const features = extractFeatures(fileReport, behaviorSummary);
         const predictions = await runInference(features);
 
         // Map predictions to meaningful labels
-        // We assumed 3 outputs:
-        // 0: Effectiveness/Maliciousness Score (0-100)
-        // 1: Evasion capability (0-100)
-        // 2: Impact score (0-100)
-        
-        // Let's refine this based on the frontend needs
-        const aiScore = Math.min(100, Math.max(0, predictions[0]));
-        const evasionScore = Math.min(100, Math.max(0, predictions[1]));
-        const impactScore = Math.min(100, Math.max(0, predictions[2]));
+        // The model returns values between 0 and 1, so we scale them to 0-100
+        const aiScore = Math.min(100, Math.max(0, predictions[0] * 100));
+        const evasionScore = Math.min(100, Math.max(0, predictions[1] * 100));
+        const impactScore = Math.min(100, Math.max(0, predictions[2] * 100));
 
         let threatLevel = 'Normal';
         if (aiScore > 80) threatLevel = 'Critical';

@@ -3,9 +3,23 @@ import json
 import joblib
 import pandas as pd
 import numpy as np
+import os
+import warnings
+
+# Suppress warnings to avoid polluting stdout
+warnings.filterwarnings("ignore")
 
 def load_model(model_path):
     try:
+        if not os.path.exists(model_path):
+            # Try alternative path if not found (e.g. if run from different CWD)
+            script_dir = os.path.dirname(os.path.abspath(__file__))
+            alt_path = os.path.join(script_dir, '..', 'malware_model.pkl')
+            if os.path.exists(alt_path):
+                model_path = alt_path
+            else:
+                raise FileNotFoundError(f"Model file not found at {model_path} or {alt_path}")
+
         data = joblib.load(model_path)
         return data['model'], data['feature_columns']
     except Exception as e:

@@ -85,14 +85,21 @@ const DashboardPage = () => {
   const sd = stats ?? EMPTY_STATS;
   const reputationScore = reputation?.reputation_score ?? user?.reputation_score ?? 0;
 
-  const tableRows = submissions.slice(0, 7).map(s => ({
-    id:     s.submission_id,
-    hash:   s.sha256_hash || s.title || 'N/A',
-    family: s.malware_family || s.malware_category || s.template_type || 'Unknown',
-    status: s.sandbox_status || (s.status === 'Published' ? 'Completed' : s.status),
-    date:   new Date(s.submitted_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric' }),
-    score:  s.sandbox_status === 'Completed' ? 100 : 0,
-  }));
+  const tableRows = submissions.slice(0, 7).map(s => {
+    // Parse AI score from "XX%" string to number
+    const aiScore = s.ai_score_percentage 
+      ? parseInt(s.ai_score_percentage.replace('%', '')) 
+      : (s.sandbox_status === 'Completed' ? 100 : 0);
+
+    return {
+      id:     s.submission_id,
+      hash:   s.sha256_hash || s.title || 'N/A',
+      family: s.malware_family || s.malware_category || s.template_type || 'Unknown',
+      status: s.sandbox_status || (s.status === 'Published' ? 'Completed' : s.status),
+      date:   new Date(s.submitted_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric' }),
+      score:  aiScore,
+    };
+  });
 
   const feedItems = activityItems.length > 0
     ? activityItems
