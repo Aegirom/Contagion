@@ -18,20 +18,20 @@ const EMPTY_STATS = { total_submissions: 0, published_submissions: 0, pending_su
 const EmptySubmissions = () => (
   <div
     className="rounded-xl flex flex-col items-center justify-center gap-4 p-16 text-center"
-    style={{ border: '1px dashed #1E2233', background: 'rgba(10,11,16,0.5)' }}
+    style={{ border: '1px dashed #E5E7EB', background: 'rgba(249,250,251,0.5)' }}
   >
     <div
       className="w-12 h-12 rounded-xl flex items-center justify-center"
-      style={{ background: '#141720', border: '1px solid #1E2233' }}
+      style={{ background: '#F3F4F6', border: '1px solid #E5E7EB' }}
     >
-      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#334155" strokeWidth="1.5">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#9CA3AF" strokeWidth="1.5">
         <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
         <polyline points="14 2 14 8 20 8" />
       </svg>
     </div>
     <div>
-      <p className="font-display text-sm font-bold text-white mb-1">No submissions yet</p>
-      <p className="font-body text-xs" style={{ color: '#334155' }}>
+      <p className="font-display text-sm font-bold text-gray-900 mb-1">No submissions yet</p>
+      <p className="font-body text-xs" style={{ color: '#9CA3AF' }}>
         Start your first analysis to build your portfolio.
       </p>
     </div>
@@ -74,7 +74,7 @@ const DashboardPage = () => {
 
   if (error) {
     return (
-      <main className="flex-1 flex items-center justify-center" style={{ background: '#050508' }}>
+      <main className="flex-1 flex items-center justify-center" style={{ background: '#FFFFFF' }}>
         <p className="font-mono text-xs" style={{ color: '#EF4444' }}>
           Failed to load dashboard.
         </p>
@@ -96,37 +96,29 @@ const DashboardPage = () => {
 
   const feedItems = activityItems.length > 0
     ? activityItems
-    : [{ msg: 'No recent activity', time: '—', color: '#1E2233' }];
+    : [{ msg: 'No recent activity', time: '—', color: '#E5E7EB' }];
 
   return (
     <main
       className="flex-1 overflow-auto relative"
-      style={{ background: '#050508' }}
+      style={{ background: '#FFFFFF' }}
     >
-      {/* Ambient lighting */}
+      {/* Subtle ambient glow */}
       <div className="pointer-events-none absolute inset-0 overflow-hidden" style={{ zIndex: 0 }}>
         <div style={{
           position: 'absolute',
           width: '900px', height: '600px',
           top: '-200px', left: '-300px',
-          background: 'radial-gradient(ellipse, rgba(34,197,94,0.055) 0%, transparent 65%)',
+          background: 'radial-gradient(ellipse, rgba(34,197,94,0.025) 0%, transparent 65%)',
           borderRadius: '50%',
         }} />
         <div style={{
           position: 'absolute',
           width: '700px', height: '700px',
           bottom: '-250px', right: '-150px',
-          background: 'radial-gradient(ellipse, rgba(109,40,217,0.04) 0%, transparent 65%)',
+          background: 'radial-gradient(ellipse, rgba(109,40,217,0.015) 0%, transparent 65%)',
           borderRadius: '50%',
         }} />
-        <div
-          className="absolute inset-0"
-          style={{
-            backgroundImage:
-              'linear-gradient(rgba(34,197,94,0.018) 1px, transparent 1px), linear-gradient(90deg, rgba(34,197,94,0.018) 1px, transparent 1px)',
-            backgroundSize: '48px 48px',
-          }}
-        />
       </div>
 
       {/* Page content */}
@@ -144,9 +136,9 @@ const DashboardPage = () => {
                 System Online
               </span>
             </div>
-            <h1 className="font-display text-2xl font-bold tracking-tight text-white">
+            <h1 className="font-display text-2xl font-bold tracking-tight text-gray-900">
               {loading ? (
-                <span style={{ color: '#1E2233' }}>Loading…</span>
+                <span style={{ color: '#E5E7EB' }}>Loading…</span>
               ) : (
                 <>
                   Welcome back,{' '}
@@ -154,7 +146,7 @@ const DashboardPage = () => {
                 </>
               )}
             </h1>
-            <p className="font-mono text-[10px] mt-1" style={{ color: '#2D3748' }}>
+            <p className="font-mono text-[10px] mt-1" style={{ color: '#9CA3AF' }}>
               Threat intelligence overview — {new Date().toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' })}
             </p>
           </div>

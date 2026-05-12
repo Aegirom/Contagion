@@ -20,7 +20,7 @@ const RankPanel = ({ loading, reputation }) => {
   return (
     <div
       className="rounded-xl overflow-hidden"
-      style={{ background: '#0A0B10', border: '1px solid #1E2233' }}
+      style={{ background: '#F9FAFB', border: '1px solid #E5E7EB' }}
     >
       <div style={{ height: '1px', background: 'linear-gradient(to right, #6D28D9, transparent)' }} />
 
@@ -28,18 +28,18 @@ const RankPanel = ({ loading, reputation }) => {
         {/* Score */}
         <div
           className="flex flex-col justify-center px-6 py-5"
-          style={{ borderRight: '1px solid #141720' }}
+          style={{ borderRight: '1px solid #E5E7EB' }}
         >
-          <p className="font-mono text-[9px] uppercase tracking-widest mb-1" style={{ color: '#334155' }}>
+          <p className="font-mono text-[9px] uppercase tracking-widest mb-1" style={{ color: '#9CA3AF' }}>
             Reputation
           </p>
           <span
             className="font-display text-3xl font-bold tracking-tight"
-            style={{ color: loading ? '#1E2233' : '#8B5CF6' }}
+            style={{ color: loading ? '#E5E7EB' : '#8B5CF6' }}
           >
             {loading ? '—' : score.toLocaleString()}
           </span>
-          <p className="font-mono text-[10px] mt-1" style={{ color: '#2D3748' }}>
+          <p className="font-mono text-[10px] mt-1" style={{ color: '#9CA3AF' }}>
             {loading ? '—' : `${xpLeft} XP to rank up`}
           </p>
         </div>
@@ -48,14 +48,14 @@ const RankPanel = ({ loading, reputation }) => {
         <div className="flex flex-col justify-center px-6 py-5 gap-3">
           <div>
             <div className="flex justify-between items-center mb-2">
-              <span className="font-mono text-[9px] uppercase tracking-widest" style={{ color: '#334155' }}>
+              <span className="font-mono text-[9px] uppercase tracking-widest" style={{ color: '#9CA3AF' }}>
                 Progress to next rank
               </span>
               <span className="font-mono text-[10px]" style={{ color: '#6D28D9' }}>
                 {loading ? '—' : `${progress}%`}
               </span>
             </div>
-            <div className="h-1 rounded-full overflow-hidden" style={{ background: '#141720' }}>
+            <div className="h-1 rounded-full overflow-hidden" style={{ background: '#F3F4F6' }}>
               <div
                 className="h-full rounded-full"
                 style={{
@@ -93,7 +93,7 @@ const RankPanel = ({ loading, reputation }) => {
         {/* Rank badge */}
         <div
           className="flex items-center justify-center px-6 py-5"
-          style={{ borderLeft: '1px solid #141720' }}
+          style={{ borderLeft: '1px solid #E5E7EB' }}
         >
           <div
             className="flex flex-col items-center justify-center w-20 h-20 rounded-xl"
@@ -105,7 +105,7 @@ const RankPanel = ({ loading, reputation }) => {
             <span className="font-mono text-[9px] uppercase tracking-widest" style={{ color: '#4C1D95' }}>
               {loading ? '—' : rankTitle}
             </span>
-            <span className="font-display text-2xl font-bold" style={{ color: loading ? '#1E2233' : '#8B5CF6' }}>
+            <span className="font-display text-2xl font-bold" style={{ color: loading ? '#E5E7EB' : '#8B5CF6' }}>
               {loading ? '—' : `#${rank}`}
             </span>
           </div>

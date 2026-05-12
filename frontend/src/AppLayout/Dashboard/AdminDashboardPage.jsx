@@ -26,8 +26,8 @@ const StatCard = ({ label, value, change, changePos, color, icon, delay = 0, loa
     <div
       className="rounded-xl overflow-hidden transition-all duration-300 cursor-default"
       style={{
-        background: "#0A0B10",
-        border: `1px solid ${hovered ? `rgba(${rgb}, 0.25)` : "#1E2233"}`,
+        background: "#F9FAFB",
+        border: `1px solid ${hovered ? `rgba(${rgb}, 0.25)` : "#E5E7EB"}`,
         boxShadow: hovered ? `0 0 24px rgba(${rgb}, 0.06)` : "none",
       }}
       onMouseEnter={() => setHovered(true)}
@@ -36,7 +36,7 @@ const StatCard = ({ label, value, change, changePos, color, icon, delay = 0, loa
       <div
         style={{
           height: "2px",
-          background: loading ? "#1E2233" : `linear-gradient(to right, ${color}, transparent)`,
+          background: loading ? "#E5E7EB" : `linear-gradient(to right, ${color}, transparent)`,
           opacity: hovered ? 1 : 0.6,
         }}
       />
@@ -44,7 +44,7 @@ const StatCard = ({ label, value, change, changePos, color, icon, delay = 0, loa
         <div className="flex items-start justify-between mb-5">
           <div
             className="w-9 h-9 rounded-lg flex items-center justify-center flex-shrink-0"
-            style={{ background: loading ? "#141720" : `rgba(${rgb}, 0.08)`, border: `1px solid rgba(${rgb}, 0.12)` }}
+            style={{ background: loading ? "#F3F4F6" : `rgba(${rgb}, 0.08)`, border: `1px solid rgba(${rgb}, 0.12)` }}
           >
             {icon}
           </div>
@@ -62,11 +62,11 @@ const StatCard = ({ label, value, change, changePos, color, icon, delay = 0, loa
           )}
         </div>
         <div className="flex items-baseline gap-1.5 mb-1">
-          <span className="font-display text-3xl font-bold tracking-tight" style={{ color: loading ? "#1E2233" : "#F1F5F9" }}>
+          <span className="font-display text-3xl font-bold tracking-tight" style={{ color: loading ? "#E5E7EB" : "#111827" }}>
             {displayValue}
           </span>
         </div>
-        <p className="font-body text-xs" style={{ color: "#475569" }}>{label}</p>
+        <p className="font-body text-xs" style={{ color: "#6B7280" }}>{label}</p>
       </div>
     </div>
   );
@@ -79,7 +79,7 @@ const RoleBadge = ({ role }) => {
     Analyst: { color: GREEN },
     Observer: { color: CYAN },
   };
-  const cfg = map[role] || { color: "#475569" };
+  const cfg = map[role] || { color: "#6B7280" };
   return (
     <span
       className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider"
@@ -158,26 +158,26 @@ function UsersPanel() {
 
   if (loading) {
     return (
-      <div className="rounded-xl overflow-hidden" style={{ background: "#0A0B10", border: "1px solid #1E2233" }}>
-        <div className="flex items-center justify-between px-5 py-3.5" style={{ borderBottom: "1px solid #1E2233" }}>
-          <span className="font-display text-[10px] font-bold tracking-widest uppercase text-white">Users</span>
-          <span className="font-mono text-[10px] px-2 py-0.5 rounded" style={{ background: "#141720", color: "#334155" }}>—</span>
+      <div className="rounded-xl overflow-hidden" style={{ background: "#F9FAFB", border: "1px solid #E5E7EB" }}>
+        <div className="flex items-center justify-between px-5 py-3.5" style={{ borderBottom: "1px solid #E5E7EB" }}>
+          <span className="font-display text-[10px] font-bold tracking-widest uppercase text-gray-900">Users</span>
+          <span className="font-mono text-[10px] px-2 py-0.5 rounded" style={{ background: "#F3F4F6", color: "#9CA3AF" }}>—</span>
         </div>
         {Array(5).fill(null).map((_, i) => (
-          <div key={i} className="grid gap-4 items-center px-5 py-3" style={{ gridTemplateColumns: "1fr 180px 120px 100px 140px", borderBottom: "1px solid #0F1118" }}>
+          <div key={i} className="grid gap-4 items-center px-5 py-3" style={{ gridTemplateColumns: "1fr 180px 120px 100px 140px", borderBottom: "1px solid #E5E7EB" }}>
             <div className="flex items-center gap-3">
-              <div className="w-8 h-8 rounded-full" style={{ background: "#141720" }} />
+              <div className="w-8 h-8 rounded-full" style={{ background: "#F3F4F6" }} />
               <div className="space-y-1.5 flex-1">
-                <div className="h-3 rounded" style={{ background: "#141720", width: "60%" }} />
-                <div className="h-2 rounded" style={{ background: "#0F1118", width: "40%" }} />
+                <div className="h-3 rounded" style={{ background: "#F3F4F6", width: "60%" }} />
+                <div className="h-2 rounded" style={{ background: "#E5E7EB", width: "40%" }} />
               </div>
             </div>
-            <div className="h-3 rounded" style={{ background: "#141720" }} />
-            <div className="h-5 w-20 rounded" style={{ background: "#141720" }} />
-            <div className="h-5 w-16 rounded" style={{ background: "#141720" }} />
+            <div className="h-3 rounded" style={{ background: "#F3F4F6" }} />
+            <div className="h-5 w-20 rounded" style={{ background: "#F3F4F6" }} />
+            <div className="h-5 w-16 rounded" style={{ background: "#F3F4F6" }} />
             <div className="flex gap-1.5">
-              <div className="h-6 w-14 rounded" style={{ background: "#141720" }} />
-              <div className="h-6 w-12 rounded" style={{ background: "#141720" }} />
+              <div className="h-6 w-14 rounded" style={{ background: "#F3F4F6" }} />
+              <div className="h-6 w-12 rounded" style={{ background: "#F3F4F6" }} />
             </div>
           </div>
         ))}
@@ -187,7 +187,7 @@ function UsersPanel() {
 
   if (error) {
     return (
-      <div className="rounded-xl p-8 text-center" style={{ background: "#0A0B10", border: "1px solid #1E2233" }}>
+      <div className="rounded-xl p-8 text-center" style={{ background: "#F9FAFB", border: "1px solid #E5E7EB" }}>
         <p className="font-mono text-xs mb-3" style={{ color: RED }}>{error}</p>
         <button onClick={loadUsers} className="font-mono text-[10px] uppercase tracking-widest px-4 py-2 rounded-lg" style={{ background: "rgba(34,197,94,0.07)", color: GREEN, border: "1px solid rgba(34,197,94,0.15)" }}>Retry</button>
       </div>
@@ -204,39 +204,39 @@ function UsersPanel() {
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             className="w-full px-3 py-2 rounded-lg text-sm border"
-            style={{ background: "#0A0B10", borderColor: "#1E2233", color: "#F1F5F9" }}
+            style={{ background: "#F9FAFB", borderColor: "#E5E7EB", color: "#111827" }}
           />
         </div>
-        <select value={filterRole} onChange={(e) => setFilterRole(e.target.value)} className="px-3 py-2 rounded-lg text-sm border" style={{ background: "#0A0B10", borderColor: "#1E2233", color: "#F1F5F9" }}>
+        <select value={filterRole} onChange={(e) => setFilterRole(e.target.value)} className="px-3 py-2 rounded-lg text-sm border" style={{ background: "#F9FAFB", borderColor: "#E5E7EB", color: "#111827" }}>
           <option value="all">All Roles</option>
           <option value="Administrator">Administrator</option>
           <option value="Moderator">Moderator</option>
           <option value="Analyst">Analyst</option>
           <option value="Observer">Observer</option>
         </select>
-        <select value={filterStatus} onChange={(e) => setFilterStatus(e.target.value)} className="px-3 py-2 rounded-lg text-sm border" style={{ background: "#0A0B10", borderColor: "#1E2233", color: "#F1F5F9" }}>
+        <select value={filterStatus} onChange={(e) => setFilterStatus(e.target.value)} className="px-3 py-2 rounded-lg text-sm border" style={{ background: "#F9FAFB", borderColor: "#E5E7EB", color: "#111827" }}>
           <option value="all">All Status</option>
           <option value="active">Active</option>
           <option value="suspended">Suspended</option>
         </select>
       </div>
 
-      <div className="rounded-xl overflow-hidden" style={{ background: "#0A0B10", border: "1px solid #1E2233" }}>
-        <div className="flex items-center justify-between px-5 py-3.5" style={{ borderBottom: "1px solid #1E2233" }}>
-          <span className="font-display text-[10px] font-bold tracking-widest uppercase text-white">User Management</span>
+      <div className="rounded-xl overflow-hidden" style={{ background: "#F9FAFB", border: "1px solid #E5E7EB" }}>
+        <div className="flex items-center justify-between px-5 py-3.5" style={{ borderBottom: "1px solid #E5E7EB" }}>
+          <span className="font-display text-[10px] font-bold tracking-widest uppercase text-gray-900">User Management</span>
           <span className="font-mono text-[10px] tabular-nums px-2 py-0.5 rounded" style={{ background: "rgba(34,197,94,0.06)", border: "1px solid rgba(34,197,94,0.12)", color: "#4ADE80" }}>{filtered.length}</span>
         </div>
 
-        <div className="grid gap-4 px-5 py-2" style={{ gridTemplateColumns: "1fr 180px 120px 100px 140px", borderBottom: "1px solid #141720" }}>
+        <div className="grid gap-4 px-5 py-2" style={{ gridTemplateColumns: "1fr 180px 120px 100px 140px", borderBottom: "1px solid #F3F4F6" }}>
           {["User", "Email", "Role", "Status", "Actions"].map((col) => (
-            <span key={col} className="font-mono text-[9px] uppercase tracking-widest" style={{ color: "#2D3748" }}>{col}</span>
+            <span key={col} className="font-mono text-[9px] uppercase tracking-widest" style={{ color: "#9CA3AF" }}>{col}</span>
           ))}
         </div>
 
         <div>
           {filtered.length === 0 ? (
             <div className="px-5 py-12 text-center">
-              <p className="font-mono text-xs" style={{ color: "#334155" }}>No users found</p>
+              <p className="font-mono text-xs" style={{ color: "#9CA3AF" }}>No users found</p>
             </div>
           ) : (
             filtered.map((u, i) => (
@@ -245,27 +245,27 @@ function UsersPanel() {
                 className="grid gap-4 items-center px-5 py-3 transition-colors"
                 style={{
                   gridTemplateColumns: "1fr 180px 120px 100px 140px",
-                  borderBottom: i < filtered.length - 1 ? "1px solid #0F1118" : "none",
+                  borderBottom: i < filtered.length - 1 ? "1px solid #E5E7EB" : "none",
                 }}
-                onMouseEnter={(e) => { e.currentTarget.style.background = "#0F1118"; }}
+                onMouseEnter={(e) => { e.currentTarget.style.background = "#E5E7EB"; }}
                 onMouseLeave={(e) => { e.currentTarget.style.background = "transparent"; }}
               >
                 <div className="flex items-center gap-3 min-w-0">
-                  <div className="w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold flex-shrink-0" style={{ background: "#141720", color: GREEN }}>
+                  <div className="w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold flex-shrink-0" style={{ background: "#F3F4F6", color: GREEN }}>
                     {(u.full_name || u.username || "?").charAt(0).toUpperCase()}
                   </div>
                   <div className="min-w-0">
                     <span className="font-mono text-xs truncate block" style={{ color: GREEN }}>{u.full_name || u.username}</span>
-                    {u.full_name && <span className="font-body text-xs" style={{ color: "#475569" }}>@{u.username}</span>}
+                    {u.full_name && <span className="font-body text-xs" style={{ color: "#6B7280" }}>@{u.username}</span>}
                   </div>
                 </div>
-                <span className="font-mono text-[10px] truncate" style={{ color: "#475569" }}>{u.email}</span>
+                <span className="font-mono text-[10px] truncate" style={{ color: "#6B7280" }}>{u.email}</span>
                 <select
                   value={u.role}
                   disabled={actionLoading === u.user_id}
                   onChange={(e) => handleAction(u.user_id, "role", { role: e.target.value })}
                   className="px-2 py-1 rounded text-[10px] font-bold border cursor-pointer"
-                  style={{ background: "#0A0B10", borderColor: "#1E2233", color: "#F1F5F9" }}
+                  style={{ background: "#F9FAFB", borderColor: "#E5E7EB", color: "#111827" }}
                 >
                   <option value="Analyst">Analyst</option>
                   <option value="Observer">Observer</option>
@@ -324,18 +324,18 @@ function UsersPanel() {
       </div>
 
       {confirmDelete && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center" style={{ background: "rgba(0,0,0,0.7)" }}>
-          <div className="rounded-xl p-6 max-w-md w-full mx-4" style={{ background: "#0A0B10", border: `1px solid ${RED}33` }}>
+        <div className="fixed inset-0 z-50 flex items-center justify-center" style={{ background: "rgba(0,0,0,0.3)" }}>
+          <div className="rounded-xl p-6 max-w-md w-full mx-4" style={{ background: "#F9FAFB", border: `1px solid ${RED}33` }}>
             <div className="flex items-center gap-2 mb-3">
               <div className="w-1.5 h-1.5 rounded-full" style={{ background: RED, boxShadow: `0 0 8px ${RED}` }} />
-              <h3 className="font-display text-sm font-bold text-white">Delete User</h3>
+              <h3 className="font-display text-sm font-bold text-gray-900">Delete User</h3>
             </div>
-            <p className="font-body text-xs mb-1" style={{ color: "#94A3B8" }}>
+            <p className="font-body text-xs mb-1" style={{ color: "#6B7280" }}>
               Permanently delete <span style={{ color: RED }}>{confirmDelete.username}</span> and all their data?
             </p>
-            <p className="font-mono text-[10px] mb-4" style={{ color: "#334155" }}>This cannot be undone.</p>
+            <p className="font-mono text-[10px] mb-4" style={{ color: "#9CA3AF" }}>This cannot be undone.</p>
             <div className="flex gap-2 justify-end">
-              <button onClick={() => setConfirmDelete(null)} className="font-mono text-[10px] uppercase tracking-widest px-4 py-2 rounded-lg" style={{ background: "rgba(59,130,246,0.07)", color: CYAN, border: "1px solid rgba(59,130,246,0.15)" }}>Cancel</button>
+              <button onClick={() => setConfirmDelete(null)} className="font-mono text-[10px] uppercase tracking-widest px-4 py-2 rounded-lg" style={{ background: "rgba(59,130,246,0.08)", color: CYAN, border: "1px solid rgba(59,130,246,0.15)" }}>Cancel</button>
               <button onClick={() => handleAction(confirmDelete.user_id, "delete")} className="font-mono text-[10px] uppercase tracking-widest px-4 py-2 rounded-lg" style={{ background: "rgba(239,68,68,0.15)", color: RED, border: "1px solid rgba(239,68,68,0.25)" }}>Delete Forever</button>
             </div>
           </div>
@@ -395,20 +395,20 @@ function PostsPanel() {
 
   if (loading) {
     return (
-      <div className="rounded-xl overflow-hidden" style={{ background: "#0A0B10", border: "1px solid #1E2233" }}>
-        <div className="flex items-center justify-between px-5 py-3.5" style={{ borderBottom: "1px solid #1E2233" }}>
-          <span className="font-display text-[10px] font-bold tracking-widest uppercase text-white">Posts</span>
-          <span className="font-mono text-[10px] px-2 py-0.5 rounded" style={{ background: "#141720", color: "#334155" }}>—</span>
+      <div className="rounded-xl overflow-hidden" style={{ background: "#F9FAFB", border: "1px solid #E5E7EB" }}>
+        <div className="flex items-center justify-between px-5 py-3.5" style={{ borderBottom: "1px solid #E5E7EB" }}>
+          <span className="font-display text-[10px] font-bold tracking-widest uppercase text-gray-900">Posts</span>
+          <span className="font-mono text-[10px] px-2 py-0.5 rounded" style={{ background: "#F3F4F6", color: "#9CA3AF" }}>—</span>
         </div>
         {Array(5).fill(null).map((_, i) => (
-          <div key={i} className="grid gap-4 items-center px-5 py-3" style={{ gridTemplateColumns: "1fr 120px 80px 100px", borderBottom: "1px solid #0F1118" }}>
+          <div key={i} className="grid gap-4 items-center px-5 py-3" style={{ gridTemplateColumns: "1fr 120px 80px 100px", borderBottom: "1px solid #E5E7EB" }}>
             <div className="space-y-1.5">
-              <div className="h-3 rounded" style={{ background: "#141720", width: "70%" }} />
-              <div className="h-2 rounded" style={{ background: "#0F1118", width: "40%" }} />
+              <div className="h-3 rounded" style={{ background: "#F3F4F6", width: "70%" }} />
+              <div className="h-2 rounded" style={{ background: "#E5E7EB", width: "40%" }} />
             </div>
-            <div className="h-5 w-20 rounded" style={{ background: "#141720" }} />
-            <div className="h-2 rounded" style={{ background: "#141720", width: "60%" }} />
-            <div className="h-6 w-14 rounded" style={{ background: "#141720" }} />
+            <div className="h-5 w-20 rounded" style={{ background: "#F3F4F6" }} />
+            <div className="h-2 rounded" style={{ background: "#F3F4F6", width: "60%" }} />
+            <div className="h-6 w-14 rounded" style={{ background: "#F3F4F6" }} />
           </div>
         ))}
       </div>
@@ -417,7 +417,7 @@ function PostsPanel() {
 
   if (error) {
     return (
-      <div className="rounded-xl p-8 text-center" style={{ background: "#0A0B10", border: "1px solid #1E2233" }}>
+      <div className="rounded-xl p-8 text-center" style={{ background: "#F9FAFB", border: "1px solid #E5E7EB" }}>
         <p className="font-mono text-xs mb-3" style={{ color: RED }}>{error}</p>
         <button onClick={load} className="font-mono text-[10px] uppercase tracking-widest px-4 py-2 rounded-lg" style={{ background: "rgba(34,197,94,0.07)", color: GREEN, border: "1px solid rgba(34,197,94,0.15)" }}>Retry</button>
       </div>
@@ -427,7 +427,7 @@ function PostsPanel() {
   return (
     <div className="space-y-4">
       <div className="flex gap-3">
-        <select value={filterStatus} onChange={(e) => setFilterStatus(e.target.value)} className="px-3 py-2 rounded-lg text-sm border" style={{ background: "#0A0B10", borderColor: "#1E2233", color: "#F1F5F9" }}>
+        <select value={filterStatus} onChange={(e) => setFilterStatus(e.target.value)} className="px-3 py-2 rounded-lg text-sm border" style={{ background: "#F9FAFB", borderColor: "#E5E7EB", color: "#111827" }}>
           <option value="all">All Status</option>
           <option value="Published">Published</option>
           <option value="Pending">Pending</option>
@@ -437,22 +437,22 @@ function PostsPanel() {
         </select>
       </div>
 
-      <div className="rounded-xl overflow-hidden" style={{ background: "#0A0B10", border: "1px solid #1E2233" }}>
-        <div className="flex items-center justify-between px-5 py-3.5" style={{ borderBottom: "1px solid #1E2233" }}>
-          <span className="font-display text-[10px] font-bold tracking-widest uppercase text-white">Submissions</span>
+      <div className="rounded-xl overflow-hidden" style={{ background: "#F9FAFB", border: "1px solid #E5E7EB" }}>
+        <div className="flex items-center justify-between px-5 py-3.5" style={{ borderBottom: "1px solid #E5E7EB" }}>
+          <span className="font-display text-[10px] font-bold tracking-widest uppercase text-gray-900">Submissions</span>
           <span className="font-mono text-[10px] tabular-nums px-2 py-0.5 rounded" style={{ background: "rgba(34,197,94,0.06)", border: "1px solid rgba(34,197,94,0.12)", color: "#4ADE80" }}>{submissions.length}</span>
         </div>
 
-        <div className="grid gap-4 px-5 py-2" style={{ gridTemplateColumns: "1fr 120px 80px 100px", borderBottom: "1px solid #141720" }}>
+        <div className="grid gap-4 px-5 py-2" style={{ gridTemplateColumns: "1fr 120px 80px 100px", borderBottom: "1px solid #F3F4F6" }}>
           {["Title / Author", "Status", "Date", "Actions"].map((col) => (
-            <span key={col} className="font-mono text-[9px] uppercase tracking-widest" style={{ color: "#2D3748" }}>{col}</span>
+            <span key={col} className="font-mono text-[9px] uppercase tracking-widest" style={{ color: "#9CA3AF" }}>{col}</span>
           ))}
         </div>
 
         <div>
           {submissions.length === 0 ? (
             <div className="px-5 py-12 text-center">
-              <p className="font-mono text-xs" style={{ color: "#334155" }}>No submissions found</p>
+              <p className="font-mono text-xs" style={{ color: "#9CA3AF" }}>No submissions found</p>
             </div>
           ) : (
             submissions.map((s, i) => (
@@ -461,17 +461,17 @@ function PostsPanel() {
                 className="grid gap-4 items-center px-5 py-3 transition-colors"
                 style={{
                   gridTemplateColumns: "1fr 120px 80px 100px",
-                  borderBottom: i < submissions.length - 1 ? "1px solid #0F1118" : "none",
+                  borderBottom: i < submissions.length - 1 ? "1px solid #E5E7EB" : "none",
                 }}
-                onMouseEnter={(e) => { e.currentTarget.style.background = "#0F1118"; }}
+                onMouseEnter={(e) => { e.currentTarget.style.background = "#E5E7EB"; }}
                 onMouseLeave={(e) => { e.currentTarget.style.background = "transparent"; }}
               >
                 <div className="min-w-0">
                   <span className="font-mono text-xs truncate block" style={{ color: GREEN }}>{s.title}</span>
-                  <span className="font-body text-xs" style={{ color: "#475569" }}>by {s.username}</span>
+                  <span className="font-body text-xs" style={{ color: "#6B7280" }}>by {s.username}</span>
                 </div>
                 <StatusBadge status={submissionStatusMap[s.status] || "Queued"} />
-                <span className="font-mono text-[10px]" style={{ color: "#334155" }}>{new Date(s.updated_at || s.submitted_at).toLocaleDateString()}</span>
+                <span className="font-mono text-[10px]" style={{ color: "#9CA3AF" }}>{new Date(s.updated_at || s.submitted_at).toLocaleDateString()}</span>
                 <button
                   onClick={() => setConfirmDelete(s)}
                   disabled={actionLoading === s.submission_id}
@@ -490,18 +490,18 @@ function PostsPanel() {
       </div>
 
       {confirmDelete && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center" style={{ background: "rgba(0,0,0,0.7)" }}>
-          <div className="rounded-xl p-6 max-w-md w-full mx-4" style={{ background: "#0A0B10", border: `1px solid ${RED}33` }}>
+        <div className="fixed inset-0 z-50 flex items-center justify-center" style={{ background: "rgba(0,0,0,0.3)" }}>
+          <div className="rounded-xl p-6 max-w-md w-full mx-4" style={{ background: "#F9FAFB", border: `1px solid ${RED}33` }}>
             <div className="flex items-center gap-2 mb-3">
               <div className="w-1.5 h-1.5 rounded-full" style={{ background: RED, boxShadow: `0 0 8px ${RED}` }} />
-              <h3 className="font-display text-sm font-bold text-white">Delete Submission</h3>
+              <h3 className="font-display text-sm font-bold text-gray-900">Delete Submission</h3>
             </div>
-            <p className="font-body text-xs mb-1" style={{ color: "#94A3B8" }}>
+            <p className="font-body text-xs mb-1" style={{ color: "#6B7280" }}>
               Permanently delete <span style={{ color: RED }}>{confirmDelete.title}</span>?
             </p>
-            <p className="font-mono text-[10px] mb-4" style={{ color: "#334155" }}>This will also delete all comments, likes, shares, reviews, and sandbox data.</p>
+            <p className="font-mono text-[10px] mb-4" style={{ color: "#9CA3AF" }}>This will also delete all comments, likes, shares, reviews, and sandbox data.</p>
             <div className="flex gap-2 justify-end">
-              <button onClick={() => setConfirmDelete(null)} className="font-mono text-[10px] uppercase tracking-widest px-4 py-2 rounded-lg" style={{ background: "rgba(59,130,246,0.07)", color: CYAN, border: "1px solid rgba(59,130,246,0.15)" }}>Cancel</button>
+              <button onClick={() => setConfirmDelete(null)} className="font-mono text-[10px] uppercase tracking-widest px-4 py-2 rounded-lg" style={{ background: "rgba(59,130,246,0.08)", color: CYAN, border: "1px solid rgba(59,130,246,0.15)" }}>Cancel</button>
               <button onClick={handleDelete} className="font-mono text-[10px] uppercase tracking-widest px-4 py-2 rounded-lg" style={{ background: "rgba(239,68,68,0.15)", color: RED, border: "1px solid rgba(239,68,68,0.25)" }}>Delete Forever</button>
             </div>
           </div>
@@ -563,15 +563,15 @@ function PendingSubmissionsPanel() {
 
   if (loading) {
     return (
-      <div className="rounded-xl overflow-hidden" style={{ background: "#0A0B10", border: "1px solid #1E2233" }}>
-        <div className="flex items-center gap-2 px-4 py-3" style={{ borderBottom: "1px solid #1E2233" }}>
+      <div className="rounded-xl overflow-hidden" style={{ background: "#F9FAFB", border: "1px solid #E5E7EB" }}>
+        <div className="flex items-center gap-2 px-4 py-3" style={{ borderBottom: "1px solid #E5E7EB" }}>
           <div className="w-1.5 h-1.5 rounded-full" style={{ background: AMBER, boxShadow: "0 0 6px rgba(245,158,11,0.7)" }} />
-          <span className="font-display text-[10px] font-bold tracking-widest uppercase text-white">Pending Review</span>
+          <span className="font-display text-[10px] font-bold tracking-widest uppercase text-gray-900">Pending Review</span>
         </div>
         {Array(3).fill(null).map((_, i) => (
-          <div key={i} className="flex items-center justify-between px-4 py-3" style={{ borderBottom: "1px solid #141720" }}>
-            <div className="space-y-1.5 flex-1"><div className="h-3 rounded" style={{ background: "#141720", width: "50%" }} /><div className="h-2 rounded" style={{ background: "#0F1118", width: "30%" }} /></div>
-            <div className="flex gap-1.5"><div className="h-6 w-14 rounded" style={{ background: "#141720" }} /><div className="h-6 w-14 rounded" style={{ background: "#141720" }} /></div>
+          <div key={i} className="flex items-center justify-between px-4 py-3" style={{ borderBottom: "1px solid #F3F4F6" }}>
+            <div className="space-y-1.5 flex-1"><div className="h-3 rounded" style={{ background: "#F3F4F6", width: "50%" }} /><div className="h-2 rounded" style={{ background: "#E5E7EB", width: "30%" }} /></div>
+            <div className="flex gap-1.5"><div className="h-6 w-14 rounded" style={{ background: "#F3F4F6" }} /><div className="h-6 w-14 rounded" style={{ background: "#F3F4F6" }} /></div>
           </div>
         ))}
       </div>
@@ -580,7 +580,7 @@ function PendingSubmissionsPanel() {
 
   if (error) {
     return (
-      <div className="rounded-xl p-8 text-center" style={{ background: "#0A0B10", border: "1px solid #1E2233" }}>
+      <div className="rounded-xl p-8 text-center" style={{ background: "#F9FAFB", border: "1px solid #E5E7EB" }}>
         <p className="font-mono text-xs mb-3" style={{ color: RED }}>{error}</p>
         <button onClick={load} className="font-mono text-[10px] uppercase tracking-widest px-4 py-2 rounded-lg" style={{ background: "rgba(34,197,94,0.07)", color: GREEN, border: "1px solid rgba(34,197,94,0.15)" }}>Retry</button>
       </div>
@@ -588,26 +588,26 @@ function PendingSubmissionsPanel() {
   }
 
   return (
-    <div className="rounded-xl overflow-hidden" style={{ background: "#0A0B10", border: "1px solid #1E2233" }}>
-      <div className="flex items-center justify-between px-4 py-3" style={{ borderBottom: "1px solid #1E2233" }}>
+    <div className="rounded-xl overflow-hidden" style={{ background: "#F9FAFB", border: "1px solid #E5E7EB" }}>
+      <div className="flex items-center justify-between px-4 py-3" style={{ borderBottom: "1px solid #E5E7EB" }}>
         <div className="flex items-center gap-2">
           <div className="w-1.5 h-1.5 rounded-full" style={{ background: AMBER, boxShadow: "0 0 6px rgba(245,158,11,0.7)" }} />
-          <span className="font-display text-[10px] font-bold tracking-widest uppercase text-white">Pending Review</span>
+          <span className="font-display text-[10px] font-bold tracking-widest uppercase text-gray-900">Pending Review</span>
         </div>
         <span className="font-mono text-[10px] tabular-nums px-2 py-0.5 rounded" style={{ background: "rgba(245,158,11,0.06)", border: "1px solid rgba(245,158,11,0.12)", color: AMBER }}>{submissions.length}</span>
       </div>
       {submissions.length === 0 ? (
-        <div className="px-4 py-12 text-center"><p className="font-mono text-xs" style={{ color: "#334155" }}>No pending submissions</p></div>
+        <div className="px-4 py-12 text-center"><p className="font-mono text-xs" style={{ color: "#9CA3AF" }}>No pending submissions</p></div>
       ) : (
         <div>
           {submissions.map((s, i) => (
-            <div key={s.submission_id} className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 px-4 py-3" style={{ borderBottom: i < submissions.length - 1 ? "1px solid #141720" : "none" }}>
+            <div key={s.submission_id} className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 px-4 py-3" style={{ borderBottom: i < submissions.length - 1 ? "1px solid #F3F4F6" : "none" }}>
               <div className="min-w-0 flex-1">
                 <span className="font-mono text-xs truncate block" style={{ color: GREEN }}>{s.title}</span>
                 <div className="flex gap-3 mt-0.5">
-                  <span className="font-body text-xs" style={{ color: "#475569" }}>by {s.username}</span>
-                  <span className="font-mono text-[10px]" style={{ color: "#334155" }}>{s.template_type}</span>
-                  <span className="font-mono text-[10px]" style={{ color: "#334155" }}>{new Date(s.submitted_at).toLocaleDateString()}</span>
+                  <span className="font-body text-xs" style={{ color: "#6B7280" }}>by {s.username}</span>
+                  <span className="font-mono text-[10px]" style={{ color: "#9CA3AF" }}>{s.template_type}</span>
+                  <span className="font-mono text-[10px]" style={{ color: "#9CA3AF" }}>{new Date(s.submitted_at).toLocaleDateString()}</span>
                 </div>
               </div>
               <div className="flex gap-1.5 flex-shrink-0">
@@ -628,17 +628,17 @@ function PendingSubmissionsPanel() {
       )}
 
       {confirmReject && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center" style={{ background: "rgba(0,0,0,0.7)" }}>
-          <div className="rounded-xl p-6 max-w-md w-full mx-4" style={{ background: "#0A0B10", border: `1px solid ${RED}33` }}>
+        <div className="fixed inset-0 z-50 flex items-center justify-center" style={{ background: "rgba(0,0,0,0.3)" }}>
+          <div className="rounded-xl p-6 max-w-md w-full mx-4" style={{ background: "#F9FAFB", border: `1px solid ${RED}33` }}>
             <div className="flex items-center gap-2 mb-3">
               <div className="w-1.5 h-1.5 rounded-full" style={{ background: RED, boxShadow: `0 0 8px ${RED}` }} />
-              <h3 className="font-display text-sm font-bold text-white">Reject Submission</h3>
+              <h3 className="font-display text-sm font-bold text-gray-900">Reject Submission</h3>
             </div>
-            <p className="font-body text-xs mb-3" style={{ color: "#94A3B8" }}>Provide a reason for rejection:</p>
+            <p className="font-body text-xs mb-3" style={{ color: "#6B7280" }}>Provide a reason for rejection:</p>
             <input type="text" placeholder="Reason (optional)" value={reason} onChange={(e) => setReason(e.target.value)}
-              className="w-full px-3 py-2 rounded-lg text-sm border mb-4" style={{ background: "#0A0B10", borderColor: "#1E2233", color: "#F1F5F9" }} />
+              className="w-full px-3 py-2 rounded-lg text-sm border mb-4" style={{ background: "#F9FAFB", borderColor: "#E5E7EB", color: "#111827" }} />
             <div className="flex gap-2 justify-end">
-              <button onClick={() => { setConfirmReject(null); setReason(""); }} className="font-mono text-[10px] uppercase tracking-widest px-4 py-2 rounded-lg" style={{ background: "rgba(59,130,246,0.07)", color: CYAN, border: "1px solid rgba(59,130,246,0.15)" }}>Cancel</button>
+              <button onClick={() => { setConfirmReject(null); setReason(""); }} className="font-mono text-[10px] uppercase tracking-widest px-4 py-2 rounded-lg" style={{ background: "rgba(59,130,246,0.08)", color: CYAN, border: "1px solid rgba(59,130,246,0.15)" }}>Cancel</button>
               <button onClick={handleReject} className="font-mono text-[10px] uppercase tracking-widest px-4 py-2 rounded-lg" style={{ background: "rgba(239,68,68,0.15)", color: RED, border: "1px solid rgba(239,68,68,0.25)" }}>Confirm Reject</button>
             </div>
           </div>
@@ -688,22 +688,22 @@ function SystemPanel() {
   if (loading) {
     return (
       <div className="grid grid-cols-1 xl:grid-cols-3 gap-5">
-        <div className="xl:col-span-2 rounded-xl p-8" style={{ background: "#0A0B10", border: "1px solid #1E2233" }}>
+        <div className="xl:col-span-2 rounded-xl p-8" style={{ background: "#F9FAFB", border: "1px solid #E5E7EB" }}>
           <div className="grid grid-cols-2 gap-4">
             {Array(6).fill(null).map((_, i) => (
-              <div key={i} className="p-5 rounded-xl" style={{ background: "#0A0B10", border: "1px solid #1E2233" }}>
-                <div className="h-2 w-16 rounded mb-3" style={{ background: "#141720" }} />
-                <div className="h-8 w-12 rounded" style={{ background: "#1E2233" }} />
+              <div key={i} className="p-5 rounded-xl" style={{ background: "#F9FAFB", border: "1px solid #E5E7EB" }}>
+                <div className="h-2 w-16 rounded mb-3" style={{ background: "#F3F4F6" }} />
+                <div className="h-8 w-12 rounded" style={{ background: "#E5E7EB" }} />
               </div>
             ))}
           </div>
         </div>
-        <div className="rounded-xl p-8" style={{ background: "#0A0B10", border: "1px solid #1E2233" }}>
-          <div className="h-2 w-24 rounded mb-4" style={{ background: "#141720" }} />
+        <div className="rounded-xl p-8" style={{ background: "#F9FAFB", border: "1px solid #E5E7EB" }}>
+          <div className="h-2 w-24 rounded mb-4" style={{ background: "#F3F4F6" }} />
           {Array(4).fill(null).map((_, i) => (
             <div key={i} className="flex items-center gap-3 py-2">
-              <div className="h-2 w-12 rounded" style={{ background: "#141720" }} />
-              <div className="h-2 flex-1 rounded" style={{ background: "#0F1118" }} />
+              <div className="h-2 w-12 rounded" style={{ background: "#F3F4F6" }} />
+              <div className="h-2 flex-1 rounded" style={{ background: "#E5E7EB" }} />
             </div>
           ))}
         </div>
@@ -713,7 +713,7 @@ function SystemPanel() {
 
   if (error) {
     return (
-      <div className="rounded-xl p-8 text-center" style={{ background: "#0A0B10", border: "1px solid #1E2233" }}>
+      <div className="rounded-xl p-8 text-center" style={{ background: "#F9FAFB", border: "1px solid #E5E7EB" }}>
         <p className="font-mono text-xs mb-3" style={{ color: RED }}>{error}</p>
         <button onClick={load} className="font-mono text-[10px] uppercase tracking-widest px-4 py-2 rounded-lg" style={{ background: "rgba(34,197,94,0.07)", color: GREEN, border: "1px solid rgba(34,197,94,0.15)" }}>Retry</button>
       </div>
@@ -730,47 +730,47 @@ function SystemPanel() {
           <StatCard label="Artifacts" value={String(stats?.total_artifacts || 0)} color={AMBER} delay={240} icon={<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke={AMBER} strokeWidth="1.75"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z" /></svg>} />
         </div>
 
-        <div className="rounded-xl overflow-hidden" style={{ background: "#0A0B10", border: "1px solid #1E2233" }}>
-          <div className="flex items-center gap-2 px-4 py-3" style={{ borderBottom: "1px solid #1E2233" }}>
+        <div className="rounded-xl overflow-hidden" style={{ background: "#F9FAFB", border: "1px solid #E5E7EB" }}>
+          <div className="flex items-center gap-2 px-4 py-3" style={{ borderBottom: "1px solid #E5E7EB" }}>
             <div className="w-1.5 h-1.5 rounded-full" style={{ background: GREEN, boxShadow: "0 0 6px rgba(34,197,94,0.7)" }} />
-            <span className="font-display text-[10px] font-bold tracking-widest uppercase text-white">Role Distribution</span>
+            <span className="font-display text-[10px] font-bold tracking-widest uppercase text-gray-900">Role Distribution</span>
           </div>
           {roleBreakdown.map((r, i) => {
             const colors = { Administrator: RED, Moderator: PURPLE, Analyst: GREEN, Observer: CYAN };
-            const c = colors[r.role] || "#475569";
+            const c = colors[r.role] || "#6B7280";
             return (
-              <div key={r.role} className="flex items-center gap-4 px-4 py-2.5" style={{ borderBottom: i < roleBreakdown.length - 1 ? "1px solid #141720" : "none" }}>
+              <div key={r.role} className="flex items-center gap-4 px-4 py-2.5" style={{ borderBottom: i < roleBreakdown.length - 1 ? "1px solid #F3F4F6" : "none" }}>
                 <span className="font-mono text-xs w-32" style={{ color: c }}>{r.role}</span>
-                <div className="flex-1 h-1.5 rounded-full overflow-hidden" style={{ background: "#141720" }}>
+                <div className="flex-1 h-1.5 rounded-full overflow-hidden" style={{ background: "#F3F4F6" }}>
                   <div className="h-full rounded-full" style={{ width: `${r.pct}%`, background: c }} />
                 </div>
-                <span className="font-mono text-[10px] w-12 text-right" style={{ color: "#475569" }}>{r.count} ({r.pct}%)</span>
+                <span className="font-mono text-[10px] w-12 text-right" style={{ color: "#6B7280" }}>{r.count} ({r.pct}%)</span>
               </div>
             );
           })}
         </div>
       </div>
 
-      <div className="rounded-xl overflow-hidden" style={{ background: "#0A0B10", border: "1px solid #1E2233" }}>
-        <div className="flex items-center justify-between px-4 py-3" style={{ borderBottom: "1px solid #1E2233" }}>
+      <div className="rounded-xl overflow-hidden" style={{ background: "#F9FAFB", border: "1px solid #E5E7EB" }}>
+        <div className="flex items-center justify-between px-4 py-3" style={{ borderBottom: "1px solid #E5E7EB" }}>
           <div className="flex items-center gap-2">
             <div className="w-1.5 h-1.5 rounded-full" style={{ background: RED, boxShadow: "0 0 6px rgba(239,68,68,0.7)" }} />
-            <span className="font-display text-[10px] font-bold tracking-widest uppercase text-white">Activity</span>
+            <span className="font-display text-[10px] font-bold tracking-widest uppercase text-gray-900">Activity</span>
           </div>
-          <span className="font-mono text-[10px] px-1.5 py-0.5 rounded" style={{ background: "#141720", color: "#334155" }}>{activity.length}</span>
+          <span className="font-mono text-[10px] px-1.5 py-0.5 rounded" style={{ background: "#F3F4F6", color: "#9CA3AF" }}>{activity.length}</span>
         </div>
         <div className="max-h-[400px] overflow-y-auto">
           {activity.length === 0 ? (
             <div className="px-4 py-8 text-center">
-              <p className="font-mono text-xs" style={{ color: "#334155" }}>No activity</p>
+              <p className="font-mono text-xs" style={{ color: "#9CA3AF" }}>No activity</p>
             </div>
           ) : (
             activity.map((a, i) => (
-              <div key={a.notification_id} className="flex items-start gap-3 px-4 py-2.5" style={{ borderBottom: i < activity.length - 1 ? "1px solid #141720" : "none" }}>
-                <div className="w-1 h-1 rounded-full mt-2 flex-shrink-0" style={{ background: a.is_read ? "#1E2233" : RED, boxShadow: a.is_read ? "none" : "0 0 4px rgba(239,68,68,0.5)" }} />
+              <div key={a.notification_id} className="flex items-start gap-3 px-4 py-2.5" style={{ borderBottom: i < activity.length - 1 ? "1px solid #F3F4F6" : "none" }}>
+                <div className="w-1 h-1 rounded-full mt-2 flex-shrink-0" style={{ background: a.is_read ? "#E5E7EB" : RED, boxShadow: a.is_read ? "none" : "0 0 4px rgba(239,68,68,0.5)" }} />
                 <div className="flex-1 min-w-0">
-                  <p className="font-body text-xs leading-relaxed" style={{ color: "#94A3B8" }}>{a.message}</p>
-                  <p className="font-mono text-[10px] mt-0.5" style={{ color: "#2D3748" }}>{a.target_username} — {new Date(a.created_at).toLocaleString()}</p>
+                  <p className="font-body text-xs leading-relaxed" style={{ color: "#6B7280" }}>{a.message}</p>
+                  <p className="font-mono text-[10px] mt-0.5" style={{ color: "#9CA3AF" }}>{a.target_username} — {new Date(a.created_at).toLocaleString()}</p>
                 </div>
               </div>
             ))
@@ -791,10 +791,9 @@ export default function AdminDashboardPage() {
   ];
 
   return (
-    <main className="flex-1 overflow-auto relative" style={{ background: "#050508" }}>
+    <main className="flex-1 overflow-auto relative" style={{ background: "#FFFFFF" }}>
       <div className="pointer-events-none absolute inset-0 overflow-hidden" style={{ zIndex: 0 }}>
-        <div style={{ position: "absolute", width: "900px", height: "600px", top: "-200px", right: "-300px", background: "radial-gradient(ellipse, rgba(239,68,68,0.04) 0%, transparent 65%)", borderRadius: "50%" }} />
-        <div className="absolute inset-0" style={{ backgroundImage: "linear-gradient(rgba(34,197,94,0.012) 1px, transparent 1px), linear-gradient(90deg, rgba(34,197,94,0.012) 1px, transparent 1px)", backgroundSize: "48px 48px" }} />
+        <div style={{ position: "absolute", width: "900px", height: "600px", top: "-200px", right: "-300px", background: "radial-gradient(ellipse, rgba(239,68,68,0.015) 0%, transparent 65%)", borderRadius: "50%" }} />
       </div>
 
       <div className="relative px-7 py-8 max-w-[1440px] mx-auto space-y-6" style={{ zIndex: 1 }}>
@@ -804,8 +803,8 @@ export default function AdminDashboardPage() {
               <div className="w-1.5 h-1.5 rounded-full" style={{ background: RED, boxShadow: `0 0 8px ${RED}` }} />
               <span className="font-mono text-[10px] uppercase tracking-widest" style={{ color: RED }}>Admin Access</span>
             </div>
-            <h1 className="font-display text-2xl font-bold tracking-tight text-white">Admin Nexus</h1>
-            <p className="font-mono text-[10px] mt-1" style={{ color: "#2D3748" }}>System overlord panel — {new Date().toLocaleDateString("en-US", { weekday: "long", month: "long", day: "numeric" })}</p>
+            <h1 className="font-display text-2xl font-bold tracking-tight text-gray-900">Admin Nexus</h1>
+            <p className="font-mono text-[10px] mt-1" style={{ color: "#9CA3AF" }}>System overlord panel — {new Date().toLocaleDateString("en-US", { weekday: "long", month: "long", day: "numeric" })}</p>
           </div>
           <div className="flex-shrink-0 mt-1">
             <span className="font-mono text-[10px] uppercase tracking-widest px-3 py-1.5 rounded-lg" style={{ background: "rgba(239,68,68,0.07)", color: RED, border: "1px solid rgba(239,68,68,0.15)" }}>Critical Access</span>
@@ -820,7 +819,7 @@ export default function AdminDashboardPage() {
               className="font-mono text-[10px] uppercase tracking-widest px-4 py-2 rounded-lg transition-all"
               style={{
                 background: tab === t.id ? "rgba(239,68,68,0.07)" : "transparent",
-                color: tab === t.id ? RED : "#475569",
+                color: tab === t.id ? RED : "#6B7280",
                 border: tab === t.id ? "1px solid rgba(239,68,68,0.15)" : "1px solid transparent",
               }}
             >

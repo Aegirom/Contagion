@@ -10,14 +10,14 @@ const SubmissionsTable = ({ submissions, loading }) => {
   return (
     <div
       className="rounded-xl overflow-hidden"
-      style={{ background: '#0A0B10', border: '1px solid #1E2233' }}
+      style={{ background: '#F9FAFB', border: '1px solid #E5E7EB' }}
     >
       {/* Header */}
       <div
         className="flex items-center justify-between px-5 py-3.5"
-        style={{ borderBottom: '1px solid #1E2233' }}
+        style={{ borderBottom: '1px solid #E5E7EB' }}
       >
-        <span className="font-display text-[10px] font-bold tracking-widest uppercase text-white">
+          <span className="font-display text-[10px] font-bold tracking-widest uppercase text-gray-900">
           Recent Submissions
         </span>
         <span
@@ -37,11 +37,11 @@ const SubmissionsTable = ({ submissions, loading }) => {
         className="grid gap-4 px-5 py-2"
         style={{
           gridTemplateColumns: '1fr 120px 80px 60px',
-          borderBottom: '1px solid #141720',
+          borderBottom: '1px solid #E5E7EB',
         }}
       >
         {['Sample / Family', 'Status', 'Date', 'Score'].map(col => (
-          <span key={col} className="font-mono text-[9px] uppercase tracking-widest" style={{ color: '#2D3748' }}>
+          <span key={col} className="font-mono text-[9px] uppercase tracking-widest" style={{ color: '#9CA3AF' }}>
             {col}
           </span>
         ))}
@@ -55,24 +55,24 @@ const SubmissionsTable = ({ submissions, loading }) => {
             className="grid gap-4 items-center px-5 py-3 transition-colors cursor-pointer"
             style={{
               gridTemplateColumns: '1fr 120px 80px 60px',
-              borderBottom: i < rows.length - 1 ? '1px solid #0F1118' : 'none',
+              borderBottom: i < rows.length - 1 ? '1px solid #F3F4F6' : 'none',
             }}
-            onMouseEnter={(e) => { e.currentTarget.style.background = '#0F1118'; }}
+            onMouseEnter={(e) => { e.currentTarget.style.background = '#F9FAFB'; }}
             onMouseLeave={(e) => { e.currentTarget.style.background = 'transparent'; }}
           >
             {/* Sample + family */}
             <div className="flex flex-col gap-0.5 min-w-0">
               {loading ? (
                 <>
-                  <div className="h-3 rounded" style={{ background: '#141720', width: '60%' }} />
-                  <div className="h-2.5 rounded" style={{ background: '#0F1118', width: '45%' }} />
+                  <div className="h-3 rounded" style={{ background: '#F3F4F6', width: '60%' }} />
+                  <div className="h-2.5 rounded" style={{ background: '#FFFFFF', width: '45%' }} />
                 </>
               ) : (
                 <>
                   <span className="font-mono text-xs truncate" style={{ color: '#22C55E' }}>
                     {s.hash.substring(0, 8)}…
                   </span>
-                  <span className="font-body text-xs" style={{ color: '#475569' }}>
+                  <span className="font-body text-xs" style={{ color: '#9CA3AF' }}>
                     {s.family}
                   </span>
                 </>
@@ -82,13 +82,13 @@ const SubmissionsTable = ({ submissions, loading }) => {
             {/* Status */}
             <div>
               {loading
-                ? <div className="h-5 w-20 rounded" style={{ background: '#141720' }} />
+                ? <div className="h-5 w-20 rounded" style={{ background: '#F3F4F6' }} />
                 : <StatusBadge status={s.status} />
               }
             </div>
 
             {/* Date */}
-            <span className="font-mono text-[10px]" style={{ color: loading ? '#1E2233' : '#334155' }}>
+            <span className="font-mono text-[10px]" style={{ color: loading ? '#E5E7EB' : '#9CA3AF' }}>
               {loading ? '—' : s.date}
             </span>
 
@@ -97,7 +97,7 @@ const SubmissionsTable = ({ submissions, loading }) => {
               className="font-mono text-sm tabular-nums text-right"
               style={{
                 color: s.score === null
-                  ? '#2D3748'
+                  ? '#9CA3AF'
                   : s.score > 85
                   ? '#EF4444'
                   : '#F59E0B',

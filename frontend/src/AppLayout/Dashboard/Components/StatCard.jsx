@@ -23,8 +23,8 @@ const StatCard = ({ label, value, suffix = '', change, changePos, color, icon, d
     <div
       className="rounded-xl overflow-hidden transition-all duration-300 cursor-default"
       style={{
-        background: '#0A0B10',
-        border: `1px solid ${hovered ? `rgba(${rgb}, 0.25)` : '#1E2233'}`,
+        background: '#F9FAFB',
+        border: `1px solid ${hovered ? `rgba(${rgb}, 0.25)` : '#E5E7EB'}`,
         boxShadow: hovered ? `0 0 24px rgba(${rgb}, 0.06)` : 'none',
       }}
       onMouseEnter={() => setHovered(true)}
@@ -35,7 +35,7 @@ const StatCard = ({ label, value, suffix = '', change, changePos, color, icon, d
         style={{
           height: '2px',
           background: loading
-            ? '#1E2233'
+            ? '#E5E7EB'
             : `linear-gradient(to right, ${color}, transparent)`,
           transition: 'opacity 0.3s',
           opacity: hovered ? 1 : 0.6,
@@ -47,7 +47,7 @@ const StatCard = ({ label, value, suffix = '', change, changePos, color, icon, d
           <div
             className="w-9 h-9 rounded-lg flex items-center justify-center flex-shrink-0"
             style={{
-              background: loading ? '#141720' : `rgba(${rgb}, 0.08)`,
+              background: loading ? '#F3F4F6' : `rgba(${rgb}, 0.08)`,
               border: `1px solid rgba(${rgb}, 0.12)`,
             }}
           >
@@ -70,18 +70,18 @@ const StatCard = ({ label, value, suffix = '', change, changePos, color, icon, d
         <div className="flex items-baseline gap-1.5 mb-1">
           <span
             className="font-display text-3xl font-bold tracking-tight"
-            style={{ color: loading ? '#1E2233' : '#F1F5F9' }}
+            style={{ color: loading ? '#E5E7EB' : '#111827' }}
           >
             {displayValue}
           </span>
           {suffix && (
-            <span className="font-mono text-xs" style={{ color: '#334155' }}>
+            <span className="font-mono text-xs" style={{ color: '#9CA3AF' }}>
               {suffix}
             </span>
           )}
         </div>
 
-        <p className="font-body text-xs" style={{ color: '#475569' }}>
+        <p className="font-body text-xs" style={{ color: '#9CA3AF' }}>
           {label}
         </p>
       </div>
