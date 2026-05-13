@@ -1,5 +1,5 @@
 import express from "express";
-import { register, login, forgotPassword, refreshToken, verifyEmail, resetPassword, getMe, updateProfile, getProfile } from "../controllers/AuthController.js";
+import { register, login, forgotPassword, refreshToken, verifyEmail, resetPassword, getMe, updateProfile, getProfile, logout } from "../controllers/AuthController.js";
 import { getFullUserProfile, updateFullUserProfile, uploadAvatar } from "../controllers/ProfileController.js";
 import { protect } from "../middleware/auth.js";
 import { verifyTurnstile } from "../middleware/turnstile.js";
@@ -12,6 +12,7 @@ router.post("/register", validate(registerSchema), register);
 router.post("/login", verifyTurnstile, validate(loginSchema), login);
 router.post("/forgot-password", validate(forgotPasswordSchema), forgotPassword);
 router.post("/refresh-token", validate(refreshTokenSchema), refreshToken);
+router.post("/logout", logout);
 router.post("/verify-email", validate(verifyEmailSchema), verifyEmail);
 router.post("/reset-password", validate(resetPasswordSchema), resetPassword);
 router.get("/me", protect, getMe);

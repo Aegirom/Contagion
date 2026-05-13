@@ -1,4 +1,5 @@
 import jwt from "jsonwebtoken";
+import crypto from "crypto";
 
 export const JWT_SIGN_OPTIONS = {
   algorithm: 'HS256',
@@ -7,11 +8,11 @@ export const JWT_SIGN_OPTIONS = {
 };
 
 export const generateTokens = (userId, email, role) => {
-  const accessToken = jwt.sign({ userId, email, role }, process.env.JWT_SECRET, {
+  const accessToken = jwt.sign({ userId, email, role, jti: crypto.randomUUID() }, process.env.JWT_SECRET, {
     ...JWT_SIGN_OPTIONS,
     expiresIn: process.env.JWT_ACCESS_EXPIRES_IN,
   });
-  const refreshToken = jwt.sign({ userId, email, role }, process.env.JWT_SECRET, {
+  const refreshToken = jwt.sign({ userId, email, role, jti: crypto.randomUUID() }, process.env.JWT_SECRET, {
     ...JWT_SIGN_OPTIONS,
     expiresIn: process.env.JWT_REFRESH_EXPIRES_IN,
   });

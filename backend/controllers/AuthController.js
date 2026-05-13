@@ -19,6 +19,7 @@ import {
   JWT_SIGN_OPTIONS,
   validatePassword,
 } from "../services/authService.js";
+import { addToBlacklist, isBlacklisted } from "../services/tokenBlacklistService.js";
 
 export const register = async (req, res) => {
   try {
@@ -97,6 +98,14 @@ export const login = async (req, res) => {
       ? convertR2ToHttpUrl(profileResult.recordset[0].avatar_url)
       : null;
 
+    res.cookie("refreshToken", refreshToken, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === "production",
+      sameSite: "strict",
+      path: "/auth",
+      maxAge: 7 * 24 * 60 * 60 * 1000,
+    });
+
     res.json({
       message: "Login successful",
       user: {
@@ -142,7 +151,10 @@ export const forgotPassword = async (req, res) => {
 
 export const refreshToken = async (req, res) => {
   try {
-    const { refreshToken: token } = req.body;
+    const token = req.cookies?.refreshToken || req.body.refreshToken;
+    if (!token) {
+      return res.status(401).json({ error: "No refresh token provided" });
+    }
 
     jwt.verify(
       token,
@@ -162,17 +174,66 @@ export const refreshToken = async (req, res) => {
           return res.status(status).json({ error: message });
         }
 
+        if (decoded.jti && isBlacklisted(decoded.jti)) {
+          return res.status(401).json({ error: "Token has been revoked" });
+        }
+
+        if (decoded.jti) addToBlacklist(decoded.jti);
+
         const { accessToken, refreshToken: newRefreshToken } = generateTokens(
           decoded.userId,
           decoded.email,
           decoded.role,
         );
 
+        res.cookie("refreshToken", newRefreshToken, {
+          httpOnly: true,
+          secure: process.env.NODE_ENV === "production",
+          sameSite: "strict",
+          path: "/auth",
+          maxAge: 7 * 24 * 60 * 60 * 1000,
+        });
+
         res.json({ accessToken, refreshToken: newRefreshToken });
       },
     );
   } catch (error) {
     console.error("Refresh token error:", error);
+    res.status(500).json({ error: "Server error" });
+  }
+};
+
+export const logout = async (req, res) => {
+  try {
+    const token = req.cookies?.refreshToken || req.body?.refreshToken;
+
+    if (token) {
+      jwt.verify(
+        token,
+        process.env.JWT_SECRET,
+        {
+          algorithms: ["HS256"],
+          issuer: "contagion",
+          audience: "contagion-api",
+        },
+        (err, decoded) => {
+          if (!err && decoded.jti) {
+            addToBlacklist(decoded.jti);
+          }
+        },
+      );
+    }
+
+    res.clearCookie("refreshToken", {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === "production",
+      sameSite: "strict",
+      path: "/auth",
+    });
+
+    res.json({ message: "Logged out successfully" });
+  } catch (error) {
+    console.error("Logout error:", error);
     res.status(500).json({ error: "Server error" });
   }
 };

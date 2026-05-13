@@ -1,4 +1,5 @@
 import jwt from "jsonwebtoken";
+import { isBlacklisted } from "../services/tokenBlacklistService.js";
 
 export const protect = (req, res, next) => {
   let token;
@@ -13,6 +14,11 @@ export const protect = (req, res, next) => {
         algorithms: ['HS256'],
         issuer: 'contagion',
       });
+
+      if (decoded.jti && isBlacklisted(decoded.jti)) {
+        return res.status(401).json({ error: "Token has been revoked" });
+      }
+
       req.user = decoded;
       next();
     } catch (error) {
@@ -35,7 +41,10 @@ export const optionalAuth = (req, res, next) => {
         algorithms: ['HS256'],
         issuer: 'contagion',
       });
-      req.user = decoded;
+
+      if (!decoded.jti || !isBlacklisted(decoded.jti)) {
+        req.user = decoded;
+      }
     } catch (error) {
       // Silently ignore token errors, just don't set req.user
     }
