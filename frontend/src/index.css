@@ -57,19 +57,23 @@
     color: var(--text-muted);
   }
 
+  * {
+    scrollbar-width: thin;
+    scrollbar-color: rgba(34, 197, 94, 0.2) transparent;
+  }
   ::-webkit-scrollbar {
     width: 4px;
     height: 4px;
   }
   ::-webkit-scrollbar-track {
-    background: #f1f1f1;
+    background: transparent;
   }
   ::-webkit-scrollbar-thumb {
-    background: #c1c1c1;
-    border-radius: 2px;
+    background: rgba(34, 197, 94, 0.2);
+    border-radius: 4px;
   }
   ::-webkit-scrollbar-thumb:hover {
-    background: #a1a1a1;
+    background: rgba(34, 197, 94, 0.4);
   }
 }
 

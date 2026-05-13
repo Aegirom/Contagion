@@ -332,7 +332,7 @@ const Sidebar = ({ isOpen, toggleSidebar }) => {
       </div>
 
       {/* Nav */}
-      <nav className="flex-1 px-2 py-4 overflow-y-auto">
+      <nav className="flex-1 px-2 py-4 overflow-y-auto sidebar-scroll">
         {sections.map((section, si) => (
           <div key={si}>
             <SectionLabel label={section.label} isOpen={isOpen} />
