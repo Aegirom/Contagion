@@ -12,6 +12,10 @@ export const adminAPI = {
     API.get("/admin/submissions/all", { params: { status } }),
   forceDeleteSubmission: (submissionId) =>
     API.delete(`/admin/submissions/${submissionId}`),
+  archiveSubmission: (submissionId) =>
+    API.put(`/admin/submissions/${submissionId}/archive`),
+  unarchiveSubmission: (submissionId) =>
+    API.put(`/admin/submissions/${submissionId}/unarchive`),
   deleteComment: (commentId) => API.delete(`/admin/comments/${commentId}`),
   deletePeerReview: (reviewId) => API.delete(`/admin/reviews/${reviewId}`),
   getRecentActivity: () => API.get("/admin/activity"),

@@ -369,6 +369,32 @@ function PostsPanel() {
 
   useEffect(() => { load(); }, [load]);
 
+  const handleArchive = async (submissionId) => {
+    setActionLoading(submissionId);
+    try {
+      await adminAPI.archiveSubmission(submissionId);
+      await load();
+    } catch (err) {
+      console.error("[Admin] Archive failed:", err.response?.data || err.message);
+      setError(err.response?.data?.error || "Archive failed");
+    } finally {
+      setActionLoading(null);
+    }
+  };
+
+  const handleUnarchive = async (submissionId) => {
+    setActionLoading(submissionId);
+    try {
+      await adminAPI.unarchiveSubmission(submissionId);
+      await load();
+    } catch (err) {
+      console.error("[Admin] Unarchive failed:", err.response?.data || err.message);
+      setError(err.response?.data?.error || "Unarchive failed");
+    } finally {
+      setActionLoading(null);
+    }
+  };
+
   const handleDelete = async () => {
     if (!confirmDelete) return;
     const sid = confirmDelete.submission_id;
@@ -387,10 +413,10 @@ function PostsPanel() {
 
   const submissionStatusMap = {
     Published: "Completed",
-    Pending: "Queued",
-    Draft: "Queued",
+    Pending: "Pending",
+    Draft: "Draft",
     Rejected: "Failed",
-    Archived: "Queued",
+    Archived: "Archived",
   };
 
   if (loading) {
@@ -401,14 +427,17 @@ function PostsPanel() {
           <span className="font-mono text-[10px] px-2 py-0.5 rounded" style={{ background: "#F3F4F6", color: "#9CA3AF" }}>—</span>
         </div>
         {Array(5).fill(null).map((_, i) => (
-          <div key={i} className="grid gap-4 items-center px-5 py-3" style={{ gridTemplateColumns: "1fr 120px 80px 100px", borderBottom: "1px solid #E5E7EB" }}>
+          <div key={i} className="grid gap-4 items-center px-5 py-3" style={{ gridTemplateColumns: "1fr 120px 80px 180px", borderBottom: "1px solid #E5E7EB" }}>
             <div className="space-y-1.5">
               <div className="h-3 rounded" style={{ background: "#F3F4F6", width: "70%" }} />
               <div className="h-2 rounded" style={{ background: "#E5E7EB", width: "40%" }} />
             </div>
             <div className="h-5 w-20 rounded" style={{ background: "#F3F4F6" }} />
             <div className="h-2 rounded" style={{ background: "#F3F4F6", width: "60%" }} />
-            <div className="h-6 w-14 rounded" style={{ background: "#F3F4F6" }} />
+            <div className="flex gap-1.5">
+              <div className="h-6 w-16 rounded" style={{ background: "#F3F4F6" }} />
+              <div className="h-6 w-14 rounded" style={{ background: "#F3F4F6" }} />
+            </div>
           </div>
         ))}
       </div>
@@ -443,7 +472,7 @@ function PostsPanel() {
           <span className="font-mono text-[10px] tabular-nums px-2 py-0.5 rounded" style={{ background: "rgba(34,197,94,0.06)", border: "1px solid rgba(34,197,94,0.12)", color: "#4ADE80" }}>{submissions.length}</span>
         </div>
 
-        <div className="grid gap-4 px-5 py-2" style={{ gridTemplateColumns: "1fr 120px 80px 100px", borderBottom: "1px solid #F3F4F6" }}>
+        <div className="grid gap-4 px-5 py-2" style={{ gridTemplateColumns: "1fr 120px 80px 180px", borderBottom: "1px solid #F3F4F6" }}>
           {["Title / Author", "Status", "Date", "Actions"].map((col) => (
             <span key={col} className="font-mono text-[9px] uppercase tracking-widest" style={{ color: "#9CA3AF" }}>{col}</span>
           ))}
@@ -460,7 +489,7 @@ function PostsPanel() {
                 key={s.submission_id}
                 className="grid gap-4 items-center px-5 py-3 transition-colors"
                 style={{
-                  gridTemplateColumns: "1fr 120px 80px 100px",
+                  gridTemplateColumns: "1fr 120px 80px 180px",
                   borderBottom: i < submissions.length - 1 ? "1px solid #E5E7EB" : "none",
                 }}
                 onMouseEnter={(e) => { e.currentTarget.style.background = "#E5E7EB"; }}
@@ -472,17 +501,44 @@ function PostsPanel() {
                 </div>
                 <StatusBadge status={submissionStatusMap[s.status] || "Queued"} />
                 <span className="font-mono text-[10px]" style={{ color: "#9CA3AF" }}>{new Date(s.updated_at || s.submitted_at).toLocaleDateString()}</span>
-                <button
-                  onClick={() => setConfirmDelete(s)}
-                  disabled={actionLoading === s.submission_id}
-                  className="font-mono text-[10px] uppercase tracking-wider px-2.5 py-1.5 rounded transition-all"
-                  style={{
-                    background: "rgba(239,68,68,0.07)", color: RED, border: "1px solid rgba(239,68,68,0.15)",
-                    opacity: actionLoading === s.submission_id ? 0.4 : 1, cursor: actionLoading === s.submission_id ? "not-allowed" : "pointer",
-                  }}
-                >
-                  Delete
-                </button>
+                <div className="flex gap-1.5">
+                  {s.status === "Archived" ? (
+                    <button
+                      onClick={() => handleUnarchive(s.submission_id)}
+                      disabled={actionLoading === s.submission_id}
+                      className="font-mono text-[10px] uppercase tracking-wider px-2.5 py-1.5 rounded transition-all"
+                      style={{
+                        background: "rgba(34,197,94,0.07)", color: GREEN, border: "1px solid rgba(34,197,94,0.15)",
+                        opacity: actionLoading === s.submission_id ? 0.4 : 1, cursor: actionLoading === s.submission_id ? "not-allowed" : "pointer",
+                      }}
+                    >
+                      Unarchive
+                    </button>
+                  ) : (
+                    <button
+                      onClick={() => handleArchive(s.submission_id)}
+                      disabled={actionLoading === s.submission_id}
+                      className="font-mono text-[10px] uppercase tracking-wider px-2.5 py-1.5 rounded transition-all"
+                      style={{
+                        background: "rgba(245,158,11,0.07)", color: AMBER, border: "1px solid rgba(245,158,11,0.15)",
+                        opacity: actionLoading === s.submission_id ? 0.4 : 1, cursor: actionLoading === s.submission_id ? "not-allowed" : "pointer",
+                      }}
+                    >
+                      Archive
+                    </button>
+                  )}
+                  <button
+                    onClick={() => setConfirmDelete(s)}
+                    disabled={actionLoading === s.submission_id}
+                    className="font-mono text-[10px] uppercase tracking-wider px-2.5 py-1.5 rounded transition-all"
+                    style={{
+                      background: "rgba(239,68,68,0.07)", color: RED, border: "1px solid rgba(239,68,68,0.15)",
+                      opacity: actionLoading === s.submission_id ? 0.4 : 1, cursor: actionLoading === s.submission_id ? "not-allowed" : "pointer",
+                    }}
+                  >
+                    Delete
+                  </button>
+                </div>
               </div>
             ))
           )}

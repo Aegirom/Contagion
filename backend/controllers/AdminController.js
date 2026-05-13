@@ -422,6 +422,66 @@ export async function forceDeleteSubmission(req, res) {
   }
 }
 
+export async function archiveSubmission(req, res) {
+  try {
+    const { submissionId } = req.params;
+    const sid = parseInt(submissionId);
+
+    const result = await pool
+      .request()
+      .input("submission_id", sql.INT, sid)
+      .query(`
+        UPDATE Analysis_Submissions
+        SET status = 'Archived', updated_at = GETDATE()
+        OUTPUT INSERTED.submission_id, INSERTED.status, INSERTED.title
+        WHERE submission_id = @submission_id AND status <> 'Archived'
+      `);
+
+    if (!result.recordset[0]) {
+      return res.status(404).json({ error: "Submission not found or already archived" });
+    }
+
+    invalidatePrefix(`submissions:overview:${sid}`);
+    invalidatePrefix("submissions:feed");
+    invalidatePrefix("admin:stats");
+
+    res.json({ message: "Submission archived", submission: result.recordset[0] });
+  } catch (err) {
+    console.error("[Admin] archiveSubmission error:", err.message);
+    res.status(500).json({ error: "Failed to archive submission" });
+  }
+}
+
+export async function unarchiveSubmission(req, res) {
+  try {
+    const { submissionId } = req.params;
+    const sid = parseInt(submissionId);
+
+    const result = await pool
+      .request()
+      .input("submission_id", sql.INT, sid)
+      .query(`
+        UPDATE Analysis_Submissions
+        SET status = 'Pending', updated_at = GETDATE()
+        OUTPUT INSERTED.submission_id, INSERTED.status, INSERTED.title
+        WHERE submission_id = @submission_id AND status = 'Archived'
+      `);
+
+    if (!result.recordset[0]) {
+      return res.status(404).json({ error: "Submission not found or not archived" });
+    }
+
+    invalidatePrefix(`submissions:overview:${sid}`);
+    invalidatePrefix("submissions:feed");
+    invalidatePrefix("admin:stats");
+
+    res.json({ message: "Submission unarchived", submission: result.recordset[0] });
+  } catch (err) {
+    console.error("[Admin] unarchiveSubmission error:", err.message);
+    res.status(500).json({ error: "Failed to unarchive submission" });
+  }
+}
+
 export async function getAllSubmissionsAdmin(req, res) {
   try {
     const { status } = req.query;

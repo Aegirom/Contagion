@@ -11,6 +11,8 @@ import {
   getPendingSubmissions,
   moderateSubmission,
   forceDeleteSubmission,
+  archiveSubmission,
+  unarchiveSubmission,
   getAllSubmissionsAdmin,
   getRecentActivity,
   getModerationStats,
@@ -46,6 +48,8 @@ router.put('/users/:userId/unsuspend', protect, requireAdmin, unsuspendUser);
 router.delete('/users/:userId', protect, requireAdmin, deleteUser);
 router.get('/submissions/all', protect, requireAdmin, getAllSubmissionsAdmin);
 router.delete('/submissions/:submissionId', protect, requireAdmin, forceDeleteSubmission);
+router.put('/submissions/:submissionId/archive', protect, requireAdminOrModerator, archiveSubmission);
+router.put('/submissions/:submissionId/unarchive', protect, requireAdminOrModerator, unarchiveSubmission);
 router.delete('/comments/:commentId', protect, requireAdminOrModerator, deleteComment);
 router.delete('/reviews/:reviewId', protect, requireAdminOrModerator, deletePeerReview);
 router.get('/activity', protect, requireAdmin, getRecentActivity);
