@@ -2,6 +2,7 @@ import express from "express";
 import cors from "cors";
 import helmet from "helmet";
 import rateLimit from "express-rate-limit";
+import cookieParser from "cookie-parser";
 import submissionsRoutes from "./routes/Submissions.js";
 import leaderboardRoutes from "./routes/Leaderboard.js";
 import authRoutes from "./routes/Auth.js";
@@ -62,6 +63,7 @@ app.use(
 );
 
 app.use(express.json({ limit: "100kb" }));
+app.use(cookieParser());
 
 // Serve uploaded avatars
 app.use(
