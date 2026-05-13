@@ -5,7 +5,7 @@ import {
   register as apiRegister,
   forgotPassword as apiForgotPassword,
 } from "../services/authService";
-import API from "../services/api";
+import API, { authAPI } from "../services/api";
 
 export const AuthContext = createContext();
 
@@ -188,14 +188,22 @@ export const AuthProvider = ({ children }) => {
     }
   };
 
-  const logout = () => {
+  const logout = async () => {
+    try {
+      const storedTokens = localStorage.getItem("authTokens") || sessionStorage.getItem("authTokens");
+      if (storedTokens) {
+        const { refreshToken } = JSON.parse(storedTokens);
+        await API.post("/auth/logout", { refreshToken });
+      }
+    } catch {
+      // Silently ignore — token may already be invalid
+    }
     setUser(null);
     setTokens({ accessToken: null, refreshToken: null });
     localStorage.removeItem("authTokens");
     localStorage.removeItem("user");
     sessionStorage.removeItem("authTokens");
     sessionStorage.removeItem("user");
-    console.log("Logged out");
     window.location.href = "/login";
   };
 
