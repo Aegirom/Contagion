@@ -50,7 +50,7 @@ const isTokenExpired = (token) => {
 
 // API instance configuration
 const API = axios.create({
-  baseURL: import.meta.env.VITE_API_URL || "http://contagion.eu-north-1.elasticbeanstalk.com",
+  baseURL: import.meta.env.VITE_API_URL || "http://localhost:3000",
   headers: {
     "Content-Type": "application/json",
   },
@@ -104,7 +104,7 @@ API.interceptors.request.use(
     if (accessToken && isTokenExpired(accessToken) && refreshToken) {
       try {
         const response = await axios.post(
-          `${config.baseURL || "http://contagion.eu-north-1.elasticbeanstalk.com"}/auth/refresh-token`,
+          `${config.baseURL || "http://localhost:3000"}/auth/refresh-token`,
           { refreshToken },
         );
         const newTokens = {

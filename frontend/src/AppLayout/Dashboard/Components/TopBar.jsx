@@ -3,7 +3,7 @@ import { Link, useNavigate } from "react-router-dom";
 import { AuthContext } from "../../../context/AuthContext";
 import { NotificationContext } from "../../../context/NotificationContext";
 
-const API_BASE = import.meta.env.VITE_API_URL || "http://contagion.eu-north-1.elasticbeanstalk.com";
+const API_BASE = import.meta.env.VITE_API_URL || "http://localhost:3000";
 
 const resolveAvatarUrl = (url) => {
   if (!url) return null;
