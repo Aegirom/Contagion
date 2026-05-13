@@ -2,18 +2,32 @@ import { spawn } from 'child_process';
 import path from 'path';
 import { fileURLToPath } from 'url';
 import { getFileReport, getBehaviorSummary } from './virusTotalService.js';
+import { lookupHash } from './abuseChService.js';
+import { analyzeLocally } from './localAnalysisService.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
 /**
- * Extracts features for the AI model from VirusTotal data.
+ * Extracts features for the AI model from either VirusTotal, Abuse.ch, or local analysis data.
  */
-const extractFeatures = (fileReport, behaviorSummary) => {
+export const extractFeatures = (fileReport, behaviorSummary, localAnalysis = null, abuseData = null) => {
     const attributes = fileReport?.data?.attributes || {};
-    const stats = attributes.last_analysis_stats || {};
-    const tags = attributes.tags || [];
-    const behavior = behaviorSummary?.data || {};
+    const stats = attributes.last_analysis_stats || localAnalysis?.stats || {};
+    const tags = [
+        ...(attributes.tags || []), 
+        ...(localAnalysis?.tags || []),
+        ...(abuseData?.tags || [])
+    ];
+    
+    // Normalize tags to unique lowercase strings
+    const uniqueTags = [...new Set(tags.map(t => String(t).toLowerCase()))];
+
+    // Behavior can come from VT or we can mock it from Abuse signatures
+    const behavior = behaviorSummary?.data || behaviorSummary || {};
+    const contactedDomains = behavior.contacted_domains || [];
+    const contactedIps = behavior.contacted_ips || [];
+    const sandboxVerdicts = behavior.sandbox_verdicts || (localAnalysis ? { "LocalAnalysis": { "verdict": localAnalysis.severity } } : {});
 
     const malicious = Number(stats.malicious || 0);
     const suspicious = Number(stats.suspicious || 0);
@@ -21,7 +35,7 @@ const extractFeatures = (fileReport, behaviorSummary) => {
     const undetected = Number(stats.undetected || 0);
     const total = malicious + suspicious + harmless + undetected + Number(stats.timeout || 0);
 
-    const fileSize = attributes.size || 0;
+    const fileSize = attributes.size || localAnalysis?.file_size || abuseData?.file_size || 0;
 
     return {
         file_size: fileSize,
@@ -30,15 +44,15 @@ const extractFeatures = (fileReport, behaviorSummary) => {
         suspicious_count: suspicious,
         undetected_count: undetected,
         detection_ratio: (malicious + suspicious) / (total || 1),
-        tag_trojan: tags.includes('trojan') ? 1 : 0,
-        tag_ransomware: tags.includes('ransomware') ? 1 : 0,
-        tag_worm: tags.includes('worm') ? 1 : 0,
-        tag_packed: tags.includes('packed') ? 1 : 0,
-        tag_obfuscated: tags.includes('obfuscated') ? 1 : 0,
-        tag_encrypted: tags.includes('encrypted') ? 1 : 0,
-        contacted_domains: (behavior.contacted_domains || []).length,
-        contacted_ips: (behavior.contacted_ips || []).length,
-        sandbox_verdicts: Object.keys(behavior.sandbox_verdicts || {}).length
+        tag_trojan: uniqueTags.some(t => t.includes('trojan')) ? 1 : 0,
+        tag_ransomware: uniqueTags.some(t => t.includes('ransomware')) ? 1 : 0,
+        tag_worm: uniqueTags.some(t => t.includes('worm')) ? 1 : 0,
+        tag_packed: uniqueTags.some(t => t.includes('packed')) ? 1 : 0,
+        tag_obfuscated: uniqueTags.some(t => t.includes('obfuscated')) ? 1 : 0,
+        tag_encrypted: uniqueTags.some(t => t.includes('encrypted')) ? 1 : 0,
+        contacted_domains: contactedDomains.length,
+        contacted_ips: contactedIps.length,
+        sandbox_verdicts: Object.keys(sandboxVerdicts).length
     };
 };
 
@@ -86,27 +100,36 @@ export const runInference = (features) => {
 };
 
 /**
- * Performs full AI evaluation for a given file hash.
+ * Performs full AI evaluation for a given file hash, using pre-fetched data if available.
  */
-export const performAiEvaluation = async (hash) => {
+export const performAiEvaluation = async (hash, preFetched = {}) => {
     try {
-        let fileReport;
-        try {
-            fileReport = await getFileReport(hash);
-        } catch (error) {
-            if (error.statusCode === 404) {
-                throw new Error(`File hash ${hash} not found in VirusTotal. Please ensure the sample has been scanned on VirusTotal first to provide behavioral data for analysis.`);
+        let { fileReport, behaviorSummary, localAnalysis, abuseData } = preFetched;
+
+        if (!fileReport && hash) {
+            try {
+                fileReport = await getFileReport(hash);
+            } catch (error) {
+                if (error.statusCode !== 404) throw error;
             }
-            throw error;
         }
 
-        const behaviorSummary = await getBehaviorSummary(hash);
+        if (!behaviorSummary && hash && fileReport) {
+            behaviorSummary = await getBehaviorSummary(hash);
+        }
 
-        const features = extractFeatures(fileReport, behaviorSummary);
+        if (!abuseData && hash) {
+            abuseData = await lookupHash(hash);
+        }
+
+        if (!fileReport && !localAnalysis && !abuseData) {
+            throw new Error(`Insufficient data for AI Evaluation of hash ${hash}. No VirusTotal report, local analysis, or threat intel available.`);
+        }
+
+        const features = extractFeatures(fileReport, behaviorSummary, localAnalysis, abuseData);
         const predictions = await runInference(features);
 
         // Map predictions to meaningful labels
-        // The model returns values between 0 and 1, so we scale them to 0-100
         const aiScore = Math.min(100, Math.max(0, predictions[0] * 100));
         const evasionScore = Math.min(100, Math.max(0, predictions[1] * 100));
         const impactScore = Math.min(100, Math.max(0, predictions[2] * 100));
@@ -117,20 +140,27 @@ export const performAiEvaluation = async (hash) => {
         else if (aiScore > 40) threatLevel = 'Elevated';
         else if (aiScore > 20) threatLevel = 'Medium';
 
+        const family = fileReport?.data?.attributes?.popular_threat_classification?.suggested_threat_label 
+                    || localAnalysis?.suggestedThreatLabel 
+                    || 'Unknown';
+
         return {
             aiScorePercentage: `${Math.round(aiScore)}%`,
             evasionScore: `${Math.round(evasionScore)}%`,
             impactScore: `${Math.round(impactScore)}%`,
             threatLevel,
-            family: fileReport.data.attributes.popular_threat_classification?.suggested_threat_label || 'Unknown',
+            family,
             summary: `Neural analysis identifies this sample as ${threatLevel.toLowerCase()} risk. ` +
                      `It shows a confidence level of ${Math.round(aiScore)}% in its malicious behavior patterns. ` +
                      `The evasion capability is rated at ${Math.round(evasionScore)}%, and potential impact at ${Math.round(impactScore)}%.`,
             date: new Date().toISOString().split('T')[0],
-            features // Returning features might be useful for debugging
+            features,
+            localAnalysis,
+            abuseData
         };
     } catch (error) {
         console.error('AI Evaluation Service Error:', error);
         throw error;
     }
 };
+

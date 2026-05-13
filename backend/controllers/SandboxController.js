@@ -12,6 +12,8 @@ import {
 } from "../services/localAnalysisService.js";
 import { getSha1Column } from "../services/artifactService.js";
 import { createNotification } from "../services/notificationService.js";
+import { performAiEvaluation } from "../services/aiEvaluationService.js";
+import { saveAiEvaluationInternal } from "./AiEvaluationController.js";
 import {
   get as cacheGet,
   set as cacheSet,
@@ -569,6 +571,21 @@ export const evaluateFile = async (req, res) => {
 
     invalidatePrefix(`sandbox:submissions:${req.user.userId}`);
     invalidatePrefix(`sandbox:executions:${req.user.userId}`);
+
+    // Trigger AI Evaluation automatically
+    try {
+        const aiEvalResult = await performAiEvaluation(hash, { 
+            fileReport, 
+            behaviorSummary, 
+            localAnalysis: {
+                ...localVerdict,
+                file_size: localArtifact?.file_size || abuseData?.file_size || 0
+            }
+        });
+        await saveAiEvaluationInternal(submission.submission_id, aiEvalResult);
+    } catch (aiErr) {
+        console.error("Automated AI evaluation failed (non-blocking):", aiErr);
+    }
 
     res.status(201).json({
       execution_id: executionId,

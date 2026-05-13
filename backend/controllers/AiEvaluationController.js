@@ -2,10 +2,13 @@ import sql from 'mssql';
 import pool from '../config/db.js';
 import { performAiEvaluation } from '../services/aiEvaluationService.js';
 
+import { analyzeLocally } from '../services/localAnalysisService.js';
+import { lookupHash } from '../services/abuseChService.js';
+
 /**
  * Ensures the AI_Evaluations table exists.
  */
-const ensureTableExists = async () => {
+export const ensureTableExists = async () => {
     try {
         await pool.request().query(`
             IF NOT EXISTS (SELECT * FROM sys.objects WHERE object_id = OBJECT_ID(N'[dbo].[AI_Evaluations]') AND type in (N'U'))
@@ -28,6 +31,32 @@ const ensureTableExists = async () => {
     } catch (err) {
         console.error('Failed to ensure AI_Evaluations table exists:', err);
     }
+};
+
+/**
+ * Internal helper to save AI evaluation to DB.
+ */
+export const saveAiEvaluationInternal = async (submissionId, evalResult) => {
+    await ensureTableExists();
+    await pool.request()
+        .input('submission_id', sql.INT, submissionId)
+        .input('ai_score', sql.NVARCHAR(10), evalResult.aiScorePercentage)
+        .input('evasion_score', sql.NVARCHAR(10), evalResult.evasionScore)
+        .input('impact_score', sql.NVARCHAR(10), evalResult.impactScore)
+        .input('threat_level', sql.NVARCHAR(20), evalResult.threatLevel)
+        .input('family', sql.NVARCHAR(100), evalResult.family)
+        .input('summary', sql.NVARCHAR(sql.MAX), evalResult.summary)
+        .input('features', sql.NVARCHAR(sql.MAX), JSON.stringify(evalResult.features))
+        .query(`
+            INSERT INTO AI_Evaluations (
+                submission_id, ai_score_percentage, evasion_score, impact_score, 
+                threat_level, family, summary, features_json
+            )
+            VALUES (
+                @submission_id, @ai_score, @evasion_score, @impact_score, 
+                @threat_level, @family, @summary, @features
+            )
+        `);
 };
 
 export const getAiEvaluation = async (req, res) => {
@@ -86,7 +115,10 @@ export const triggerAiEvaluation = async (req, res) => {
         const subResult = await pool.request()
             .input('submission_id', sql.INT, submissionId)
             .query(`
-                SELECT s.submission_id, s.author_id, s.status, s.title, a.sha256_hash, a.md5_hash
+                SELECT 
+                    s.submission_id, s.author_id, s.status, s.title, 
+                    a.artifact_id, a.sha256_hash, a.md5_hash, a.file_name, 
+                    a.file_type, a.file_size, a.malware_family, a.malware_category
                 FROM Analysis_Submissions s
                 LEFT JOIN Malware_Artifacts a ON a.artifact_id = s.artifact_id
                 WHERE s.submission_id = @submission_id
@@ -110,33 +142,17 @@ export const triggerAiEvaluation = async (req, res) => {
             return res.status(400).json({ error: 'Submission has no associated artifact or hash' });
         }
 
-        // 2. Perform AI Evaluation
-        const evalResult = await performAiEvaluation(hash);
+        // 2. Perform Local Analysis to gather features
+        const localAnalysis = analyzeLocally(submission);
+
+        // 3. Perform AI Evaluation with fallback data
+        const evalResult = await performAiEvaluation(hash, { localAnalysis });
         
         // Add submission info for the frontend
         evalResult.submissionName = submission.title;
 
-        // 3. Store result in DB
-        await ensureTableExists();
-        await pool.request()
-            .input('submission_id', sql.INT, submissionId)
-            .input('ai_score', sql.NVARCHAR(10), evalResult.aiScorePercentage)
-            .input('evasion_score', sql.NVARCHAR(10), evalResult.evasionScore)
-            .input('impact_score', sql.NVARCHAR(10), evalResult.impactScore)
-            .input('threat_level', sql.NVARCHAR(20), evalResult.threatLevel)
-            .input('family', sql.NVARCHAR(100), evalResult.family)
-            .input('summary', sql.NVARCHAR(sql.MAX), evalResult.summary)
-            .input('features', sql.NVARCHAR(sql.MAX), JSON.stringify(evalResult.features))
-            .query(`
-                INSERT INTO AI_Evaluations (
-                    submission_id, ai_score_percentage, evasion_score, impact_score, 
-                    threat_level, family, summary, features_json
-                )
-                VALUES (
-                    @submission_id, @ai_score, @evasion_score, @impact_score, 
-                    @threat_level, @family, @summary, @features
-                )
-            `);
+        // 4. Store result in DB
+        await saveAiEvaluationInternal(submissionId, evalResult);
 
         res.status(201).json(evalResult);
     } catch (err) {
