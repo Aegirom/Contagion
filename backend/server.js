@@ -54,7 +54,7 @@ app.use(helmet({
 // CORS with explicit options - must not use * with credentials
 const allowedOrigins = process.env.CORS_ORIGIN
   ? process.env.CORS_ORIGIN.split(",").map((s) => s.trim())
-  : ["http://localhost:5173", "https://contagion.dev"];
+  : ["https://contagion.dev"];
 
 app.use(
   cors({
