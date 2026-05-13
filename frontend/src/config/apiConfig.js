@@ -1,14 +1,14 @@
 const apiConfig = {
   development: {
-    baseURL: import.meta.env.VITE_API_URL || 'http://localhost:3000',
+    baseURL: import.meta.env.VITE_API_URL || 'http://contagion.eu-north-1.elasticbeanstalk.com',
     timeout: 10000,
   },
   production: {
-    baseURL: import.meta.env.VITE_API_URL || 'https://your-backend-url.com',
+    baseURL: import.meta.env.VITE_API_URL || 'http://contagion.eu-north-1.elasticbeanstalk.com',
     timeout: 10000,
   },
   test: {
-    baseURL: import.meta.env.VITE_API_URL || 'http://localhost:3000',
+    baseURL: import.meta.env.VITE_API_URL || 'http://contagion.eu-north-1.elasticbeanstalk.com',
     timeout: 5000,
   },
 };
