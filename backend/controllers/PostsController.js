@@ -265,11 +265,25 @@ export const toggleLike = async (req, res) => {
       const postOwnerId = await getPostOwnerId(submissionId);
 
       if (postOwnerId && postOwnerId !== userId) {
+        const actorUsername = likerResult.recordset[0].username;
+
+        await pool.request()
+          .input("ownerId", sql.Int, Number(postOwnerId))
+          .input("actor", sql.NVarChar(100), actorUsername)
+          .input("submissionId", sql.Int, Number(submissionId))
+          .query(`
+            DELETE FROM Notifications
+            WHERE user_id = @ownerId
+              AND type = 'like'
+              AND actor_username = @actor
+              AND related_submission_id = @submissionId
+          `);
+
         await createNotification({
           userId: postOwnerId,
           type: "like",
           message: `liked your analysis`,
-          actorUsername: likerResult.recordset[0].username,
+          actorUsername,
           relatedSubmissionId: submissionId,
         });
       }
